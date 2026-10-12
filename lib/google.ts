@@ -22,6 +22,11 @@ export const unlinkGoogle = () => api("/auth/google/unlink", { method: "POST" })
 export const resetPasswordWithGoogle = (p: { phoneNumber: string; idToken: string; newPassword: string }) =>
   api("/auth/reset-password/google", { method: "POST", body: p, auth: "none" });
 
+// Ask the venue to reset a forgotten password (no Google needed). Staff see it under Complaints and set a new password.
+// The server answers the same for any number, so it never reveals whether an account exists.
+export const requestPasswordReset = (phoneNumber: string) =>
+  api<unknown>("/auth/reset-request", { method: "POST", body: { phoneNumber }, auth: "none" });
+
 interface GisApi {
   accounts: {
     id: {

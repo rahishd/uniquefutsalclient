@@ -133,4 +133,19 @@ describe("password reset with Google", () => {
     expect((await post("/api/auth/google/unlink", {}, tokenFor(A))).status).toBe(200);
     expect((await post("/api/auth/reset-password/google", { phoneNumber: A, idToken: "ok", newPassword: "Another#11" })).status).toBe(403);
   });
+  it("asks the venue to reset: one open request per customer, same answer for any number", async () => {
+    const ask = (phone: string) => post("/api/auth/reset-request", { phoneNumber: phone });
+    expect((await ask("123")).status).toBe(400);
+    const known = await ask(A);
+    const unknown = await ask("9800000499");
+    expect(known.status).toBe(200);
+    expect(unknown.status).toBe(200);
+    expect(unknown.body.message).toBe(known.body.message); // no account lookup through the answer
+    expect((await ask(A)).status).toBe(200); // asking again does not add a second request
+    const rows = await prisma.complaint.findMany({ where: { userId: A, category: "Password reset" } });
+    expect(rows).toHaveLength(1);
+    expect(rows[0].status).toBe("open");
+    expect(await prisma.complaint.count({ where: { userId: "9800000499" } })).toBe(0);
+    await prisma.complaint.deleteMany({ where: { userId: A, category: "Password reset" } });
+  });
 });

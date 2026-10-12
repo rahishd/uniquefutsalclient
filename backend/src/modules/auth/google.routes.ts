@@ -7,6 +7,7 @@ import { prisma } from "../../config/db";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { ApiResponseUtil } from "../../utils/apiResponse";
 import { HashUtil } from "../../utils/hash";
+import { randomInt } from "node:crypto";
 import { AppError } from "../../middlewares/error.middleware";
 import validateRequest from "../../middlewares/validate.middleware";
 import { authRateLimitMiddleware } from "../../middlewares/rateLimit.middleware";
@@ -106,6 +107,31 @@ router.post(
     await prisma.user.update({ where: { phoneNumber: user.phoneNumber }, data: { password: await HashUtil.hash(req.body.newPassword) } });
     logger.info(`Password reset through Google for ${user.phoneNumber.slice(0, 3)}*******`);
     res.json(ApiResponseUtil.success(200, "Password changed. You can sign in now."));
+  }),
+);
+
+// Reset without Google: the customer asks the venue from the sign-in page. It shows up for staff under Complaints (and the bell)
+// as a "Password reset" request; staff check who it is and set a new password in Customers, then the customer signs in.
+// The answer is the same whether or not the number has an account, so nobody can use it to look numbers up.
+const RESET_CATEGORY = "Password reset";
+const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+router.post(
+  "/reset-request",
+  authRateLimitMiddleware,
+  [body("phoneNumber").matches(/^9\d{9}$/).withMessage("Enter a 10-digit mobile number starting with 9")],
+  validateRequest,
+  asyncHandler(async (req, res: Response) => {
+    const phone: string = req.body.phoneNumber;
+    const user = await prisma.user.findUnique({ where: { phoneNumber: phone }, select: { role: true, isActive: true, name: true } });
+    if (user && user.role === "user" && user.isActive) {
+      const open = await prisma.complaint.findFirst({ where: { userId: phone, category: RESET_CATEGORY, status: { in: ["open", "in_review"] } }, select: { id: true } });
+      if (!open) {
+        const code = "CP-" + Array.from({ length: 6 }, () => CODE_CHARS[randomInt(CODE_CHARS.length)]).join("");
+        await prisma.complaint.create({ data: { code, userId: phone, category: RESET_CATEGORY, message: "This customer asked for a password reset from the sign-in page. Check it is them (call the number), then set a new password in Customers and tell them." } });
+        logger.info(`Password reset requested for ${phone.slice(0, 3)}*******`);
+      }
+    }
+    res.json(ApiResponseUtil.success(200, "If that number has an account, the venue has been told. They will call you and set a new password."));
   }),
 );
 

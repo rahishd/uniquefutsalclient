@@ -21,23 +21,51 @@ const heading = "text-xs font-bold uppercase tracking-[0.2em] text-[#0c0b5d]";
 export default function Footer() {
   return (
     <footer className="mx-auto w-full max-w-md px-5 pb-40 pt-12 desk:max-w-none desk:px-10 desk:pb-14 desk:pt-6">
-      <section aria-label="Message from the founder" className="glass mb-10 space-y-3 rounded-3xl p-5 desk:p-8">
-        <h2 className={heading}>Message from the founder</h2>
-        <div className="space-y-3 text-sm leading-relaxed text-slate-600">
-          <p>
-            My valued customers are at the heart of this journey. I want to build genuine relationships by listening to their needs, welcoming their ideas, and creating experiences they’re proud to be part of. Their trust and support help Unique Futsal grow, while every game gives us another chance to connect and make the community stronger.
-          </p>
-          <p>
-            Unique Futsal brings people together through shared games and inclusive experiences, turning a common interest into friendships, encouragement, and a stronger sense of belonging. I also see technology as a way to make sports more accessible and organized, helping people discover sessions, coordinate participation, and stay connected beyond the game.
-          </p>
-          <p>
-            For me, success is found in new friendships, shared progress, and opportunities to grow together. Unique Futsal is my effort to unite sport, technology, and community in one meaningful experience—one game, one connection, and one opportunity at a time.
+      <section aria-label="A message from the founder" className="glass mb-10 overflow-hidden rounded-3xl">
+        <div className="relative bg-gradient-to-b from-[#005f7e] via-[#0a7899] to-[#3e9bb5] text-white">
+          {/* big quotation marks, as in the template */}
+          <span aria-hidden className="pointer-events-none absolute left-3 top-0 select-none font-serif text-[8rem] leading-none text-white/25 desk:left-8 desk:text-[13rem]">“</span>
+          <span aria-hidden className="pointer-events-none absolute bottom-0 left-4 select-none font-serif text-[8rem] leading-[0.6] text-white/25 desk:bottom-6 desk:left-auto desk:right-[38%] desk:text-[13rem]">”</span>
+
+          <div className="relative grid desk:grid-cols-[1.55fr_1fr]">
+            <div className="space-y-3 px-6 pb-6 pt-16 text-sm leading-relaxed desk:px-12 desk:pb-12 desk:pt-24 desk:text-[17px] desk:leading-8">
+              <h2 className="text-xl font-bold desk:text-3xl">A Message from the Founder</h2>
+              <p className="font-semibold">Greetings to all our valued customers and players,</p>
+              <p>
+                I am Rahish Dumre, Founder of Unique Futsal. My vision for Unique Futsal began in 2017 with a simple idea: to create an indoor futsal facility that stands apart from others—not only through its facilities but also through the experience and relationships it builds, Since their name &quot;Unique&quot; was born. Established in 2018, Unique Futsal was founded on the principles of comfort, refreshment, and a welcoming, family-like environment.
+              </p>
+              <p>
+                Our journey has always been about providing more than just a place to play. In 2019, we introduced health insurance to support players against unexpected injuries. In 2021, we launched dedicated membership plans for men, women, and corporate groups. In 2023, we established our Children&apos;s Academy for ages 10–15, focusing on skill development, physical fitness, and discipline. In 2024, we introduced GameZone to extend the experience beyond the court and encourage social connections through digital entertainment.
+              </p>
+              <p>Looking ahead, my vision is to develop a technology-driven futsal experience with seamless online booking and integrated services.</p>
+              <p>Interestingly, this system is self-built by me. Briefly about my background: I hold a BSc (Hons) in Computing and an MSc (Hons) in Cyber Security Threat Intelligence from London Metropolitan University.</p>
+              <p>I believe futsal is more than a sport; it builds teamwork, promotes a healthy lifestyle, develops discipline, and strengthens communities.</p>
+              <p>Thank you for your continued trust and support. Unique Futsal is not just a venue; it is a community we build together.</p>
+            </div>
+
+            <div className="relative flex items-end justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/founder.webp"
+                alt="Rahish Dumre, Founder of Unique Futsal"
+                className="w-3/4 max-w-[340px] object-contain object-bottom desk:w-full desk:max-w-none"
+                style={{ maskImage: "linear-gradient(to right, transparent 0, #000 22%)", WebkitMaskImage: "linear-gradient(to right, transparent 0, #000 22%)" }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-4 bg-white px-6 py-4 desk:px-12 desk:py-6">
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.jpg" alt="" className="h-12 w-12 rounded-xl object-cover desk:h-16 desk:w-16" />
+            <span className="text-sm font-extrabold uppercase tracking-wide text-[#0c0b5d] desk:text-lg">Unique Futsal</span>
+          </div>
+          <p className="text-right">
+            <span className="block text-xs font-medium uppercase tracking-[0.25em] text-slate-500 desk:text-base">Founder</span>
+            <span className="block text-lg font-extrabold uppercase leading-tight text-slate-900 desk:text-4xl">Rahish Dumre</span>
           </p>
         </div>
-        <p className="pt-1 text-sm">
-          <span className="block font-bold text-[#0c0b5d]">Rahish Dumre</span>
-          <span className="block text-slate-500">Unique Futsal</span>
-        </p>
       </section>
 
       <div className="space-y-10 desk:grid desk:grid-cols-3 desk:gap-10 desk:space-y-0">

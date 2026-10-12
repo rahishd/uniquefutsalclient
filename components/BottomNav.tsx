@@ -44,27 +44,23 @@ export default function BottomNav() {
       className="fixed inset-x-0 bottom-0 z-50 px-5 desk:hidden"
       style={{ paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}
     >
-      <div className="glass relative mx-auto flex max-w-md items-center justify-between rounded-full px-4 py-2.5">
-        {LEFT_TABS.map((t) => <span key={t.href}>{sideTab(t)}</span>)}
+      <div className="glass mx-auto flex max-w-md items-stretch justify-between overflow-hidden rounded-3xl px-2">
+        {LEFT_TABS.map((t) => <span key={t.href} className="py-2.5">{sideTab(t)}</span>)}
 
-        {/* Spacer keeps the side tabs apart; the Book Now button floats above it */}
-        <div className="w-16" aria-hidden />
+        {/* Book Now: a square navy block set into the bar, full height, no ring and no float */}
         <Link
           href="/book"
           aria-label="Book Now"
           aria-current={bookActive ? "page" : undefined}
-          className="absolute left-1/2 top-0 flex -translate-x-1/2 -translate-y-1/3 flex-col items-center"
+          className={`flex w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-none bg-[#0c0b5d] text-white transition-colors ${
+            bookActive ? "bg-[#17168a]" : "hover:bg-[#17168a]"
+          }`}
         >
-          {/* outer ring */}
-          <span className="flex h-[84px] w-[84px] items-center justify-center rounded-full border border-white/80 bg-white/60 shadow-[0_10px_30px_rgba(40,80,140,0.18)] backdrop-blur-xl">
-            <span className="glass-btn flex h-[66px] w-[66px] items-center justify-center rounded-full text-white">
-              <CalendarDays size={28} />
-            </span>
-          </span>
-          <span className="mt-1 text-[11px] font-semibold text-accent">Book Now</span>
+          <CalendarDays size={26} strokeWidth={2} />
+          <span className="text-[11px] font-semibold tracking-wide">Book Now</span>
         </Link>
 
-        {RIGHT_TABS.map((t) => <span key={t.href}>{sideTab(t)}</span>)}
+        {RIGHT_TABS.map((t) => <span key={t.href} className="py-2.5">{sideTab(t)}</span>)}
       </div>
     </nav>
   );
