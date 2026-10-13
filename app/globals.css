@@ -86,3 +86,38 @@ button[class*="bg-white/"] {
    the mobile layout. A desktop browser window that happens to be tall and narrow still counts as desktop
    (it has a mouse), as long as it is at least 1024px wide. Use it as `desk:` in class names. */
 @custom-variant desk (@media (min-width: 1024px) and ((orientation: landscape) or ((hover: hover) and (pointer: fine))));
+
+/* Dark mode (Footer > Theme). The whole page is inverted, then hue-rotated back so blues stay blue and orange stays
+   orange; pictures, maps, the mascot and the navy / orange brand surfaces are inverted a second time so they keep
+   their real colours. Toggled by the `dark` class on <html> (see lib/theme.ts and the script in app/layout.tsx). */
+html.dark {
+  color-scheme: dark;
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Surfaces that keep their real colours (inverted a second time). */
+html.dark .glass-btn,
+html.dark .glass-active,
+html.dark .bg-brand,
+html.dark [class*="bg-[#0c0b5d]"],
+html.dark [class*="from-[#0c0b5d]"],
+html.dark [class*="from-[#005f7e]"],
+html.dark [class*="bg-[#f5822a]"] {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Pictures, maps and the mascot are inverted back too ... */
+html.dark img,
+html.dark video,
+html.dark iframe,
+html.dark canvas,
+html.dark svg.uf-kid,
+html.dark [style*="background-image"] {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* ... except when they sit inside a surface that already keeps its colours (that would invert them twice). */
+html.dark :is(.glass-btn, .glass-active, .bg-brand, [class*="bg-[#0c0b5d]"], [class*="from-[#0c0b5d]"], [class*="from-[#005f7e]"], [class*="bg-[#f5822a]"])
+  :is(img, video, iframe, canvas, svg.uf-kid, [style*="background-image"]) {
+  filter: none;
+}

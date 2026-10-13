@@ -5,6 +5,7 @@ import { BarChart3, CalendarDays, ChevronRight, CircleHelp, Crown, Gamepad2, Gra
 import { markReadByTypes, noticesStore, type NoticeType } from "@/lib/notifications";
 import { useSession } from "@/lib/session";
 import { pendingActions, useTeams } from "@/lib/teams";
+import { useT } from "@/lib/i18n";
 
 interface Tile {
   label: string;
@@ -38,6 +39,7 @@ export default function PopularGrid() {
   const unread = noticesStore.use().data?.unreadByType ?? NO_UNREAD;
   const teams = useTeams();
   const session = useSession();
+  const tr = useT();
 
   function countFor(t: Tile) {
     if (t.actions) {
@@ -51,9 +53,9 @@ export default function PopularGrid() {
   return (
     <section className="mt-8 desk:mt-10">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium desk:text-xl">Popular</h2>
+        <h2 className="text-lg font-medium desk:text-xl">{tr("Popular")}</h2>
         <Link href="/profile" className="flex items-center text-sm text-brand">
-          See all <ChevronRight size={16} />
+          {tr("See all")} <ChevronRight size={16} />
         </Link>
       </div>
       <ul className="mt-4 grid grid-cols-4 gap-x-3 gap-y-5 desk:grid-cols-6 desk:gap-x-4 desk:gap-y-6">
@@ -76,7 +78,7 @@ export default function PopularGrid() {
                     </span>
                   )}
                 </span>
-                <span className="text-center text-xs text-slate-600 desk:text-sm">{t.label}</span>
+                <span className="text-center text-xs text-slate-600 desk:text-sm">{tr(t.label)}</span>
               </Link>
             </li>
           );

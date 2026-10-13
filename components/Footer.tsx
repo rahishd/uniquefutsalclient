@@ -1,6 +1,9 @@
+"use client";
+
 import { Mail, MapPin, PhoneCall } from "lucide-react";
 import { FaFacebookF, FaTiktok, FaWhatsapp } from "react-icons/fa6";
 import { site } from "@/lib/site";
+import { useT } from "@/lib/i18n";
 
 
 function Social({ href, label, children }: { href: string; label: string; children: React.ReactNode }) {
@@ -19,6 +22,7 @@ function Social({ href, label, children }: { href: string; label: string; childr
 const heading = "text-xs font-bold uppercase tracking-[0.2em] text-[#0c0b5d]";
 
 export default function Footer() {
+  const t = useT();
   return (
     <footer className="mx-auto w-full max-w-md px-5 pb-40 pt-12 desk:max-w-none desk:px-10 desk:pb-14 desk:pt-6">
       <section aria-label="A message from the founder" className="glass mb-10 overflow-hidden rounded-3xl">
@@ -70,7 +74,7 @@ export default function Footer() {
 
       <div className="space-y-10 desk:grid desk:grid-cols-3 desk:gap-10 desk:space-y-0">
         <div>
-          <h2 className={heading}>Contact us</h2>
+          <h2 className={heading}>{t("Contact us")}</h2>
           <ul className="mt-4 space-y-3 text-sm font-medium text-slate-600">
             <li>
               <a href={`tel:${site.phone}`} className="flex items-center gap-3">
@@ -98,8 +102,8 @@ export default function Footer() {
         </div>
 
         <div>
-          <h2 className={heading}>Follow us</h2>
-          <p className="mt-4 text-sm text-slate-500">Stay updated with our latest offers, tournaments, and events.</p>
+          <h2 className={heading}>{t("Follow us")}</h2>
+          <p className="mt-4 text-sm text-slate-500">{t("Stay updated with our latest offers, tournaments, and events.")}</p>
           <div className="mt-4 flex gap-3">
             <Social href={site.whatsapp} label="WhatsApp">
               <FaWhatsapp className="text-[#25d366]" />
@@ -114,7 +118,7 @@ export default function Footer() {
         </div>
 
         <div>
-          <h2 className={heading}>Find us</h2>
+          <h2 className={heading}>{t("Find us")}</h2>
           <div className="glass mt-4 overflow-hidden rounded-2xl">
             <iframe
               title={`${site.name} on Google Maps`}

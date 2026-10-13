@@ -8,6 +8,7 @@ import { errorText } from "@/lib/api";
 import { openSignIn, signOut, useSession } from "@/lib/session";
 import { useTeams } from "@/lib/teams";
 import { setPref, usePrefs } from "@/lib/prefs";
+import { useLang, useT, type Lang } from "@/lib/i18n";
 import { fmtPts } from "@/lib/points";
 import { loyaltyStore, progressPct } from "@/lib/loyalty";
 import { POSITIONS, gameplayStore, paymentsStore, profileStore, saveProfile, type PaymentItem } from "@/lib/profile";
@@ -151,6 +152,8 @@ function RegisteredProfile() {
   const membership = myMembershipStore.use().data?.current ?? null;
   const statsById = new Map((gameplay?.games ?? []).map((g) => [g.id, g]));
   const prefs = usePrefs();
+  const t = useT();
+  const [lang, setLang] = useLang();
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({ name: "", email: "", location: "", position: "" });
@@ -458,19 +461,19 @@ function RegisteredProfile() {
       </>)}
 
       {/* Settings */}
-      <Card title="Settings" action={<Bell size={18} className="text-slate-400" />}>
+      <Card title={t("Settings")} action={<Bell size={18} className="text-slate-400" />}>
         <ul className="space-y-4 text-sm">
-          <li className="flex items-center justify-between gap-4"><span>Pop-up reminder<span className="block text-xs text-slate-400">Full-screen slider 1 hour before your game, to tell the venue &ldquo;I&apos;m coming&rdquo;</span></span><Switch checked={prefs.popup} onChange={(v) => setPref("popup", v)} label="Pop-up reminder, 1 hour before your game" /></li>
-          <li className="flex items-center justify-between gap-4"><span>Booking reminders (SMS)<span className="block text-xs text-slate-400">1 hour before your game</span></span><Switch checked={prefs.reminders} onChange={(v) => setPref("reminders", v)} label="Booking reminders" /></li>
-          <li className="flex items-center justify-between gap-4"><span>Promotional notifications<span className="block text-xs text-slate-400">Offers and tournaments</span></span><Switch checked={prefs.promos} onChange={(v) => setPref("promos", v)} label="Promotional notifications" /></li>
+          <li className="flex items-center justify-between gap-4"><span>{t("Pop-up reminder")}<span className="block text-xs text-slate-400">Full-screen slider 1 hour before your game, to tell the venue &ldquo;I&apos;m coming&rdquo;</span></span><Switch checked={prefs.popup} onChange={(v) => setPref("popup", v)} label="Pop-up reminder, 1 hour before your game" /></li>
+          <li className="flex items-center justify-between gap-4"><span>{t("Booking reminders (SMS)")}<span className="block text-xs text-slate-400">{t("1 hour before your game")}</span></span><Switch checked={prefs.reminders} onChange={(v) => setPref("reminders", v)} label="Booking reminders" /></li>
+          <li className="flex items-center justify-between gap-4"><span>{t("Promotional notifications")}<span className="block text-xs text-slate-400">{t("Offers and tournaments")}</span></span><Switch checked={prefs.promos} onChange={(v) => setPref("promos", v)} label="Promotional notifications" /></li>
           <AccountSecurity />
-          <li className="flex items-center justify-between gap-4"><label htmlFor="lang">Language</label>
-            <select id="lang" value={prefs.language} onChange={(e) => setPref("language", e.target.value)} className="rounded-xl bg-white/70 px-3 py-2 text-sm outline-none ring-1 ring-white/80">
+          <li className="flex items-center justify-between gap-4"><label htmlFor="lang">{t("Language")}</label>
+            <select id="lang" value={lang} onChange={(e) => setLang(e.target.value as Lang)} className="rounded-xl bg-white/70 px-3 py-2 text-sm outline-none ring-1 ring-white/80">
               <option value="en">English</option><option value="ne">नेपाली</option>
             </select>
           </li>
         </ul>
-        <button type="button" onClick={signOut} className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-white/70 py-3 text-sm font-medium text-rose-500"><LogOut size={16} /> Sign out</button>
+        <button type="button" onClick={signOut} className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-white/70 py-3 text-sm font-medium text-rose-500"><LogOut size={16} /> {t("Sign out")}</button>
       </Card>
     </div>
   );

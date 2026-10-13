@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useT } from "@/lib/i18n";
 
 // Top navigation for desktop mode (see the `desk:` variant in globals.css). On phones and portrait tablets the
 // bottom bar is used instead, so this is hidden there.
@@ -18,6 +19,7 @@ const LINKS = [
 
 export default function DeskNav() {
   const pathname = usePathname();
+  const t = useT();
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
   return (
     <nav aria-label="Main" className="ml-auto hidden items-center gap-1 desk:flex">
@@ -34,7 +36,7 @@ export default function DeskNav() {
                 : `whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-medium transition-colors desk:max-xl:px-2.5 desk:max-xl:text-[13px] ${active ? "bg-white text-brand" : "text-white/80 hover:bg-white/10 hover:text-white"}`
             }
           >
-            {l.label}
+            {t(l.label)}
           </Link>
         );
       })}

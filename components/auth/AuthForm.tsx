@@ -9,6 +9,7 @@ import { site } from "@/lib/site";
 import { googleConfig, requestPasswordReset, resetPasswordWithGoogle, type GoogleConfig } from "@/lib/google";
 import GoogleButton from "@/components/auth/GoogleButton";
 import KidSkills from "@/components/KidSkills";
+import { useT } from "@/lib/i18n";
 
 // A pill-shaped field with its icon on the left; a bad value turns the ring red and shows the message under it.
 const field = "flex items-center gap-3 rounded-full bg-white/80 px-5 py-4 shadow-sm ring-1 transition focus-within:ring-2";
@@ -22,6 +23,7 @@ function nextPath() {
 
 export default function AuthForm() {
   const session = useSession();
+  const t = useT();
   const [mode, setMode] = useState<"in" | "up" | "reset">("in");
   const [google, setGoogle] = useState<GoogleConfig | null>(null);
   const [done, setDone] = useState<string | null>(null);
@@ -103,9 +105,9 @@ export default function AuthForm() {
     );
   }
 
-  const title = mode === "in" ? "Welcome Back" : mode === "up" ? "Create your account" : "Reset your password";
+  const title = t(mode === "in" ? "Welcome Back" : mode === "up" ? "Create your account" : "Reset your password");
   const sub =
-    mode === "in" ? "Sign in to book your next game." : mode === "up" ? "Book faster, earn points and play with your team." : "We'll ask the venue to set a new password for you.";
+    mode === "in" ? t("Sign in to book your next game.") : mode === "up" ? "Book faster, earn points and play with your team." : "We'll ask the venue to set a new password for you.";
   const primary =
     "flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#0c0b5d] to-[#3f3fd1] py-4 text-base font-semibold text-white shadow-[0_12px_28px_-10px_rgba(12,11,93,0.7)] transition disabled:opacity-50";
 
@@ -131,7 +133,7 @@ export default function AuthForm() {
         {mode === "up" && (
           <div className={`${field} ring-white/80 focus-within:ring-brand`}>
             <User size={18} className="shrink-0 text-slate-400" />
-            <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" aria-label="Full name" autoComplete="name" />
+            <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("Full name")} aria-label="Full name" autoComplete="name" />
           </div>
         )}
 
@@ -143,13 +145,13 @@ export default function AuthForm() {
               value={phone}
               inputMode="numeric"
               onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-              placeholder="Mobile number (98XXXXXXXX)"
+              placeholder={t("Mobile number (98XXXXXXXX)")}
               aria-label="Mobile number"
               aria-invalid={phoneBad}
               autoComplete="tel"
             />
           </div>
-          {phoneBad && <p className="mt-1.5 px-5 text-sm font-medium text-rose-500">That mobile number doesn&apos;t look right</p>}
+          {phoneBad && <p className="mt-1.5 px-5 text-sm font-medium text-rose-500">{t("That mobile number doesn't look right")}</p>}
         </div>
 
         {mode !== "reset" && (
@@ -160,7 +162,7 @@ export default function AuthForm() {
               type={show ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder={mode === "up" ? "Choose a password (6+ characters)" : "Password"}
+              placeholder={mode === "up" ? "Choose a password (6+ characters)" : t("Password")}
               aria-label="Password"
               autoComplete={mode === "in" ? "current-password" : "new-password"}
             />
@@ -172,7 +174,7 @@ export default function AuthForm() {
 
         {mode === "in" && (
           <div className="flex justify-end px-1">
-            <button type="button" onClick={() => go("reset")} className="text-sm font-semibold text-accent">Forgot Password?</button>
+            <button type="button" onClick={() => go("reset")} className="text-sm font-semibold text-accent">{t("Forgot Password?")}</button>
           </div>
         )}
 
@@ -191,7 +193,7 @@ export default function AuthForm() {
               </div>
             ) : (
               <button type="button" onClick={askVenue} disabled={!phoneOk || busy} className={primary}>
-                {busy ? <><Loader2 size={18} className="animate-spin" /> Please wait…</> : "Ask the venue to reset it"}
+                {busy ? <><Loader2 size={18} className="animate-spin" /> Please wait…</> : t("Ask the venue to reset it")}
               </button>
             )}
 
@@ -212,7 +214,7 @@ export default function AuthForm() {
           </div>
         ) : (
           <button type="submit" disabled={!ok || busy} className={primary}>
-            {busy ? <><Loader2 size={18} className="animate-spin" /> Please wait…</> : mode === "in" ? "Log In" : "Create account"}
+            {busy ? <><Loader2 size={18} className="animate-spin" /> Please wait…</> : mode === "in" ? t("Log In") : t("Create account")}
           </button>
         )}
       </form>
@@ -221,14 +223,14 @@ export default function AuthForm() {
         <span className="h-px flex-1 bg-slate-300/70" /> or <span className="h-px flex-1 bg-slate-300/70" />
       </div>
       <Link href="/book" className="flex w-full items-center justify-center rounded-full bg-white/80 py-3.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-white">
-        Continue as a guest
+        {t("Continue as a guest")}
       </Link>
 
       <p className="text-center text-sm text-slate-500">
         {mode === "in" ? (
-          <>Don&apos;t have an account? <button type="button" onClick={() => go("up")} className="font-bold text-accent">Sign Up</button></>
+          <>{t("Don't have an account?")} <button type="button" onClick={() => go("up")} className="font-bold text-accent">{t("Sign Up")}</button></>
         ) : (
-          <>{mode === "up" ? "Already have an account?" : "Remembered it?"} <button type="button" onClick={() => go("in")} className="font-bold text-accent">Sign In</button></>
+          <>{t(mode === "up" ? "Already have an account?" : "Remembered it?")} <button type="button" onClick={() => go("in")} className="font-bold text-accent">{t("Sign In")}</button></>
         )}
       </p>
     </div>

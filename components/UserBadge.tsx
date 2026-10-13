@@ -4,6 +4,7 @@ import Link from "next/link";
 import ProfileAvatar from "@/components/captain/ProfileAvatar";
 import { useSession } from "@/lib/session";
 import { useTeams } from "@/lib/teams";
+import { useT } from "@/lib/i18n";
 import DigitalIdButton from "@/components/digitalid/DigitalIdButton";
 import WifiButton from "@/components/wifi/WifiButton";
 
@@ -11,6 +12,7 @@ import WifiButton from "@/components/wifi/WifiButton";
 export default function UserBadge() {
   const session = useSession();
   const teams = useTeams();
+  const t = useT();
   const name = session?.registered ? session.name : "Guest";
   const captain = Boolean(session?.registered && teams?.mode === "captain");
 
@@ -20,7 +22,7 @@ export default function UserBadge() {
       {session ? <ProfileAvatar name={name} captain={captain} size={56} /> : <span className="h-14 w-14 rounded-full bg-white/60" />}
       <span>
         <span className="block text-sm text-slate-400">
-          {captain ? "Captain" : "Hello"} <span aria-hidden>👋</span>
+          {captain ? t("Captain") : t("Hello")} <span aria-hidden>👋</span>
         </span>
         <span className="block min-h-8 text-2xl font-medium leading-tight">{session ? name : ""}</span>
       </span>

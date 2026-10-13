@@ -10,6 +10,8 @@ import ArrivalPrompt from "@/components/ArrivalPrompt";
 import WinPrompt from "@/components/captain/WinPrompt";
 import AdPopup from "@/components/ads/AdPopup";
 import VisitTracker from "@/components/VisitTracker";
+import { LangSync } from "@/components/HeaderToggles";
+import PageTranslator from "@/components/PageTranslator";
 
 const poppins = Poppins({ variable: "--font-poppins", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
@@ -28,8 +30,14 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${poppins.variable} h-full antialiased`}>
+    <html lang="en" suppressHydrationWarning className={`${poppins.variable} h-full antialiased`}>
+      <head>
+        {/* apply the saved light/dark choice before the first paint, so there is no flash */}
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem("uf-theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}` }} />
+      </head>
       <body className="min-h-full">
+        <LangSync />
+        <PageTranslator />
         <CompanyHeader />
         <main className="mx-auto w-full max-w-md px-5 pb-40 pt-5 min-h-[60vh] desk:max-w-none desk:px-10 desk:pb-16 desk:pt-8">{children}</main>
         <FooterGate />
