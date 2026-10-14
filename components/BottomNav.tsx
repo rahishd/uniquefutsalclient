@@ -14,6 +14,8 @@ const RIGHT_TABS = [
   { label: "Profile", href: "/profile", icon: User },
 ];
 
+// Clean white bar along the bottom: an outlined icon and a small label per tab, the current one in dark blue.
+// Book Now is a square dark-blue block set into the middle of the bar.
 export default function BottomNav() {
   const pathname = usePathname();
   const t = useT();
@@ -24,18 +26,13 @@ export default function BottomNav() {
     const active = isActive(href);
     return (
       <Link
+        key={href}
         href={href}
         aria-current={active ? "page" : undefined}
-        className="flex w-14 flex-col items-center gap-0.5"
+        className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-2 ${active ? "text-brand" : "text-slate-400"}`}
       >
-        <span
-          className={`flex h-7 w-7 items-center justify-center rounded-full transition-all ${
-            active ? "glass-active text-white" : "bg-white/40 text-brand"
-          }`}
-        >
-          <Icon size={16} strokeWidth={active ? 2.2 : 1.9} />
-        </span>
-        <span className={`text-[9px] font-medium leading-none ${active ? "text-brand" : "text-slate-400"}`}>{t(label)}</span>
+        <Icon size={21} strokeWidth={active ? 2.3 : 1.8} />
+        <span className={`text-[10px] leading-none ${active ? "font-semibold" : "font-medium"}`}>{t(label)}</span>
       </Link>
     );
   };
@@ -43,26 +40,24 @@ export default function BottomNav() {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-50 px-5 desk:hidden"
-      style={{ paddingBottom: "max(env(safe-area-inset-bottom), 10px)" }}
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white shadow-[0_-6px_20px_rgba(15,23,42,0.06)] desk:hidden"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <div className="glass mx-auto flex max-w-md items-stretch justify-between overflow-hidden rounded-3xl px-2">
-        {LEFT_TABS.map((tab) => <span key={tab.href} className="py-[3px]">{sideTab(tab)}</span>)}
+      <div className="mx-auto flex max-w-md items-stretch">
+        {LEFT_TABS.map(sideTab)}
 
-        {/* Book Now: a square navy block set into the bar, full height, no ring and no float */}
+        {/* Book Now: a square dark-blue block set into the bar */}
         <Link
           href="/book"
           aria-label="Book Now"
           aria-current={bookActive ? "page" : undefined}
-          className={`flex w-20 shrink-0 flex-col items-center justify-center gap-0.5 rounded-none bg-[#0c0b5d] text-white transition-colors ${
-            bookActive ? "bg-[#17168a]" : "hover:bg-[#17168a]"
-          }`}
+          className="flex w-20 shrink-0 flex-col items-center justify-center gap-0.5 bg-[#0c0b5d] text-white"
         >
-          <CalendarDays size={18} strokeWidth={2} />
+          <CalendarDays size={20} strokeWidth={2} />
           <span className="text-[10px] font-semibold leading-none tracking-wide">{t("Book Now")}</span>
         </Link>
 
-        {RIGHT_TABS.map((tab) => <span key={tab.href} className="py-[3px]">{sideTab(tab)}</span>)}
+        {RIGHT_TABS.map(sideTab)}
       </div>
     </nav>
   );

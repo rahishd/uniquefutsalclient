@@ -20,17 +20,17 @@ interface Tile {
 
 const TILES: Tile[] = [
   { label: "Book", href: "/book", icon: CalendarDays, tone: "text-brand", types: ["booking", "reminder", "payment"] },
-  { label: "Membership", href: "/member", icon: Crown, tone: "text-amber-500", types: ["membership"] },
-  { label: "Opponent", href: "/opponent", icon: Swords, tone: "text-rose-500", actions: true },
-  { label: "Points", href: "/points", icon: Star, tone: "text-yellow-500", types: ["points"] },
-  { label: "Promos", href: "/promos", icon: Tag, tone: "text-emerald-500", types: ["promo"] },
-  { label: "My stats", href: "/profile", icon: BarChart3, tone: "text-indigo-500" },
-  { label: "Tournaments", href: "/tournaments", icon: Trophy, tone: "text-orange-500", types: ["tournament"] },
-  { label: "Gamezone", href: "/gamezone", icon: Gamepad2, tone: "text-violet-500", types: ["gamezone"] },
-  { label: "Complaints", href: "/complaints", icon: MessageSquareWarning, tone: "text-rose-600", types: ["complaint"] },
-  { label: "Children's Academy", href: "/academy", icon: GraduationCap, tone: "text-teal-600", types: ["academy"] },
-  { label: "Refer & Earn", href: "/refer", icon: HeartHandshake, tone: "text-pink-600", types: ["referral"] },
-  { label: "Help", href: "/help", icon: CircleHelp, tone: "text-sky-500" },
+  { label: "Membership", href: "/member", icon: Crown, tone: "text-brand", types: ["membership"] },
+  { label: "Opponent", href: "/opponent", icon: Swords, tone: "text-brand", actions: true },
+  { label: "Points", href: "/points", icon: Star, tone: "text-brand", types: ["points"] },
+  { label: "Promos", href: "/promos", icon: Tag, tone: "text-brand", types: ["promo"] },
+  { label: "My stats", href: "/profile", icon: BarChart3, tone: "text-brand" },
+  { label: "Tournaments", href: "/tournaments", icon: Trophy, tone: "text-brand", types: ["tournament"] },
+  { label: "Gamezone", href: "/gamezone", icon: Gamepad2, tone: "text-brand", types: ["gamezone"] },
+  { label: "Complaints", href: "/complaints", icon: MessageSquareWarning, tone: "text-brand", types: ["complaint"] },
+  { label: "Children's Academy", href: "/academy", icon: GraduationCap, tone: "text-brand", types: ["academy"] },
+  { label: "Refer & Earn", href: "/refer", icon: HeartHandshake, tone: "text-brand", types: ["referral"] },
+  { label: "Help", href: "/help", icon: CircleHelp, tone: "text-brand" },
 ];
 
 const NO_UNREAD: Partial<Record<NoticeType, number>> = {};

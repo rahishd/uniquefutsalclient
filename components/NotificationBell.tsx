@@ -107,11 +107,11 @@ export default function NotificationBell() {
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
-        className="glass relative flex h-12 w-12 items-center justify-center rounded-2xl text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        className="relative flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       >
         <Bell size={22} />
         {unread > 0 && (
-          <span aria-hidden className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1 text-[11px] font-semibold text-white">
+          <span aria-hidden className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-semibold text-white">
             {badge}
           </span>
         )}
@@ -129,7 +129,7 @@ export default function NotificationBell() {
             role="dialog"
             aria-label="Notifications"
             tabIndex={-1}
-            className="absolute right-0 top-14 z-50 w-[min(22rem,calc(100vw-2.5rem))] rounded-3xl p-4 outline-none shadow-[0_20px_50px_rgba(12,11,93,0.25)] ring-1 ring-white/80"
+            className="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2.5rem))] rounded-3xl p-4 outline-none shadow-[0_20px_50px_rgba(12,11,93,0.25)] ring-1 ring-white/80"
             style={{ background: "#ffffff" }}
           >
             <div className="flex items-center justify-between">

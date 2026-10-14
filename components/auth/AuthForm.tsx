@@ -116,8 +116,8 @@ export default function AuthForm() {
       {/* brand banner */}
       <div className="relative min-h-[170px] overflow-hidden rounded-[28px] bg-gradient-to-br from-[#0c0b5d] via-[#1a1a8f] to-[#3f3fd1] p-6 text-white shadow-[0_18px_40px_-18px_rgba(12,11,93,0.8)]">
         <div className="relative z-10 max-w-[58%]">
-          <p className="text-3xl font-extrabold leading-none tracking-tight">Unique<span className="text-[#ffb35c]">.</span></p>
-          <p className="mt-0.5 text-3xl font-extrabold leading-none tracking-tight text-[#ffb35c]">Futsal</p>
+          <p className="text-3xl font-extrabold leading-none tracking-tight">Unique<span className="text-white">.</span></p>
+          <p className="mt-0.5 text-3xl font-extrabold leading-none tracking-tight text-white">Futsal</p>
           <p className="mt-3 text-sm text-white/85">Book your court,<br />right from your phone.</p>
           <span className="mt-3 inline-block rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#0c0b5d]">Live slots · Instant booking</span>
         </div>

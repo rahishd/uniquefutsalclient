@@ -3,38 +3,39 @@ import { site } from "@/lib/site";
 import AdStrip from "@/components/ads/AdStrip";
 import DeskNav from "@/components/DeskNav";
 import HeaderToggles from "@/components/HeaderToggles";
+import NotificationBell from "@/components/NotificationBell";
 
-// Company bar at the very top of every page: a navy rectangle with the white logo and name. It stays
-// pinned while the page scrolls, so the customer always sees whose app this is. The greeting sits just
-// below it on Home. In desktop mode (see `desk:` in globals.css) the bar spans the page and carries the
-// main navigation, because the bottom bar is hidden there.
+// Top bar on EVERY page: clean and white. The logo and name sit on the left with some air around them, and the
+// theme, language and notification buttons on the right. It stays pinned while the page scrolls. In desktop mode
+// (see `desk:` in globals.css) the bar spans the page and carries the main navigation, because the bottom bar is
+// hidden there.
 export default function CompanyHeader() {
   return (
-    <div className="sticky top-0 z-30 bg-[#eceaf8]/80 backdrop-blur-xl" style={{ paddingTop: "env(safe-area-inset-top)" }}>
-      <div className="mx-auto w-full max-w-md px-3 pb-2 pt-2 desk:max-w-none desk:px-10 desk:pb-3 desk:pt-3">
-        <div className="flex min-h-16 items-center gap-3 rounded-2xl bg-[#0c0b5d] px-4 py-2 shadow-[0_8px_20px_rgba(12,11,93,0.3)] desk:gap-6 desk:px-6">
-          <Link href="/" aria-label={`${site.name} home`} className="flex min-w-0 items-center gap-3 desk:shrink-0 desk:max-xl:gap-2">
-            {/* The logo picture is white on navy; blending with "lighten" keeps only the white player on the bar. */}
+    <div className="sticky top-0 z-30 border-b border-slate-100 bg-white" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+      <div className="mx-auto w-full max-w-md px-5 desk:max-w-none desk:px-10">
+        <div className="flex min-h-16 items-center gap-3 py-2 desk:gap-3 2xl:gap-6">
+          <Link href="/" aria-label={`${site.name} home`} className="flex min-w-0 items-center gap-2.5 desk:shrink-0">
+            {/* The logo picture is white on navy; it stays a small navy tile, so the player reads as a white mark. */}
             <span
               aria-hidden
-              className="h-11 w-11 shrink-0 bg-[#0c0b5d] bg-no-repeat"
+              className="h-10 w-10 shrink-0 rounded-xl bg-[#0c0b5d] bg-no-repeat"
               style={{
                 backgroundImage: "url(/logo.jpg)",
-                backgroundSize: "75px 75px",
-                backgroundPosition: "-13px -5px",
+                backgroundSize: "68px 68px",
+                backgroundPosition: "-12px -4px",
                 backgroundBlendMode: "lighten",
               }}
             />
             <span className="min-w-0">
-              <span className="block text-lg desk:whitespace-nowrap font-bold uppercase leading-tight tracking-wide text-white">{site.name}</span>
-              <span className="block truncate text-[10px] leading-snug text-white/75 desk:max-xl:hidden">1st Advanced tech Driven futsal In nepal</span>
-              <span className="block truncate text-[10px] leading-snug text-white/75 desk:max-xl:hidden">Designed and Developed by: Rahish Dumre</span>
+              <span className="block truncate text-lg font-extrabold uppercase leading-tight tracking-wide text-brand desk:whitespace-nowrap desk:max-xl:hidden">{site.name}</span>
+              <span className="block truncate text-[10px] leading-snug text-slate-500 desk:max-2xl:hidden">1st Advanced tech Driven futsal In nepal</span>
             </span>
           </Link>
           <DeskNav />
           <HeaderToggles />
+          <NotificationBell />
         </div>
-        <div className="empty:hidden mt-2"><AdStrip placement="header" /></div>
+        <div className="empty:hidden pb-2"><AdStrip placement="header" /></div>
       </div>
     </div>
   );

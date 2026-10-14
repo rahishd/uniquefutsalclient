@@ -15,7 +15,7 @@ export function LangSync() {
 }
 
 const round =
-  "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-white ring-1 ring-white/25 transition hover:bg-white/25 active:scale-95";
+  "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 active:scale-95";
 
 // Two round buttons on the right of the header. Each one shows the OTHER option and switches to it when tapped:
 // the moon turns dark mode on (and becomes a sun), and "NP" switches to Nepali (and becomes "EN").

@@ -22,12 +22,20 @@ export interface GalleryPhoto {
   imageUrl: string;
 }
 
+// A company or institution the venue works with (Corporate Network on Home).
+export interface Partner {
+  id: string;
+  name: string;
+  imageUrl: string;
+}
+
 export interface SiteContent {
   gallery: GalleryPhoto[];
+  partners: Partner[];
   ads: { header: AdItem[]; footer: AdItem[]; popup: AdItem[]; inline: AdItem[] };
 }
 
-const EMPTY: SiteContent = { gallery: [], ads: { header: [], footer: [], popup: [], inline: [] } };
+const EMPTY: SiteContent = { gallery: [], partners: [], ads: { header: [], footer: [], popup: [], inline: [] } };
 const REFRESH_MS = 60_000;
 
 // One shared copy for every component, fetched once and refreshed every minute while the app is open.
@@ -39,8 +47,13 @@ async function load() {
   try {
     const next = await api<SiteContent & { serverTime: string }>("/content/active", { auth: "none" });
     // only replace when something changed, so a rotating ad is not restarted every minute
-    if (JSON.stringify(next.ads) !== JSON.stringify(current.ads) || JSON.stringify(next.gallery) !== JSON.stringify(current.gallery)) {
-      current = { gallery: next.gallery, ads: next.ads };
+    const partners = next.partners ?? [];
+    if (
+      JSON.stringify(next.ads) !== JSON.stringify(current.ads) ||
+      JSON.stringify(next.gallery) !== JSON.stringify(current.gallery) ||
+      JSON.stringify(partners) !== JSON.stringify(current.partners)
+    ) {
+      current = { gallery: next.gallery, partners, ads: next.ads };
       listeners.forEach((l) => l());
     }
   } catch {

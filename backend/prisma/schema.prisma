@@ -854,6 +854,21 @@ model SiteGallery {
   @@index([visible, sortOrder])
 }
 
+// Corporate Network: logos of the companies and institutions the venue works with. Staff manage them in the admin portal
+// (Corporate Network); the customer app shows them as a moving strip on Home. The picture lives in ContentMedia.
+model SitePartner {
+  id        String   @id @default(cuid())
+  name      String
+  mediaId   String   @unique
+  sortOrder Int      @default(0)
+  visible   Boolean  @default(true)
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([visible, sortOrder])
+}
+
 model SiteAd {
   id                String   @id @default(cuid())
   title             String

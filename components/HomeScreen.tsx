@@ -2,7 +2,6 @@ import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import HeaderInfo from "@/components/HeaderInfo";
 import HomeSearch from "@/components/HomeSearch";
-import NotificationBell from "@/components/NotificationBell";
 import UserBadge from "@/components/UserBadge";
 import QuickRebook from "@/components/QuickRebook";
 import PopularGrid from "@/components/PopularGrid";
@@ -12,6 +11,7 @@ import KidSkills from "@/components/KidSkills";
 import WhatsAppChat from "@/components/WhatsAppChat";
 import AdStrip from "@/components/ads/AdStrip";
 import GallerySection from "@/components/ads/GallerySection";
+import ScrollBackdrop from "@/components/ScrollBackdrop";
 
 // Phone and portrait tablet: one column, in the `order-N` order below.
 // Desktop mode (`desk:`, see globals.css): main content on the left, a sticky sidebar on the right (date and
@@ -20,17 +20,18 @@ import GallerySection from "@/components/ads/GallerySection";
 export default function HomeScreen() {
   return (
     <div className="flex flex-col desk:grid desk:grid-cols-12 desk:items-start desk:gap-x-10">
+      {/* photo background that changes as the page scrolls (fixed, behind everything, ignores clicks) */}
+      <ScrollBackdrop />
       <div className="contents desk:col-span-8 desk:block">
-        {/* Header: user info left, notifications right */}
+        {/* Who is signed in. The bell lives in the page header (components/CompanyHeader.tsx). */}
         <header className="order-1 flex items-center justify-between">
           <UserBadge />
-          <NotificationBell />
         </header>
 
         {/* Promo banner */}
         <section className="relative order-5 mt-5 min-h-[230px] overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c0b5d] via-[#16167f] to-[#2a2aa8] p-5 text-white shadow-[0_10px_30px_rgba(12,11,93,0.35)] desk:mt-6 desk:min-h-[300px] desk:p-10">
           <div className="relative z-10 max-w-[56%] desk:max-w-[52%]">
-            <p className="text-xs font-medium text-orange-300 desk:text-sm">Up to 25% off today</p>
+            <p className="text-xs font-medium text-white/80 desk:text-sm">Up to 25% off today</p>
             <h2 className="mt-1 text-xl font-medium leading-snug desk:mt-2 desk:text-4xl desk:leading-tight">Exclusive deals on your next game</h2>
             <Link href="/book" className="glass-btn mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium text-white desk:mt-7 desk:px-7 desk:py-3.5 desk:text-base">
               <CalendarDays size={16} /> Book now

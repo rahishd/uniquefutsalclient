@@ -30,9 +30,10 @@ const mediaUrl = (id: string) => `/api/content/media/${id}`;
 
 export class ContentService {
   async active(now: Date = new Date()) {
-    const [gallery, ads] = await Promise.all([
+    const [gallery, ads, partners] = await Promise.all([
       prisma.siteGallery.findMany({ where: { visible: true }, orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }], take: 100 }),
       prisma.siteAd.findMany({ where: { active: true }, orderBy: [{ priority: "desc" }, { createdAt: "asc" }], take: 100 }),
+      prisma.sitePartner.findMany({ where: { visible: true }, orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], take: 100 }),
     ]);
     const live = ads.filter((a) => isLive(a, now));
     const by = (p: Placement) =>
@@ -44,6 +45,7 @@ export class ContentService {
       serverTime: now.toISOString(),
       gallery: gallery.map((g) => ({ id: g.id, title: g.title, caption: g.caption, orientation: g.orientation, imageUrl: mediaUrl(g.mediaId) })),
       ads: { header: by("header"), footer: by("footer"), popup: by("popup"), inline: by("inline") },
+      partners: partners.map((p) => ({ id: p.id, name: p.name, imageUrl: mediaUrl(p.mediaId) })),
     };
   }
 

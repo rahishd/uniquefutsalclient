@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0c0b5d",
+  themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -39,7 +39,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <LangSync />
         <PageTranslator />
         <CompanyHeader />
-        <main className="mx-auto w-full max-w-md px-5 pb-40 pt-5 min-h-[60vh] desk:max-w-none desk:px-10 desk:pb-16 desk:pt-8">{children}</main>
+        <main className="mx-auto w-full max-w-md px-5 pb-28 pt-5 min-h-[60vh] desk:max-w-none desk:px-10 desk:pb-16 desk:pt-8">{children}</main>
         <FooterGate />
         <BottomNav />
         <SwRegister />

@@ -4,6 +4,7 @@ import { Mail, MapPin, PhoneCall } from "lucide-react";
 import { FaFacebookF, FaTiktok, FaWhatsapp } from "react-icons/fa6";
 import { site } from "@/lib/site";
 import { useT } from "@/lib/i18n";
+import PartnersStrip from "@/components/PartnersStrip";
 
 
 function Social({ href, label, children }: { href: string; label: string; children: React.ReactNode }) {
@@ -25,16 +26,19 @@ export default function Footer() {
   const t = useT();
   return (
     <footer className="mx-auto w-full max-w-md px-5 pb-40 pt-12 desk:max-w-none desk:px-10 desk:pb-14 desk:pt-6">
+      {/* the organisations the venue works with: between the promo codes above and the founder message */}
+      <PartnersStrip />
+
       <section aria-label="A message from the founder" className="glass mb-10 overflow-hidden rounded-3xl">
-        <div className="relative bg-gradient-to-b from-[#005f7e] via-[#0a7899] to-[#3e9bb5] text-white">
+        <div className="relative bg-slate-100 text-slate-700">
           {/* big quotation marks, as in the template */}
-          <span aria-hidden className="pointer-events-none absolute left-3 top-0 select-none font-serif text-[8rem] leading-none text-white/25 desk:left-8 desk:text-[13rem]">“</span>
-          <span aria-hidden className="pointer-events-none absolute bottom-0 left-4 select-none font-serif text-[8rem] leading-[0.6] text-white/25 desk:bottom-6 desk:left-auto desk:right-[38%] desk:text-[13rem]">”</span>
+          <span aria-hidden className="pointer-events-none absolute left-3 top-0 select-none font-serif text-[8rem] leading-none text-slate-300 desk:left-8 desk:text-[13rem]">“</span>
+          <span aria-hidden className="pointer-events-none absolute bottom-0 left-4 select-none font-serif text-[8rem] leading-[0.6] text-slate-300 desk:bottom-6 desk:left-auto desk:right-[38%] desk:text-[13rem]">”</span>
 
           <div className="relative grid desk:grid-cols-[1.55fr_1fr]">
             <div className="space-y-3 px-6 pb-6 pt-16 text-sm leading-relaxed desk:px-12 desk:pb-12 desk:pt-24 desk:text-[17px] desk:leading-8">
-              <h2 className="text-xl font-bold desk:text-3xl">A Message from the Founder</h2>
-              <p className="font-semibold">Greetings to all our valued customers and players,</p>
+              <h2 className="text-xl font-bold text-slate-900 desk:text-3xl">A Message from the Founder</h2>
+              <p className="font-semibold text-slate-900">Greetings to all our valued customers and players,</p>
               <p>
                 I am Rahish Dumre, Founder of Unique Futsal. My vision for Unique Futsal began in 2017 with a simple idea: to create an indoor futsal facility that stands apart from others—not only through its facilities but also through the experience and relationships it builds, Since their name &quot;Unique&quot; was born. Established in 2018, Unique Futsal was founded on the principles of comfort, refreshment, and a welcoming, family-like environment.
               </p>
@@ -47,14 +51,10 @@ export default function Footer() {
               <p>Thank you for your continued trust and support. Unique Futsal is not just a venue; it is a community we build together.</p>
             </div>
 
-            <div className="relative flex items-end justify-center">
+            {/* a cut-out photo (transparent background), standing on the bottom edge of the card */}
+            <div className="relative flex items-end justify-center px-6 desk:px-0 desk:pr-10">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/founder.webp"
-                alt="Rahish Dumre, Founder of Unique Futsal"
-                className="w-3/4 max-w-[340px] object-contain object-bottom desk:w-full desk:max-w-none"
-                style={{ maskImage: "linear-gradient(to right, transparent 0, #000 22%)", WebkitMaskImage: "linear-gradient(to right, transparent 0, #000 22%)" }}
-              />
+              <img src="/founder.webp" alt="Rahish Dumre, Founder of Unique Futsal" className="block w-3/4 max-w-[340px] object-contain object-bottom desk:w-full desk:max-w-[460px]" />
             </div>
           </div>
         </div>
