@@ -64,3 +64,33 @@ export async function setFollowing(matchId: string, on: boolean): Promise<void> 
   await api(`/tournaments/matches/${matchId}/follow`, { method: on ? "PUT" : "DELETE" });
   followStore.patch((ids) => (on ? [...new Set([...ids, matchId])] : ids.filter((x) => x !== matchId)));
 }
+
+// ---- team registration for one tournament (the shareable link: /tournaments/<id>/register) ----
+export interface RegistrationInfo {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  prizePool: number;
+  format?: string;
+  hosted: { hostName: string | null } | null;
+  minPlayers: number;
+  maxPlayers: number;
+  registered: number;
+  limit: number | null; // null = no limit on teams
+  spotsLeft: number | null;
+  open: boolean;
+  closedReason: string | null;
+}
+
+export const fetchRegistrationInfo = (id: string) => api<RegistrationInfo>(`/tournaments/${encodeURIComponent(id)}/registration`, { auth: "none" });
+
+export const submitTeam = (id: string, team: { teamName: string; captainName: string; contactPhone: string; contactEmail: string; players: string[] }) =>
+  api<{ id: string; teamName: string; status: string; tournamentName: string }>(`/tournaments/${encodeURIComponent(id)}/register`, { method: "POST", body: team, auth: "none" });
+
+export const registrationPath = (id: string) => `/tournaments/${encodeURIComponent(id)}/register`;
+// The full address to share. Built in the browser, so it is always the address the customer is on.
+export const registrationLink = (id: string) => `${typeof window !== "undefined" ? window.location.origin : ""}${registrationPath(id)}`;
+
+// Is a tournament still worth offering registration for (not finished)?
+export const canRegister = (t: { status?: string; endDate: string }) => t.status !== "completed";

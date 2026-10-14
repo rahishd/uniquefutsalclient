@@ -3,12 +3,15 @@ import tournamentController from "./tournament.controller";
 import adminOnly from "../../middlewares/admin.middleware";
 import { optionalAuthMiddleware } from "../../middlewares/auth.middleware";
 import tieSheet from "./tournament.tiesheet";
+import registerRoutes from "./tournament.register";
 
 const router = Router();
 
 // Tournament routes
 // Customer app: the current tournament with its tie-sheet (/current, /:id/tiesheet)
 router.use(tieSheet);
+// Team registration for one tournament, from a shareable link (GET /:id/registration, POST /:id/register)
+router.use(registerRoutes);
 
 // Public lists return a safe summary; staff (with a token) get everything
 router.get("/", optionalAuthMiddleware, tournamentController.getAllTournaments);

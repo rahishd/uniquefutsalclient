@@ -7,7 +7,8 @@ import TieSheet from "@/components/TieSheet";
 import { formatRs } from "@/lib/booking";
 import { fmtDay } from "@/lib/promos";
 import { site } from "@/lib/site";
-import { HostedEvent, eventsStore, hoursLabel, tournamentStore } from "@/lib/tournament";
+import { HostedEvent, canRegister, eventsStore, hoursLabel, registrationPath, tournamentStore } from "@/lib/tournament";
+import ShareRegistration from "@/components/tournament/ShareRegistration";
 
 // Tournaments the venue hosts for a manager: the host and the hours of each day
 function EventList({ events }: { events: HostedEvent[] }) {
@@ -18,9 +19,23 @@ function EventList({ events }: { events: HostedEvent[] }) {
           <p className="font-medium">{e.name}</p>
           <p className="text-xs text-slate-400">{fmtDay(e.startDate)}{e.startDate !== e.endDate ? ` – ${fmtDay(e.endDate)}` : ""}{e.hostName ? ` · Hosted by ${e.hostName}` : ""}</p>
           <ul className="mt-3 space-y-1 text-sm">{e.days.map((d) => <li key={d.date} className="flex justify-between"><span>{fmtDay(d.date)}</span><span className="text-slate-500">{hoursLabel(d)}</span></li>)}</ul>
+          <RegisterBox id={e.id} name={e.name} />
         </li>
       ))}
     </ul>
+  );
+}
+
+// The way in for a team: register for this tournament, and the link to send to other teams.
+function RegisterBox({ id, name }: { id: string; name: string }) {
+  return (
+    <div className="mt-4 space-y-3 rounded-2xl bg-white/60 p-4">
+      <Link href={registrationPath(id)} className="glass-btn flex w-full items-center justify-center rounded-full py-3 text-sm font-semibold text-white">Register your team</Link>
+      <div>
+        <p className="mb-2 text-center text-xs text-slate-500">Registration link for this tournament</p>
+        <ShareRegistration id={id} name={name} />
+      </div>
+    </div>
   );
 }
 
@@ -92,6 +107,14 @@ export default function TournamentsPage() {
           </div>
         )}
       </dl>
+
+      {canRegister(t) && (
+        <section aria-label="Register a team" className="glass mt-5 rounded-3xl p-5">
+          <h2 className="text-lg font-medium">Register your team</h2>
+          <p className="mt-1 text-sm text-slate-500">Teams can sign up for {t.name} here. Each tournament has its own registration link that you can share.</p>
+          <RegisterBox id={t.id} name={t.name} />
+        </section>
+      )}
 
       {t.hosted && t.hosted.days.length > 0 && (
         <section className="mt-6" aria-label="Schedule">

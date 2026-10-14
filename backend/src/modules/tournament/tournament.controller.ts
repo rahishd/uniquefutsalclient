@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { registerTeam } from "./tournament.register";
 import { AuthRequest } from "../../middlewares/auth.middleware";
 import tournamentService from "./tournament.service";
 import { AuditService } from "../audit";
@@ -107,14 +108,10 @@ class TournamentController {
 
   async submitRegistration(req: Request, res: Response, next: NextFunction) {
     try {
-      const registration = await tournamentService.createRegistration(req.body);
-      res.status(201).json({ 
-        success: true, 
-        data: {
-          ...registration,
-          players: JSON.parse(registration.players)
-        } 
-      });
+      // the same checks as the shareable registration link (a real tournament, open, valid team, no duplicates)
+      const { tournamentId, ...team } = req.body ?? {};
+      const registration = await registerTeam(String(tournamentId ?? ""), team);
+      res.status(201).json({ success: true, data: registration });
     } catch (error) {
       next(error);
     }
