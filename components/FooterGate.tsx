@@ -11,7 +11,7 @@ export default function FooterGate() {
   return (
     <>
       <div className="mx-auto w-full max-w-md px-5 desk:max-w-none desk:px-10"><AdStrip placement="footer" /></div>
-      {pathname === "/" ? <Footer /> : <div className="h-36 desk:h-8" aria-hidden />}
+      {pathname === "/" ? <Footer /> : <div className="h-24 desk:h-8" aria-hidden />}
     </>
   );
 }

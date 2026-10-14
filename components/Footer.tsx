@@ -25,7 +25,7 @@ const heading = "text-xs font-bold uppercase tracking-[0.2em] text-[#0c0b5d]";
 export default function Footer() {
   const t = useT();
   return (
-    <footer className="mx-auto w-full max-w-md px-5 pb-40 pt-12 desk:max-w-none desk:px-10 desk:pb-14 desk:pt-6">
+    <footer className="mx-auto w-full max-w-md px-5 pb-28 pt-6 desk:max-w-none desk:px-10 desk:pb-14 desk:pt-6">
       {/* the organisations the venue works with: between the promo codes above and the founder message */}
       <PartnersStrip />
 

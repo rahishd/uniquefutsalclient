@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bell, Check, ChevronDown, ChevronRight, Crown, Download, Loader2, LogOut, Pencil, Star, Trophy, UserRound, X } from "lucide-react";
+import { Bell, Camera, Check, ChevronDown, ChevronRight, Crown, Download, Loader2, LogOut, Pencil, Star, Trophy, UserRound, X } from "lucide-react";
 import { downloadPdf } from "@/lib/pdf";
 import { errorText } from "@/lib/api";
 import { openSignIn, signOut, useSession } from "@/lib/session";
@@ -11,7 +11,7 @@ import { setPref, usePrefs } from "@/lib/prefs";
 import { useLang, useT, type Lang } from "@/lib/i18n";
 import { fmtPts } from "@/lib/points";
 import { loyaltyStore, progressPct } from "@/lib/loyalty";
-import { POSITIONS, gameplayStore, paymentsStore, profileStore, saveProfile, type PaymentItem } from "@/lib/profile";
+import { POSITIONS, gameplayStore, paymentsStore, profileStore, removeAvatar, saveProfile, squarePhoto, uploadAvatar, type PaymentItem } from "@/lib/profile";
 import { cancelBooking, formatHour, myBookingsStore, parseKey, startsAtMs, type Booking } from "@/lib/booking";
 import { cancelGz, myGzStore, type GzBooking } from "@/lib/gamezone";
 import ProfileAvatar from "@/components/captain/ProfileAvatar";
@@ -159,6 +159,9 @@ function RegisteredProfile() {
   const [draft, setDraft] = useState({ name: "", email: "", location: "", position: "" });
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const photoInput = useRef<HTMLInputElement>(null);
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [cancelError, setCancelError] = useState<string | null>(null);
   const [openBookings, setOpenBookings] = useState(false);
@@ -191,6 +194,33 @@ function RegisteredProfile() {
   const registeredSince = new Date(profile.registeredAt).toLocaleDateString("en-GB", { month: "short", year: "numeric" });
   const pct = loy ? progressPct(loy) : 0;
   const canSave = draft.name.trim().length >= 2;
+
+  async function choosePhoto(file: File | null) {
+    if (!file || photoBusy) return;
+    setPhotoBusy(true);
+    setPhotoError(null);
+    try {
+      await uploadAvatar(await squarePhoto(file));
+    } catch (err) {
+      setPhotoError(errorText(err));
+    } finally {
+      setPhotoBusy(false);
+      if (photoInput.current) photoInput.current.value = "";
+    }
+  }
+
+  async function dropPhoto() {
+    if (photoBusy) return;
+    setPhotoBusy(true);
+    setPhotoError(null);
+    try {
+      await removeAvatar();
+    } catch (err) {
+      setPhotoError(errorText(err));
+    } finally {
+      setPhotoBusy(false);
+    }
+  }
 
   async function cancel(it: Item) {
     setCancelError(null);
@@ -320,11 +350,27 @@ function RegisteredProfile() {
       {/* Identity */}
       <section className="glass rounded-3xl p-5 desk:col-span-2">
         <div className="flex items-center gap-4">
-          <ProfileAvatar name={profile.name} captain={captainMode} size={64} />
+          {/* tap the picture to choose a photo from the phone's gallery or camera */}
+          <div className="relative shrink-0">
+            <ProfileAvatar name={profile.name} captain={captainMode} size={72} src={profile.avatar} />
+            <button
+              type="button"
+              onClick={() => photoInput.current?.click()}
+              disabled={photoBusy}
+              aria-label={profile.avatar ? "Change profile photo" : "Add a profile photo"}
+              className="absolute -bottom-1 -left-1 flex h-8 w-8 items-center justify-center rounded-full bg-brand text-white shadow ring-2 ring-white disabled:opacity-60"
+            >
+              {photoBusy ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />}
+            </button>
+            <input ref={photoInput} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" aria-label="Profile photo" onChange={(e) => void choosePhoto(e.target.files?.[0] ?? null)} />
+          </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-lg font-medium">{profile.name}</p>
             <p className="text-sm text-slate-500">{profile.phone}</p>
             <p className="text-xs text-slate-400">ID {profile.customerCode} · Since {registeredSince}</p>
+            {profile.avatar && (
+              <button type="button" onClick={() => void dropPhoto()} disabled={photoBusy} className="mt-1 text-xs font-medium text-rose-500 disabled:opacity-60">Remove photo</button>
+            )}
           </div>
           {!editing && (
             <button
@@ -337,6 +383,8 @@ function RegisteredProfile() {
             </button>
           )}
         </div>
+
+        {photoError && <p role="alert" className="mt-3 rounded-2xl bg-rose-500/10 px-4 py-3 text-sm text-rose-600">{photoError}</p>}
 
         {editing && (
           <form className="mt-5 space-y-3" onSubmit={save}>

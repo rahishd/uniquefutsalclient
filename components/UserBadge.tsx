@@ -19,7 +19,7 @@ export default function UserBadge() {
   return (
     <div className="flex min-w-0 items-center gap-3">
     <Link href="/profile" className="flex items-center gap-3">
-      {session ? <ProfileAvatar name={name} captain={captain} size={56} /> : <span className="h-14 w-14 rounded-full bg-white/60" />}
+      {session ? <ProfileAvatar name={name} captain={captain} size={56} src={session.registered ? session.avatar : null} /> : <span className="h-14 w-14 rounded-full bg-white/60" />}
       <span>
         <span className="block text-sm text-slate-400">
           {captain ? t("Captain") : t("Hello")} <span aria-hidden>👋</span>

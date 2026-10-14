@@ -1,13 +1,20 @@
-// Round profile picture (initial for now) with the gold (C) badge when in Captain mode.
-export default function ProfileAvatar({ name, captain, size = 56 }: { name: string; captain: boolean; size?: number }) {
+import { mediaUrl } from "@/lib/content";
+
+// Round profile picture (the customer's photo, or their initial) with the gold (C) badge when in Captain mode.
+export default function ProfileAvatar({ name, captain, size = 56, src }: { name: string; captain: boolean; size?: number; src?: string | null }) {
   return (
     <span className="relative inline-block shrink-0" style={{ width: size, height: size }}>
-      <span
-        className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-[#2a2a9c] to-brand font-semibold text-white shadow-md ring-2 ring-white"
-        style={{ fontSize: size * 0.34 }}
-      >
-        {name.slice(0, 1).toUpperCase()}
-      </span>
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={mediaUrl(src)} alt={name} draggable={false} className="h-full w-full rounded-full object-cover shadow-md ring-2 ring-white" />
+      ) : (
+        <span
+          className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-[#2a2a9c] to-brand font-semibold text-white shadow-md ring-2 ring-white"
+          style={{ fontSize: size * 0.34 }}
+        >
+          {name.slice(0, 1).toUpperCase()}
+        </span>
+      )}
       {captain && (
         <span
           role="img"

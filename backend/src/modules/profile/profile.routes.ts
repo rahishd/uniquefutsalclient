@@ -7,6 +7,7 @@ import validateRequest from "../../middlewares/validate.middleware";
 import { AppError } from "../../middlewares/error.middleware";
 import { prisma } from "../../config/db";
 import { todayKey } from "../../utils/dates";
+import sharp from "sharp";
 
 const router = Router();
 router.use(authMiddleware); // everything here is about the signed-in customer only
@@ -17,6 +18,57 @@ const LANGUAGES = ["en", "ne"];
 async function prefsFor(userId: string) {
   return prisma.userPrefs.upsert({ where: { userId }, update: {}, create: { userId } });
 }
+
+// ---- profile picture ----
+// The picture is decoded for real, turned into a 480 x 480 square WebP (location data is dropped) and kept in the database
+// like the site pictures, so no outside storage is needed. A new picture gets a new id, so old copies never show from cache.
+const AVATAR_DATA_URL = /^data:image\/(?:jpeg|jpg|png|webp);base64,([A-Za-z0-9+/=\s]+)$/i;
+const AVATAR_MAX_BYTES = 6 * 1024 * 1024;
+const AVATAR_PATH = "/api/content/media/";
+const ownMediaId = (avatar: string | null) => (avatar && avatar.startsWith(AVATAR_PATH) ? avatar.slice(AVATAR_PATH.length) : null);
+
+router.put(
+  "/profile/avatar",
+  asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = req.user!.id;
+    const m = AVATAR_DATA_URL.exec(String((req.body as { image?: unknown })?.image ?? "").trim());
+    if (!m) throw new AppError(400, "The picture must be a JPG, PNG or WebP image.");
+    const raw = Buffer.from(m[1], "base64");
+    if (raw.length === 0 || raw.length > AVATAR_MAX_BYTES) throw new AppError(400, "That picture is too large. The limit is 6 MB.");
+    let out: { data: Buffer; width: number; height: number };
+    try {
+      const r = await sharp(raw, { limitInputPixels: 80_000_000 })
+        .rotate()
+        .resize({ width: 480, height: 480, fit: "cover", position: "attention" })
+        .webp({ quality: 85 })
+        .toBuffer({ resolveWithObject: true });
+      out = { data: r.data, width: r.info.width, height: r.info.height };
+    } catch {
+      throw new AppError(400, "That picture could not be read. Please choose a different image.");
+    }
+    const user = await prisma.user.findUnique({ where: { phoneNumber: id }, select: { avatar: true } });
+    if (!user) throw new AppError(404, "User not found");
+    const media = await prisma.contentMedia.create({ data: { mime: "image/webp", data: out.data, width: out.width, height: out.height, bytes: out.data.length, createdBy: id } });
+    const avatar = `${AVATAR_PATH}${media.id}`;
+    await prisma.user.update({ where: { phoneNumber: id }, data: { avatar } });
+    const old = ownMediaId(user.avatar);
+    if (old) await prisma.contentMedia.deleteMany({ where: { id: old, createdBy: id } });
+    res.json(ApiResponseUtil.success(200, "Profile picture saved", { avatar }));
+  }),
+);
+
+router.delete(
+  "/profile/avatar",
+  asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = req.user!.id;
+    const user = await prisma.user.findUnique({ where: { phoneNumber: id }, select: { avatar: true } });
+    if (!user) throw new AppError(404, "User not found");
+    await prisma.user.update({ where: { phoneNumber: id }, data: { avatar: null } });
+    const old = ownMediaId(user.avatar);
+    if (old) await prisma.contentMedia.deleteMany({ where: { id: old, createdBy: id } });
+    res.json(ApiResponseUtil.success(200, "Profile picture removed", { avatar: null }));
+  }),
+);
 
 // "UF-C-" + the last five digits of the mobile number. For display only; the phone number is the real identity.
 const customerCode = (phone: string) => `UF-C-${phone.slice(-5)}`;

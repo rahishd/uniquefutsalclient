@@ -9,7 +9,7 @@ import { api, ApiError } from "@/lib/api";
 import { getTokens, setTokens, subscribeTokens } from "@/lib/auth-token";
 
 export type Session =
-  | { registered: true; id: string; name: string; phone: string }
+  | { registered: true; id: string; name: string; phone: string; avatar?: string | null }
   | { registered: false };
 
 const USER_KEY = "uf-user-v1"; // last known account, so the screen does not flash while /auth/me loads
@@ -25,9 +25,10 @@ interface ApiUser {
   name: string;
   phoneNumber: string;
   role: string;
+  avatar?: string | null;
 }
 
-const toSession = (u: ApiUser): Session => ({ registered: true, id: u.phoneNumber, name: u.name || "Player", phone: u.phoneNumber });
+const toSession = (u: ApiUser): Session => ({ registered: true, id: u.phoneNumber, name: u.name || "Player", phone: u.phoneNumber, avatar: u.avatar ?? null });
 
 function emit() {
   listeners.forEach((l) => l());
@@ -133,6 +134,14 @@ export async function signUp(input: { name: string; phone: string; password: str
 export function updateSessionName(name: string) {
   if (cached && cached.registered) {
     cached = { ...cached, name };
+    saveUser(cached);
+    emit();
+  }
+}
+
+export function updateSessionAvatar(avatar: string | null) {
+  if (cached && cached.registered) {
+    cached = { ...cached, avatar };
     saveUser(cached);
     emit();
   }
