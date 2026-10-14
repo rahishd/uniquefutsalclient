@@ -40,6 +40,7 @@ export interface Tournament {
   endDate: string;
   teams: number;
   prizePool: number;
+  entryFee?: number; // rupees per team, 0 = free entry
   prizes?: { first?: string; second?: string; third?: string };
   format?: string;
   // an event the venue hosts for a manager: no team sign-up, just the host and the hours of each day
@@ -50,7 +51,7 @@ export interface Tournament {
 const h12 = (h: number) => `${h % 24 % 12 || 12} ${h % 24 < 12 ? "AM" : "PM"}`;
 export const hoursLabel = (d: { startHour: number; endHour: number }) => `${h12(d.startHour)} to ${h12(d.endHour)}`;
 
-export interface HostedEvent { id: string; name: string; hostName: string | null; startDate: string; endDate: string; days: { date: string; startHour: number; endHour: number }[] }
+export interface HostedEvent { id: string; name: string; hostName: string | null; entryFee?: number; startDate: string; endDate: string; days: { date: string; startHour: number; endHour: number }[] }
 export const eventsStore = createRemoteStore<HostedEvent[]>(() => api<HostedEvent[]>("/tournaments/events", { auth: "none" }), { pollMs: 60000 });
 
 export const tournamentStore = createRemoteStore<Tournament | null>(() => api<Tournament | null>("/tournaments/current", { auth: "none" }), { pollMs: 30000 });
@@ -72,10 +73,9 @@ export interface RegistrationInfo {
   startDate: string;
   endDate: string;
   prizePool: number;
+  entryFee: number; // rupees per team, 0 = free entry
   format?: string;
   hosted: { hostName: string | null } | null;
-  minPlayers: number;
-  maxPlayers: number;
   registered: number;
   limit: number | null; // null = no limit on teams
   spotsLeft: number | null;
@@ -85,7 +85,7 @@ export interface RegistrationInfo {
 
 export const fetchRegistrationInfo = (id: string) => api<RegistrationInfo>(`/tournaments/${encodeURIComponent(id)}/registration`, { auth: "none" });
 
-export const submitTeam = (id: string, team: { teamName: string; captainName: string; contactPhone: string; contactEmail: string; players: string[] }) =>
+export const submitTeam = (id: string, team: { teamName: string; captainName: string; contactPhone: string; contactEmail: string }) =>
   api<{ id: string; teamName: string; status: string; tournamentName: string }>(`/tournaments/${encodeURIComponent(id)}/register`, { method: "POST", body: team, auth: "none" });
 
 export const registrationPath = (id: string) => `/tournaments/${encodeURIComponent(id)}/register`;

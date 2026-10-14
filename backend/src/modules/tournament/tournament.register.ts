@@ -8,13 +8,13 @@ import { todayKey } from "../../utils/dates";
 
 // Team registration for ONE tournament, from a link that can be shared (the customer site: /tournaments/<id>/register).
 // Open to guests as well: a captain only needs the team name, a mobile number and the player names. Contact details are
-// never shown back to anyone except staff in the admin portal.
-export const MIN_PLAYERS = 5;
-export const MAX_PLAYERS = 12;
+// never shown back to anyone except staff in the admin portal. The team registers as a whole: players are not listed one by
+// one (a list may still be sent, for example by older apps, and is kept as given).
+export const MAX_PLAYERS = 30;
 const PHONE = /^9\d{9}$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-type T = { id: string; name: string; startDate: string; endDate: string; isActive: boolean; status: string; maxTeams: number; prizePool: number; hostedEvent: boolean; hostName: string | null; description: string | null };
+type T = { id: string; name: string; startDate: string; endDate: string; isActive: boolean; status: string; maxTeams: number; prizePool: number; entryFee: number; hostedEvent: boolean; hostName: string | null; description: string | null };
 
 const counted = { status: { not: "rejected" } } as const;
 
@@ -55,10 +55,7 @@ export async function registerTeam(tournamentId: string, input: TeamInput) {
   if (!PHONE.test(phone)) throw new AppError(400, "Enter a 10-digit mobile number starting with 9.");
   if (email && !EMAIL.test(email)) throw new AppError(400, "Enter a valid email, or leave it empty.");
   const raw = Array.isArray(input.players) ? input.players : [];
-  const players = raw.map((p) => clean(p, 40)).filter(Boolean);
-  if (players.length < MIN_PLAYERS) throw new AppError(400, `Add at least ${MIN_PLAYERS} players, including the captain.`);
-  if (players.length > MAX_PLAYERS) throw new AppError(400, `A team can have at most ${MAX_PLAYERS} players.`);
-  if (new Set(players.map((p) => p.toLowerCase())).size !== players.length) throw new AppError(400, "Each player name must be different.");
+  const players = raw.map((p) => clean(p, 40)).filter(Boolean).slice(0, MAX_PLAYERS);
 
   const clash = await prisma.registration.findFirst({
     where: { tournamentId, ...counted, OR: [{ teamName: { equals: teamName, mode: "insensitive" } }, { contactPhone: phone }] },
@@ -106,9 +103,8 @@ router.get(
     }
     res.json(
       ApiResponseUtil.success(200, "Registration", {
-        id: t.id, name: t.name, startDate: t.startDate, endDate: t.endDate, prizePool: t.prizePool, format,
+        id: t.id, name: t.name, startDate: t.startDate, endDate: t.endDate, prizePool: t.prizePool, entryFee: t.entryFee, format,
         hosted: t.hostedEvent ? { hostName: t.hostName } : null,
-        minPlayers: MIN_PLAYERS, maxPlayers: MAX_PLAYERS,
         registered: s.registered, limit: s.limit, spotsLeft: s.spotsLeft, open: s.open, closedReason: s.closedReason,
       }),
     );

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, CheckCircle2, ChevronLeft, Loader2, Plus, Trophy, Users, X } from "lucide-react";
+import { Banknote, CalendarDays, CheckCircle2, ChevronLeft, Loader2, Trophy, Users } from "lucide-react";
 import { errorText } from "@/lib/api";
 import { formatRs } from "@/lib/booking";
 import { fmtDay } from "@/lib/promos";
@@ -24,7 +24,6 @@ export default function RegisterPage({ id }: { id: string }) {
   const captainName = captainInput ?? (session?.registered ? session.name : "");
   const phone = phoneInput ?? (session?.registered ? session.phone : "");
   const [email, setEmail] = useState("");
-  const [players, setPlayers] = useState<string[]>(["", "", "", "", ""]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<{ teamName: string } | null>(null);
@@ -45,11 +44,8 @@ export default function RegisterPage({ id }: { id: string }) {
   }
   if (!info) return <div className="h-96 animate-pulse rounded-3xl bg-white/40" aria-label="Loading" />;
 
-  const min = info.minPlayers;
-  const max = info.maxPlayers;
-  const filled = players.map((p) => p.trim()).filter(Boolean);
   const phoneOk = /^9\d{9}$/.test(phone);
-  const ready = teamName.trim().length >= 2 && captainName.trim().length >= 2 && phoneOk && filled.length >= min;
+  const ready = teamName.trim().length >= 2 && captainName.trim().length >= 2 && phoneOk;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -57,7 +53,7 @@ export default function RegisterPage({ id }: { id: string }) {
     setBusy(true);
     setError(null);
     try {
-      const r = await submitTeam(id, { teamName: teamName.trim(), captainName: captainName.trim(), contactPhone: phone, contactEmail: email.trim(), players: filled });
+      const r = await submitTeam(id, { teamName: teamName.trim(), captainName: captainName.trim(), contactPhone: phone, contactEmail: email.trim() });
       setDone({ teamName: r.teamName });
     } catch (err) {
       setError(errorText(err));
@@ -86,6 +82,13 @@ export default function RegisterPage({ id }: { id: string }) {
             <div>
               <dt className="text-xs text-slate-400">{info.hosted ? "Hosted by" : "Places left"}</dt>
               <dd className="font-medium">{info.hosted ? info.hosted.hostName ?? "The venue" : info.spotsLeft === null ? "Open" : `${info.spotsLeft} of ${info.limit}`}</dd>
+            </div>
+          </div>
+          <div className="col-span-2 flex gap-2">
+            <Banknote size={18} className="mt-0.5 shrink-0 text-brand" />
+            <div>
+              <dt className="text-xs text-slate-400">Entry fee</dt>
+              <dd className="font-medium">{info.entryFee > 0 ? `${formatRs(info.entryFee)} per team` : "Free entry"}</dd>
             </div>
           </div>
           {info.prizePool > 0 && (
@@ -139,28 +142,13 @@ export default function RegisterPage({ id }: { id: string }) {
             <input className={input} value={email} type="email" onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
           </label>
 
-          <fieldset className="space-y-2">
-            <legend className="text-sm font-medium">Players <span className="font-normal text-slate-400">({min} to {max}, include the captain)</span></legend>
-            {players.map((p, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <input className={input} value={p} maxLength={40} onChange={(e) => setPlayers((l) => l.map((v, j) => (j === i ? e.target.value : v)))} placeholder={`Player ${i + 1}`} aria-label={`Player ${i + 1}`} autoComplete="off" />
-                {players.length > min && (
-                  <button type="button" onClick={() => setPlayers((l) => l.filter((_, j) => j !== i))} aria-label={`Remove player ${i + 1}`} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500"><X size={16} /></button>
-                )}
-              </div>
-            ))}
-            {players.length < max && (
-              <button type="button" onClick={() => setPlayers((l) => [...l, ""])} className="flex items-center gap-1.5 text-sm font-semibold text-brand"><Plus size={16} /> Add a player</button>
-            )}
-            <p className="text-xs text-slate-400">{filled.length} of at least {min} player names filled in.</p>
-          </fieldset>
 
           {error && <p role="alert" className="rounded-2xl bg-rose-500/10 px-4 py-3 text-sm text-rose-600">{error}</p>}
 
           <button type="submit" disabled={!ready || busy} className="glass-btn flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-sm font-semibold text-white disabled:opacity-50">
             {busy ? <><Loader2 size={18} className="animate-spin" /> Registering…</> : "Register team"}
           </button>
-          <p className="text-center text-xs text-slate-400">The venue confirms every team. You will be contacted on the mobile number above.</p>
+          <p className="text-center text-xs text-slate-400">The whole team is registered, so you do not need to list the players. The venue confirms every team and contacts you on the mobile number above{info.entryFee > 0 ? ` about the ${formatRs(info.entryFee)} entry fee` : ""}.</p>
         </form>
       )}
     </div>

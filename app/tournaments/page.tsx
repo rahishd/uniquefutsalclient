@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, MapPin, CalendarDays, Trophy, Users } from "lucide-react";
+import { Banknote, ChevronLeft, MapPin, CalendarDays, Trophy, Users } from "lucide-react";
 import PlaceholderPage from "@/components/PlaceholderPage";
 import TieSheet from "@/components/TieSheet";
 import { formatRs } from "@/lib/booking";
@@ -18,6 +18,7 @@ function EventList({ events }: { events: HostedEvent[] }) {
         <li key={e.id} className="glass rounded-3xl p-5">
           <p className="font-medium">{e.name}</p>
           <p className="text-xs text-slate-400">{fmtDay(e.startDate)}{e.startDate !== e.endDate ? ` – ${fmtDay(e.endDate)}` : ""}{e.hostName ? ` · Hosted by ${e.hostName}` : ""}</p>
+          <p className="mt-2 text-sm"><span className="text-slate-400">Entry fee:</span> <b className="font-medium">{e.entryFee && e.entryFee > 0 ? `${formatRs(e.entryFee)} per team` : "Free entry"}</b></p>
           <ul className="mt-3 space-y-1 text-sm">{e.days.map((d) => <li key={d.date} className="flex justify-between"><span>{fmtDay(d.date)}</span><span className="text-slate-500">{hoursLabel(d)}</span></li>)}</ul>
           <RegisterBox id={e.id} name={e.name} />
         </li>
@@ -89,6 +90,13 @@ export default function TournamentsPage() {
           <div>
             <dt className="text-xs text-slate-400">Venue</dt>
             <dd className="font-medium">{site.name}, {site.address}</dd>
+          </div>
+        </div>
+        <div className="col-span-2 flex gap-2">
+          <Banknote size={18} className="mt-0.5 shrink-0 text-brand" />
+          <div>
+            <dt className="text-xs text-slate-400">Entry fee</dt>
+            <dd className="font-medium">{t.entryFee && t.entryFee > 0 ? `${formatRs(t.entryFee)} per team` : "Free entry"}</dd>
           </div>
         </div>
         {t.prizePool > 0 && (

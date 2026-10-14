@@ -9,7 +9,6 @@ const team = (over: Record<string, unknown> = {}) => ({
   captainName: "Ram Thapa",
   contactPhone: "9812345678",
   contactEmail: "",
-  players: ["Ram Thapa", "Shyam KC", "Hari Rai", "Gita Sharma", "Sita Magar"],
   ...over,
 });
 
@@ -19,7 +18,7 @@ beforeAll(async () => {
   await prisma.notification.deleteMany({ where: { userId: CAPTAIN } });
   await prisma.user.deleteMany({ where: { phoneNumber: CAPTAIN } });
   await makeUser(CAPTAIN, "Captain Test");
-  open = (await prisma.tournament.create({ data: { name: "REGTEST Cup", prizePool: 5000, minTeams: 2, maxTeams: 2, startDate: futureDate(10), endDate: futureDate(12) } })).id;
+  open = (await prisma.tournament.create({ data: { name: "REGTEST Cup", prizePool: 5000, entryFee: 1500, minTeams: 2, maxTeams: 2, startDate: futureDate(10), endDate: futureDate(12) } })).id;
   done = (await prisma.tournament.create({ data: { name: "REGTEST Old", prizePool: 0, minTeams: 2, maxTeams: 8, startDate: futureDate(-9), endDate: futureDate(-7), status: "completed" } })).id;
 });
 
@@ -35,7 +34,7 @@ describe("Team registration from the shareable link", () => {
   it("shows what the page needs, without any contact details", async () => {
     const r = await api().get(`/api/tournaments/${open}/registration`);
     expect(r.status).toBe(200);
-    expect(r.body.data).toMatchObject({ id: open, name: "REGTEST Cup", open: true, spotsLeft: 2, limit: 2, registered: 0, minPlayers: 5, maxPlayers: 12 });
+    expect(r.body.data).toMatchObject({ id: open, name: "REGTEST Cup", open: true, spotsLeft: 2, limit: 2, registered: 0, entryFee: 1500 });
     expect(JSON.stringify(r.body)).not.toMatch(/contactPhone|captainName/);
     expect((await api().get("/api/tournaments/nope/registration")).status).toBe(404);
   });
@@ -45,7 +44,7 @@ describe("Team registration from the shareable link", () => {
     expect(ok.status).toBe(201);
     expect(ok.body.data.status).toBe("pending");
     const row = await prisma.registration.findFirst({ where: { tournamentId: open } });
-    expect(JSON.parse(row!.players)).toHaveLength(5);
+    expect(JSON.parse(row!.players)).toEqual([]); // a team registers as a whole, no player list needed
 
     const sameName = await api().post(`/api/tournaments/${open}/register`).send(team({ teamName: "tilottama strikers", contactPhone: "9811111111" }));
     expect(sameName.status).toBe(409);
@@ -60,8 +59,6 @@ describe("Team registration from the shareable link", () => {
     const post = (b: object) => api().post(`/api/tournaments/${open}/register`).send(b);
     expect((await post(team({ teamName: "A", contactPhone: "9822222222" }))).status).toBe(400);
     expect((await post(team({ contactPhone: "12345", teamName: "Bad Phone FC" }))).status).toBe(400);
-    expect((await post(team({ contactPhone: "9833333333", teamName: "Few FC", players: ["One", "Two"] }))).status).toBe(400);
-    expect((await post(team({ contactPhone: "9833333333", teamName: "Dup FC", players: ["A A", "A A", "B B", "C C", "D D"] }))).status).toBe(400);
     expect((await post(team({ contactPhone: "9833333333", teamName: "Mail FC", contactEmail: "not-an-email" }))).status).toBe(400);
     expect(await prisma.registration.count({ where: { tournamentId: open } })).toBe(1);
   });

@@ -1514,5 +1514,11 @@ export const NE_DICTIONARY: Record<string, string> = {
  "Your team is confirmed": "तपाईंको टोली पुष्टि भयो",
  "Team registration not accepted": "टोली दर्ता स्वीकार गरिएन",
  "{0} is confirmed for {1}. See you there!": "{0} {1} का लागि पुष्टि भयो। त्यहीँ भेटौंला!",
- "{0} could not be accepted for {1}. Please call the venue if you have questions.": "{0} लाई {1} का लागि स्वीकार गर्न सकिएन। प्रश्न भए कृपया भेन्युमा फोन गर्नुहोस्।"
+ "{0} could not be accepted for {1}. Please call the venue if you have questions.": "{0} लाई {1} का लागि स्वीकार गर्न सकिएन। प्रश्न भए कृपया भेन्युमा फोन गर्नुहोस्।",
+ "Entry fee": "प्रवेश शुल्क",
+ "Entry fee:": "प्रवेश शुल्क:",
+ "Free entry": "निःशुल्क प्रवेश",
+ "{0} per team": "प्रति टोली {0}",
+ "The whole team is registered, so you do not need to list the players. The venue confirms every team and contacts you on the mobile number above.": "पूरै टोली दर्ता हुन्छ, त्यसैले खेलाडीहरूको नाम लेख्नु पर्दैन। भेन्युले हरेक टोली पुष्टि गर्छ र माथिको मोबाइल नम्बरमा सम्पर्क गर्छ।",
+ "The whole team is registered, so you do not need to list the players. The venue confirms every team and contacts you on the mobile number above about the {0} entry fee.": "पूरै टोली दर्ता हुन्छ, त्यसैले खेलाडीहरूको नाम लेख्नु पर्दैन। भेन्युले हरेक टोली पुष्टि गर्छ र {0} प्रवेश शुल्कबारे माथिको मोबाइल नम्बरमा सम्पर्क गर्छ।"
 };

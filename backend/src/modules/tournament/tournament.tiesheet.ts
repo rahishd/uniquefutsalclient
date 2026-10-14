@@ -13,7 +13,7 @@ import { todayKey } from "../../utils/dates";
 
 // The customer view of a tournament: scores and the tie-sheet. Registrations (team phone numbers and emails)
 // and the venue's costs are never part of this public view.
-export async function publicTournament(t: { id: string; name: string; prizePool: number; minTeams: number; maxTeams: number; startDate: string; endDate: string; isActive: boolean; status: string; description: string | null; hostedEvent?: boolean; hostName?: string | null }) {
+export async function publicTournament(t: { id: string; name: string; prizePool: number; minTeams: number; maxTeams: number; startDate: string; endDate: string; isActive: boolean; status: string; description: string | null; hostedEvent?: boolean; hostName?: string | null; entryFee?: number }) {
   const rounds = await prisma.tournamentRound.findMany({ where: { tournamentId: t.id }, orderBy: { position: "asc" }, include: { matches: { orderBy: { startsAt: "asc" }, include: { goals: { orderBy: [{ minute: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }] } } } } });
   // an event the venue hosts for a manager: who hosts it and the hours of each day (the manager phone number and the bill stay private)
   const days = t.hostedEvent ? await prisma.tournamentDay.findMany({ where: { tournamentId: t.id }, orderBy: { date: "asc" } }) : [];
@@ -30,7 +30,7 @@ export async function publicTournament(t: { id: string; name: string; prizePool:
     // description is free text for older tournaments
   }
   return {
-    id: t.id, name: t.name, status, startDate: t.startDate, endDate: t.endDate, teams: t.maxTeams, prizePool: t.prizePool, prizes, format, hosted,
+    id: t.id, name: t.name, status, startDate: t.startDate, endDate: t.endDate, teams: t.maxTeams, prizePool: t.prizePool, entryFee: t.entryFee ?? 0, prizes, format, hosted,
     rounds: rounds.map((r) => ({
       id: r.id, name: r.name,
       matches: r.matches.map((m) => ({ id: m.id, status: m.status, home: m.home, away: m.away, homeScore: m.homeScore, awayScore: m.awayScore, note: m.note, startsAt: m.startsAt, venue: m.venue,
@@ -59,7 +59,7 @@ router.get(
   asyncHandler(async (_req: Request, res: Response) => {
     const today = todayKey();
     const rows = await prisma.tournament.findMany({ where: { hostedEvent: true, isActive: true, status: { notIn: ["completed", "cancelled"] }, endDate: { gte: today } }, orderBy: { startDate: "asc" }, include: { days: { orderBy: { date: "asc" } } }, take: 20 });
-    res.json(ApiResponseUtil.success(200, "Hosted events", rows.map((t) => ({ id: t.id, name: t.name, hostName: t.hostName, startDate: t.startDate, endDate: t.endDate, days: t.days.map((d) => ({ date: d.date, startHour: d.startHour, endHour: d.endHour })) }))));
+    res.json(ApiResponseUtil.success(200, "Hosted events", rows.map((t) => ({ id: t.id, name: t.name, hostName: t.hostName, entryFee: t.entryFee, startDate: t.startDate, endDate: t.endDate, days: t.days.map((d) => ({ date: d.date, startHour: d.startHour, endHour: d.endHour })) }))));
   }),
 );
 
