@@ -6,6 +6,7 @@ import { errorText } from "@/lib/api";
 import { loadDigitalId, replaceDigitalId, type DigitalId } from "@/lib/digitalid";
 import { cardToBlob, drawIdCard } from "@/lib/idcard";
 
+import { askConfirm } from "@/lib/confirm";
 // The customer's portrait Digital ID card: view, download, share (WhatsApp) and replace.
 export default function DigitalIdSheet({ onClose }: { onClose: () => void }) {
   const [id, setId] = useState<DigitalId | null>(null);
@@ -73,7 +74,7 @@ export default function DigitalIdSheet({ onClose }: { onClose: () => void }) {
   }
 
   async function replace() {
-    if (!window.confirm("Make a new QR? Your old card will stop working and any copy you sent will no longer be accepted.")) return;
+    if (!(await askConfirm("Make a new QR? Your old card will stop working and any copy you sent will no longer be accepted."))) return;
     setBusy(true);
     setError(null);
     try {

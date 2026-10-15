@@ -7,6 +7,7 @@ import { errorText } from "@/lib/api";
 import { markReadByTypes } from "@/lib/notifications";
 import { STATUS_TEXT, cancelEnrollment, clock, dayLabel, enroll, loadInfo, loadMine, type AcademyInfo, type Enrollment } from "@/lib/academy";
 
+import { askConfirm } from "@/lib/confirm";
 const input = "mt-2 w-full rounded-2xl bg-white/70 px-4 py-3 text-sm font-normal outline-none ring-1 ring-black/5 placeholder:text-slate-400 focus:ring-brand";
 
 const EMPTY = { guardianName: "", guardianPhone: "", emergencyPhone: "", address: "", childName: "", childAge: "", healthStatus: "healthy" as "healthy" | "condition", healthNotes: "", sessionId: "", accept: false };
@@ -53,7 +54,7 @@ export default function AcademyPage() {
   }
 
   async function cancel(id: string) {
-    if (!window.confirm("Cancel this class for your child?")) return;
+    if (!(await askConfirm("Cancel this class for your child?"))) return;
     try {
       await cancelEnrollment(id);
       loadMine().then(setMine).catch(() => {});

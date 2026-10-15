@@ -12,6 +12,7 @@ import AdPopup from "@/components/ads/AdPopup";
 import VisitTracker from "@/components/VisitTracker";
 import { LangSync } from "@/components/HeaderToggles";
 import PageTranslator from "@/components/PageTranslator";
+import ConfirmHost from "@/components/ConfirmHost";
 
 const poppins = Poppins({ variable: "--font-poppins", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full">
         <LangSync />
         <PageTranslator />
+        <ConfirmHost />
         <CompanyHeader />
         <main className="mx-auto w-full max-w-md px-5 pb-6 pt-5 min-h-[60vh] desk:max-w-none desk:px-10 desk:pb-8 desk:pt-8">{children}</main>
         <FooterGate />

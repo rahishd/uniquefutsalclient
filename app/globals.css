@@ -54,13 +54,46 @@ html.has-backdrop .text-slate-600 {
   box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
 }
 
-/* Buttons: solid dark blue. (.glass-active is the selected state of a chip, tab or option.) */
+/* Buttons and highlighted cards: light blue with dark-blue text. (.glass-active is the selected state of a chip, tab
+   or option.) Solid navy is kept only for the logo tile in the header. */
 .glass-btn,
-.glass-active {
-  background: #0c0b5d;
-  border: 1px solid #0c0b5d;
-  color: #ffffff;
-  box-shadow: 0 6px 16px rgba(12, 11, 93, 0.22);
+.glass-active,
+.bg-brand.text-white,
+[class*="from-[#2a2a9c]"] {
+  background: #dbeafe;
+  border: 1px solid #bfd7ff;
+  color: #0c0b5d;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.16);
+}
+[class*="from-[#2a2a9c]"] {
+  background-image: none;
+}
+
+/* Big highlighted cards (Home banner, membership, points, sign-in banner, "I'm coming"): a soft light-blue gradient. */
+[class*="from-[#0c0b5d]"] {
+  background-image: linear-gradient(135deg, #eaf3ff 0%, #d6e7ff 55%, #c3dcff 100%);
+  border: 1px solid #bfd7ff;
+  color: #0c0b5d;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.16);
+}
+[class*="from-[#0c0b5d]"] :is(.text-white, [class*="text-white/"]),
+:is(.glass-btn, .glass-active, .bg-brand.text-white) :is(.text-white, [class*="text-white/"]) {
+  color: inherit;
+}
+[class*="from-[#0c0b5d]"] [class*="text-white/"] {
+  color: #1e3a8a;
+}
+[class*="from-[#0c0b5d]"] :is(.text-orange-300, .text-amber-100, .text-amber-200, .text-yellow-300, .text-yellow-200) {
+  color: #b45309;
+}
+/* chips and buttons that sat on the dark card as translucent white */
+[class*="from-[#0c0b5d]"] [class*="bg-white/"] {
+  background-color: rgba(255, 255, 255, 0.75);
+}
+[class*="from-[#0c0b5d]"] .glass-btn,
+[class*="from-[#0c0b5d]"] .glass-active {
+  background: #ffffff;
+  border-color: #bfd7ff;
 }
 
 /* Inner panels and light chips: a very light blue-grey fill instead of translucent white. */
@@ -100,11 +133,8 @@ html.dark {
 }
 
 /* Surfaces that keep their real colours (inverted a second time). */
-html.dark .glass-btn,
-html.dark .glass-active,
-html.dark .bg-brand,
+html.dark .bg-brand:not(.text-white),
 html.dark [class*="bg-[#0c0b5d]"],
-html.dark [class*="from-[#0c0b5d]"],
 html.dark [class*="from-[#005f7e]"],
 html.dark [class*="bg-[#f5822a]"] {
   filter: invert(1) hue-rotate(180deg);
@@ -121,7 +151,7 @@ html.dark [style*="background-image"] {
 }
 
 /* ... except when they sit inside a surface that already keeps its colours (that would invert them twice). */
-html.dark :is(.glass-btn, .glass-active, .bg-brand, [class*="bg-[#0c0b5d]"], [class*="from-[#0c0b5d]"], [class*="from-[#005f7e]"], [class*="bg-[#f5822a]"])
+html.dark :is(.bg-brand:not(.text-white), [class*="bg-[#0c0b5d]"], [class*="from-[#005f7e]"], [class*="bg-[#f5822a]"])
   :is(img, video, iframe, canvas, svg.uf-kid, [style*="background-image"]) {
   filter: none;
 }

@@ -15,7 +15,7 @@ const RIGHT_TABS = [
 ];
 
 // Clean white bar along the bottom: an outlined icon and a small label per tab, the current one in dark blue.
-// Book Now is a square dark-blue block set into the middle of the bar.
+// Book Now sits in the same row and looks like the other tabs.
 export default function BottomNav() {
   const pathname = usePathname();
   const t = useT();
@@ -46,15 +46,15 @@ export default function BottomNav() {
       <div className="mx-auto flex max-w-md items-stretch">
         {LEFT_TABS.map(sideTab)}
 
-        {/* Book Now: a square dark-blue block set into the bar */}
+        {/* Book Now: same look as the other tabs */}
         <Link
           href="/book"
           aria-label="Book Now"
           aria-current={bookActive ? "page" : undefined}
-          className="flex w-20 shrink-0 flex-col items-center justify-center gap-0.5 bg-[#0c0b5d] text-white"
+          className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-2 ${bookActive ? "text-brand" : "text-slate-400"}`}
         >
-          <CalendarDays size={20} strokeWidth={2} />
-          <span className="text-[10px] font-semibold leading-none tracking-wide">{t("Book Now")}</span>
+          <CalendarDays size={21} strokeWidth={bookActive ? 2.3 : 1.8} />
+          <span className={`text-[10px] leading-none ${bookActive ? "font-semibold" : "font-medium"}`}>{t("Book Now")}</span>
         </Link>
 
         {RIGHT_TABS.map(sideTab)}

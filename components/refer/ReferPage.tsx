@@ -8,6 +8,7 @@ import { markReadByTypes } from "@/lib/notifications";
 import { MAX_ADVANCE_DAYS, dateKey, fetchSlots, type Slot } from "@/lib/booking";
 import { STATUS_TEXT, bookAndRefer, clock, dayLabel, loadMe, loadRules, withdrawReferral, type ReferMe, type ReferRules } from "@/lib/refer";
 
+import { askConfirm } from "@/lib/confirm";
 const input = "mt-2 w-full rounded-2xl bg-white/70 px-4 py-3 text-sm font-normal outline-none ring-1 ring-black/5 placeholder:text-slate-400 focus:ring-brand";
 
 export default function ReferPage() {
@@ -62,7 +63,7 @@ export default function ReferPage() {
   }
 
   async function withdraw(id: string) {
-    if (!window.confirm("Withdraw this referral?")) return;
+    if (!(await askConfirm("Withdraw this referral?"))) return;
     try {
       await withdrawReferral(id);
       refresh();
