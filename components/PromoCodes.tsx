@@ -4,8 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { Check, ChevronRight, Copy } from "lucide-react";
 import { fmtDay, promosStore } from "@/lib/promos";
+import { useSession } from "@/lib/session";
 
 export default function PromoCodes() {
+  const session = useSession();
   const [copied, setCopied] = useState<string | null>(null);
   const live = (promosStore.use().data ?? []).filter((p) => p.status === "active");
 
@@ -19,7 +21,8 @@ export default function PromoCodes() {
     }
   }
 
-  if (live.length === 0) return null;
+  // promo codes are for signed-in customers; a guest pays the full price
+  if (live.length === 0 || session?.registered !== true) return null;
 
   return (
     <section className="mt-8 desk:mt-10" aria-label="Live promo codes">

@@ -6,13 +6,13 @@ import { Banknote, CalendarDays, CheckCircle2, ChevronLeft, Loader2, Trophy, Use
 import { errorText } from "@/lib/api";
 import { formatRs } from "@/lib/booking";
 import { fmtDay } from "@/lib/promos";
-import { useSession } from "@/lib/session";
+import { openSignIn, useSession } from "@/lib/session";
 import { fetchRegistrationInfo, submitTeam, type RegistrationInfo } from "@/lib/tournament";
 import ShareRegistration from "@/components/tournament/ShareRegistration";
 
 const input = "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-brand";
 
-// Team registration for ONE tournament. This page is the shareable link: anyone who has it can register a team, signed in or not.
+// Team registration for ONE tournament. This page is the shareable link: anyone signed in who has it can register a team (a guest is asked to sign in).
 export default function RegisterPage({ id }: { id: string }) {
   const session = useSession();
   const [info, setInfo] = useState<RegistrationInfo | null>(null);
@@ -43,6 +43,18 @@ export default function RegisterPage({ id }: { id: string }) {
     );
   }
   if (!info) return <div className="h-96 animate-pulse rounded-3xl bg-white/40" aria-label="Loading" />;
+  if (session && !session.registered) {
+    return (
+      <div>
+        <Link href="/tournaments" className="inline-flex items-center gap-1 text-sm text-brand"><ChevronLeft size={18} /> Tournaments</Link>
+        <section className="glass mt-6 rounded-3xl p-6 text-center">
+          <p className="font-semibold">Sign in to register a team</p>
+          <p className="mt-1 text-sm text-slate-500">{info.name}: registering a team needs an account. Guests can book a court and Gamezone only.</p>
+          <button type="button" onClick={openSignIn} className="glass-btn mt-4 rounded-full px-6 py-3 text-sm font-semibold">Sign in</button>
+        </section>
+      </div>
+    );
+  }
 
   const phoneOk = /^9\d{9}$/.test(phone);
   const ready = teamName.trim().length >= 2 && captainName.trim().length >= 2 && phoneOk;

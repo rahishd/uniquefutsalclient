@@ -341,6 +341,9 @@ export class BookingService {
   // Price of a booking and the effect of a promo code, with no side effects. Used by the quote and promo-check
   // endpoints; the same rules run again when the booking is created, so the browser's numbers are never trusted.
   public async quote(date: string, startTime: string, duration: number, promoCode?: string, userId?: string) {
+    // A guest (no account) never gets a promo code: the full price, paid online.
+    const guestPromoNote = !userId && promoCode && promoCode.trim() ? { ok: false, message: "Promo codes are for signed-in customers. Sign in to use one." } : null;
+    if (!userId) promoCode = undefined;
     const hourlyPricing = await SettingsService.getHourlyPricing();
     const defaultHourlyRate = await SettingsService.getHourlyRate();
     const startHour = parseInt(startTime.split(":")[0], 10);
@@ -395,7 +398,7 @@ export class BookingService {
     }
     // Mineral water: included unless a VIP discount or a promo code (without the water switch) lowered the price.
     const water = waterFor({ vip: !!vipApplied, promo: promoUsed });
-    return { basePrice, discount, total: Math.max(0, basePrice - discount), promo, vip: vipApplied, water };
+    return { basePrice, discount, total: Math.max(0, basePrice - discount), promo: guestPromoNote ?? promo, vip: vipApplied, water };
   }
 
   // Awards new-style loyalty points for bookings that are now both completed and fully paid. Idempotent.

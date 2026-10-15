@@ -2,10 +2,12 @@
 
 import { Tag } from "lucide-react";
 import { promosStore } from "@/lib/promos";
+import { useSession } from "@/lib/session";
 
 // The badge on the Home promo banner. It is worked out from today's live booking promo codes (the same list as
 // "Live promo codes"), so it can never promise more than a customer can actually get. With no live code it shows nothing.
 export default function BannerOffer() {
+  const session = useSession();
   const live = (promosStore.use().data ?? []).filter((p) => p.status === "active" && p.kind === "booking");
 
   let bestPercent = 0;
@@ -23,7 +25,8 @@ export default function BannerOffer() {
       ? `Rs. ${bestRupees.toLocaleString("en-IN")}`
       : null;
 
-  if (!value) return null;
+  // the offer is a promo code: for signed-in customers only
+  if (!value || session?.registered !== true) return null;
 
   // Colours are inline: the banner's own text rules would otherwise turn the badge text navy on navy.
   return (

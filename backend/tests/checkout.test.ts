@@ -33,10 +33,17 @@ const post = (url: string, body: object, token?: string) => {
 
 describe("quote and promo check", () => {
   it("prices a slot on the server and explains a bad promo", async () => {
-    const res = await post("/api/bookings/quote", { date: futureDate(2), startTime: "16:00", promoCode: "NOPE" });
+    const res = await post("/api/bookings/quote", { date: futureDate(2), startTime: "16:00", promoCode: "NOPE" }, tokenFor(REG));
     expect(res.status).toBe(200);
     expect(res.body.data.basePrice).toBeGreaterThan(0);
     expect(res.body.data.promo).toEqual({ ok: false, message: "This promo code is invalid." });
+    expect(res.body.data.total).toBe(res.body.data.basePrice);
+  });
+  it("never applies a promo code for a guest", async () => {
+    const res = await post("/api/bookings/quote", { date: futureDate(2), startTime: "16:00", promoCode: "NOPE" });
+    expect(res.status).toBe(200);
+    expect(res.body.data.promo).toMatchObject({ ok: false });
+    expect(res.body.data.promo.message).toMatch(/signed-in/);
     expect(res.body.data.total).toBe(res.body.data.basePrice);
   });
   it("applies the booking window to quotes too", async () => {

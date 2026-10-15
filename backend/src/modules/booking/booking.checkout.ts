@@ -70,6 +70,8 @@ export const checkoutController = {
     if (registered) {
       if (guest) throw new AppError(400, "Signed-in customers do not send guest details");
     } else {
+      // Guest rules: only a court booking (and Gamezone), paid in full online, and no promo code.
+      if (promoCode && String(promoCode).trim()) throw new AppError(403, "Promo codes are for signed-in customers. Sign in to use one.");
       // Guest rules: details are required and the full amount is paid online.
       const name = (guest?.name ?? "").trim();
       const phone = (guest?.phone ?? "").trim();

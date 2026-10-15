@@ -109,3 +109,23 @@ describe("Unique Club: the 10% discount", () => {
     expect(q.club).toBeNull();
   });
 });
+
+describe("Guests: court and Gamezone only, 100% online, no promo codes", () => {
+  const date = futureDate(2);
+  const guestBody = { name: "Walk Up", phone: "9811122233" };
+
+  it("gives a guest the full price and says promo codes need an account", async () => {
+    const q = await api().post("/api/bookings/quote").send({ date, startTime: "18:00", duration: 1, promoCode: "WEEKEND10" });
+    expect(q.status).toBe(200);
+    expect(q.body.data.discount).toBe(0);
+    expect(q.body.data.total).toBe(q.body.data.basePrice);
+    expect(q.body.data.promo).toMatchObject({ ok: false });
+  });
+
+  it("refuses a promo code and pay-at-venue from a guest at checkout", async () => {
+    const promo = await api().post("/api/bookings/checkout").send({ date, startTime: "18:00", duration: 1, method: "fonepay", promoCode: "WEEKEND10", guest: guestBody });
+    expect(promo.status).toBe(403);
+    const venue = await api().post("/api/bookings/checkout").send({ date, startTime: "18:00", duration: 1, method: "venue", guest: guestBody });
+    expect(venue.status).toBe(403);
+  });
+});

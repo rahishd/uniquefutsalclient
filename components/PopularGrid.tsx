@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { BarChart3, CalendarDays, ChevronRight, CircleHelp, Crown, Gamepad2, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, UserSearch, Zap, BadgeCheck } from "lucide-react";
+import { BarChart3, CalendarDays, ChevronRight, CircleHelp, Crown, Gamepad2, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, UserSearch, Zap, BadgeCheck, Lock } from "lucide-react";
 import { markReadByTypes, noticesStore, type NoticeType } from "@/lib/notifications";
-import { useSession } from "@/lib/session";
+import { openSignIn, useSession } from "@/lib/session";
 import { pendingActions, useTeams } from "@/lib/teams";
 import { useT } from "@/lib/i18n";
 
@@ -35,12 +35,16 @@ const TILES: Tile[] = [
   { label: "Help", href: "/help", icon: CircleHelp, tone: "text-brand" },
 ];
 
+// A guest (no account) can book a court and Gamezone, and read Help. Everything else needs an account.
+const GUEST_OK = new Set(["/book", "/gamezone", "/help"]);
+
 const NO_UNREAD: Partial<Record<NoticeType, number>> = {};
 
 export default function PopularGrid() {
   const unread = noticesStore.use().data?.unreadByType ?? NO_UNREAD;
   const teams = useTeams();
   const session = useSession();
+  const guest = session?.registered !== true;
   const tr = useT();
 
   function countFor(t: Tile) {
@@ -63,28 +67,51 @@ export default function PopularGrid() {
           {tr("See all")} <ChevronRight size={16} />
         </Link>
       </div>
+      {guest && session !== undefined && (
+        <div role="note" className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-sky-100 px-4 py-3 text-sm text-[#0c0b5d]">
+          <span className="flex items-center gap-2 font-medium"><Lock size={15} aria-hidden /> {tr("Please register to access all locked features.")}</span>
+          <button type="button" onClick={openSignIn} className="rounded-full bg-[#0c0b5d] px-4 py-1.5 text-xs font-semibold" style={{ color: "#ffffff" }}>{tr("Register / Sign in")}</button>
+        </div>
+      )}
       <ul className="mt-4 grid grid-cols-4 gap-x-3 gap-y-5 desk:grid-cols-6 desk:gap-x-4 desk:gap-y-6">
         {TILES.map((t) => {
           const count = countFor(t);
           const Icon = t.icon;
+          const locked = guest && !GUEST_OK.has(t.href);
+          const face = (
+            <>
+              <span className={`glass relative flex h-[70px] w-[70px] items-center justify-center rounded-3xl transition-transform desk:h-24 desk:w-24 desk:group-hover:-translate-y-1 ${locked ? "opacity-60" : ""}`}>
+                <Icon className={`${t.tone} h-[30px] w-[30px] desk:h-10 desk:w-10`} />
+                {locked && (
+                  <span aria-hidden className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-slate-700 text-white shadow ring-2 ring-white">
+                    <Lock size={12} />
+                  </span>
+                )}
+                {!locked && count > 0 && (
+                  <span aria-hidden className="absolute -right-1.5 -top-1.5 flex h-6 min-w-6 items-center justify-center rounded-full bg-rose-500 px-1.5 text-xs font-semibold text-white shadow ring-2 ring-white">
+                    {count > 9 ? "9+" : count}
+                  </span>
+                )}
+              </span>
+              <span className="text-center text-xs text-slate-600 desk:text-sm">{tr(t.label)}</span>
+            </>
+          );
           return (
             <li key={t.label}>
-              <Link
-                href={t.href}
-                onClick={() => t.types && markReadByTypes(t.types)}
-                aria-label={count > 0 ? `${t.label}, ${count} new` : t.label}
-                className="group flex flex-col items-center gap-2"
-              >
-                <span className="glass relative flex h-[70px] w-[70px] items-center justify-center rounded-3xl transition-transform desk:h-24 desk:w-24 desk:group-hover:-translate-y-1">
-                  <Icon className={`${t.tone} h-[30px] w-[30px] desk:h-10 desk:w-10`} />
-                  {count > 0 && (
-                    <span aria-hidden className="absolute -right-1.5 -top-1.5 flex h-6 min-w-6 items-center justify-center rounded-full bg-rose-500 px-1.5 text-xs font-semibold text-white shadow ring-2 ring-white">
-                      {count > 9 ? "9+" : count}
-                    </span>
-                  )}
-                </span>
-                <span className="text-center text-xs text-slate-600 desk:text-sm">{tr(t.label)}</span>
-              </Link>
+              {locked ? (
+                <button type="button" onClick={openSignIn} aria-label={`${t.label}: sign in to use`} className="group flex w-full flex-col items-center gap-2">
+                  {face}
+                </button>
+              ) : (
+                <Link
+                  href={t.href}
+                  onClick={() => t.types && markReadByTypes(t.types)}
+                  aria-label={count > 0 ? `${t.label}, ${count} new` : t.label}
+                  className="group flex flex-col items-center gap-2"
+                >
+                  {face}
+                </Link>
+              )}
             </li>
           );
         })}

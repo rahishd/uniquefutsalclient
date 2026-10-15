@@ -5,9 +5,10 @@ import { ApiResponseUtil } from "../../utils/apiResponse";
 import { AppError } from "../../middlewares/error.middleware";
 import { prisma } from "../../config/db";
 import { todayKey } from "../../utils/dates";
+import { authMiddleware } from "../../middlewares/auth.middleware";
 
 // Team registration for ONE tournament, from a link that can be shared (the customer site: /tournaments/<id>/register).
-// Open to guests as well: a captain only needs the team name, a mobile number and the player names. Contact details are
+// Needs a signed-in customer (a guest can only book a court or Gamezone): a captain gives the team name and a mobile number. Contact details are
 // never shown back to anyone except staff in the admin portal. The team registers as a whole: players are not listed one by
 // one (a list may still be sent, for example by older apps, and is kept as given).
 export const MAX_PLAYERS = 30;
@@ -113,6 +114,7 @@ router.get(
 
 router.post(
   "/:id/register",
+  authMiddleware,
   perHour,
   asyncHandler(async (req: Request, res: Response) => {
     const r = await registerTeam(req.params.id, req.body as TeamInput);

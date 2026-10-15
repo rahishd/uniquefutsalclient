@@ -1,4 +1,4 @@
-import { api, futureDate, makeUser, prisma } from "./helpers";
+import { api, bearer, futureDate, makeUser, prisma, tokenFor } from "./helpers";
 
 const CAPTAIN = "9800000611";
 let open: string; // upcoming, 2 team places
@@ -31,6 +31,12 @@ afterAll(async () => {
 });
 
 describe("Team registration from the shareable link", () => {
+  it("is for signed-in customers: a guest is turned away", async () => {
+    const guest = await api().post(`/api/tournaments/${open}/register`).send(team());
+    expect(guest.status).toBe(401);
+    expect(await prisma.registration.count({ where: { tournamentId: open } })).toBe(0);
+  });
+
   it("shows what the page needs, without any contact details", async () => {
     const r = await api().get(`/api/tournaments/${open}/registration`);
     expect(r.status).toBe(200);
@@ -39,24 +45,24 @@ describe("Team registration from the shareable link", () => {
     expect((await api().get("/api/tournaments/nope/registration")).status).toBe(404);
   });
 
-  it("registers a team (a guest is enough), then refuses the same name or the same number", async () => {
-    const ok = await api().post(`/api/tournaments/${open}/register`).send(team());
+  it("registers a team (a signed-in customer), then refuses the same name or the same number", async () => {
+    const ok = await api().post(`/api/tournaments/${open}/register`).set(bearer(tokenFor(CAPTAIN))).send(team());
     expect(ok.status).toBe(201);
     expect(ok.body.data.status).toBe("pending");
     const row = await prisma.registration.findFirst({ where: { tournamentId: open } });
     expect(JSON.parse(row!.players)).toEqual([]); // a team registers as a whole, no player list needed
 
-    const sameName = await api().post(`/api/tournaments/${open}/register`).send(team({ teamName: "tilottama strikers", contactPhone: "9811111111" }));
+    const sameName = await api().post(`/api/tournaments/${open}/register`).set(bearer(tokenFor(CAPTAIN))).send(team({ teamName: "tilottama strikers", contactPhone: "9811111111" }));
     expect(sameName.status).toBe(409);
     expect(sameName.body.message).toMatch(/name/i);
-    const samePhone = await api().post(`/api/tournaments/${open}/register`).send(team({ teamName: "Other FC" }));
+    const samePhone = await api().post(`/api/tournaments/${open}/register`).set(bearer(tokenFor(CAPTAIN))).send(team({ teamName: "Other FC" }));
     expect(samePhone.status).toBe(409);
     expect(samePhone.body.message).toMatch(/mobile number/i);
     expect(await prisma.registration.count({ where: { tournamentId: open } })).toBe(1);
   });
 
   it("checks the form", async () => {
-    const post = (b: object) => api().post(`/api/tournaments/${open}/register`).send(b);
+    const post = (b: object) => api().post(`/api/tournaments/${open}/register`).set(bearer(tokenFor(CAPTAIN))).send(b);
     expect((await post(team({ teamName: "A", contactPhone: "9822222222" }))).status).toBe(400);
     expect((await post(team({ contactPhone: "12345", teamName: "Bad Phone FC" }))).status).toBe(400);
     expect((await post(team({ contactPhone: "9833333333", teamName: "Mail FC", contactEmail: "not-an-email" }))).status).toBe(400);
@@ -64,8 +70,8 @@ describe("Team registration from the shareable link", () => {
   });
 
   it("stops when all places are taken, and a rejected team frees its place", async () => {
-    expect((await api().post(`/api/tournaments/${open}/register`).send(team({ teamName: "Second FC", contactPhone: "9844444444" }))).status).toBe(201);
-    const full = await api().post(`/api/tournaments/${open}/register`).send(team({ teamName: "Third FC", contactPhone: "9855555555" }));
+    expect((await api().post(`/api/tournaments/${open}/register`).set(bearer(tokenFor(CAPTAIN))).send(team({ teamName: "Second FC", contactPhone: "9844444444" }))).status).toBe(201);
+    const full = await api().post(`/api/tournaments/${open}/register`).set(bearer(tokenFor(CAPTAIN))).send(team({ teamName: "Third FC", contactPhone: "9855555555" }));
     expect(full.status).toBe(409);
     expect(full.body.message).toMatch(/places are taken/i);
     const info = await api().get(`/api/tournaments/${open}/registration`);
@@ -73,25 +79,25 @@ describe("Team registration from the shareable link", () => {
 
     await prisma.registration.updateMany({ where: { tournamentId: open, teamName: "Second FC" }, data: { status: "rejected" } });
     expect((await api().get(`/api/tournaments/${open}/registration`)).body.data.open).toBe(true);
-    expect((await api().post(`/api/tournaments/${open}/register`).send(team({ teamName: "Third FC", contactPhone: "9855555555" }))).status).toBe(201);
+    expect((await api().post(`/api/tournaments/${open}/register`).set(bearer(tokenFor(CAPTAIN))).send(team({ teamName: "Third FC", contactPhone: "9855555555" }))).status).toBe(201);
   });
 
   it("refuses a finished tournament and an unknown one", async () => {
-    const r = await api().post(`/api/tournaments/${done}/register`).send(team({ contactPhone: "9866666666", teamName: "Late FC" }));
+    const r = await api().post(`/api/tournaments/${done}/register`).set(bearer(tokenFor(CAPTAIN))).send(team({ contactPhone: "9866666666", teamName: "Late FC" }));
     expect(r.status).toBe(409);
     expect(r.body.message).toMatch(/finished/i);
-    expect((await api().post("/api/tournaments/does-not-exist/register").send(team())).status).toBe(404);
+    expect((await api().post("/api/tournaments/does-not-exist/register").set(bearer(tokenFor(CAPTAIN))).send(team())).status).toBe(404);
   });
 
   it("tells a customer with an account, and the older endpoint now checks everything too", async () => {
     const t = await prisma.tournament.create({ data: { name: "REGTEST Second", prizePool: 0, minTeams: 2, maxTeams: 8, startDate: futureDate(20), endDate: futureDate(21) } });
-    const r = await api().post(`/api/tournaments/${t.id}/register`).send(team({ teamName: "Account FC", contactPhone: CAPTAIN }));
+    const r = await api().post(`/api/tournaments/${t.id}/register`).set(bearer(tokenFor(CAPTAIN))).send(team({ teamName: "Account FC", contactPhone: CAPTAIN }));
     expect(r.status).toBe(201);
     expect(await prisma.notification.count({ where: { userId: CAPTAIN, type: "tournament" } })).toBe(1);
 
-    const legacyBad = await api().post("/api/tournaments/registrations").send({ tournamentId: t.id, teamName: "x", captainName: "y", contactPhone: "1", players: [] });
+    const legacyBad = await api().post("/api/tournaments/registrations").set(bearer(tokenFor(CAPTAIN))).send({ tournamentId: t.id, teamName: "x", captainName: "y", contactPhone: "1", players: [] });
     expect(legacyBad.status).toBe(400);
-    const legacyOk = await api().post("/api/tournaments/registrations").send({ tournamentId: t.id, ...team({ teamName: "Legacy FC", contactPhone: "9877777777" }) });
+    const legacyOk = await api().post("/api/tournaments/registrations").set(bearer(tokenFor(CAPTAIN))).send({ tournamentId: t.id, ...team({ teamName: "Legacy FC", contactPhone: "9877777777" }) });
     expect(legacyOk.status).toBe(201);
   });
 });

@@ -349,7 +349,13 @@ export default function BookingFlow({ initialDate, initialHour }: { initialDate?
           </section>
         )}
 
-        {!free && !q?.club && (
+        {!registered && (
+          <p className="glass rounded-2xl px-4 py-3 text-xs text-slate-600">
+            Booking as a guest: the full amount is paid online. Promo codes and the other services (membership, points, club, chat and more) need an account.
+          </p>
+        )}
+
+        {!free && !q?.club && registered && (
           <section className="glass rounded-3xl p-5">
             <label htmlFor="promo" className="flex items-center gap-2 text-sm font-medium"><Tag size={16} className="text-brand" /> Promo code</label>
             <div className="mt-3 flex gap-2">

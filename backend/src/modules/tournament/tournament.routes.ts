@@ -1,7 +1,7 @@
 import { Router } from "express";
 import tournamentController from "./tournament.controller";
 import adminOnly from "../../middlewares/admin.middleware";
-import { optionalAuthMiddleware } from "../../middlewares/auth.middleware";
+import { authMiddleware, optionalAuthMiddleware } from "../../middlewares/auth.middleware";
 import tieSheet from "./tournament.tiesheet";
 import registerRoutes from "./tournament.register";
 
@@ -16,7 +16,7 @@ router.use(registerRoutes);
 // Public lists return a safe summary; staff (with a token) get everything
 router.get("/", optionalAuthMiddleware, tournamentController.getAllTournaments);
 router.get("/registrations", ...adminOnly, tournamentController.getRegistrations);
-router.post("/registrations", tournamentController.submitRegistration);
+router.post("/registrations", authMiddleware, tournamentController.submitRegistration);
 router.get("/affected-items", ...adminOnly, tournamentController.getAffectedItems);
 router.post("/apply-actions", ...adminOnly, tournamentController.applyActions);
 router.get("/:id", optionalAuthMiddleware, tournamentController.getTournamentById);

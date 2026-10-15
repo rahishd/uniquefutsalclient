@@ -91,8 +91,8 @@ export const helpTopics: HelpTopic[] = [
     summary: "Signed-in customers skip typing their details.",
     points: [
       "Signed in: we already know your name and number. Every payment option is open, including Pay at venue.",
-      "Guest: type your name and mobile number and pay the full amount online.",
-      "Book again, membership, points and your history need an account.",
+      "Guest: you can book a court and Gamezone. Type your name and mobile number and pay 100% of the amount online. Promo codes are not available to guests.",
+      "Everything else (membership, Unique Club, points, promos, Find Player, chat, tournaments registration, complaints and more) needs an account. Sign in or create one, it is free.",
     ],
   },
   {
