@@ -106,6 +106,7 @@ Awards are idempotent per source. Free-game bookings, guests, membership ledger 
 | POST | `/teams` | User in Captain mode | `{name 2-30}` |
 | GET | `/teams/me` | User | roster (with phones) for my own team |
 | POST/DELETE | `/teams/me/members`, `/teams/me/members/:userId` | Captain | add by phone (registered, in no other team, max 12); the captain cannot be removed |
+| GET | `/teams/find?q=` | Captain | Find Player: teams by the start of the captain's mobile number (5+ digits) or by team name (2+ letters), max 10, never your own team: `[{id,name,area,players,record,rating,rank,captainName}]`. A shorter search returns `[]` |
 | GET | `/teams/ranking`, `/teams/:id` | Captain | rating (1-5, needs 3 approved games), rank, record, form. Team stats only |
 | GET/POST | `/challenges` | Captain | create needs >= 5 players, `loserPct` 70/60/100 with no default, date within 10 days |
 | POST | `/challenges/:id/accept|decline|cancel` | Captain | accept creates the court booking (the unique hour guard decides races) |
@@ -229,3 +230,60 @@ Staff (admin portal > Customers) give one customer a VIP code such as `ADMINVIP`
 - If a normal promo code is typed too, the bigger discount wins and `promo` names the one applied. A wrong code still reports "invalid" while the VIP discount keeps applying.
 - Only the customer it was given to can use it. Anyone else (another customer, a guest) typing the same text gets "This promo code is invalid."
 - The booking stores the code in `promoCode` and the amount in `discountAmount`, so staff can see how much it has saved.
+
+## Chat
+
+Registered customers can chat one to one or in groups (text only). Every route needs a signed-in customer. A chat is visible only to its members; anyone else gets 404.
+
+| Method | Path | Who | What |
+| --- | --- | --- | --- |
+| GET | `/chat/rules` | User | `{bodyMax: 1000, groupMax: 50, groupNameMin: 2, groupNameMax: 40}` |
+| GET | `/chat/people?q=` | User | customers whose mobile number starts with `q` (at least 5 digits, else `[]`), max 10, never yourself: `[{phone, name, avatar}]` |
+| GET | `/chat/threads` | User | my chats, newest activity first: `{id, kind: direct|group, title, avatar, memberCount, lastMessage, lastFrom, lastMessageAt, unread}` |
+| GET | `/chat/unread` | User | `{unread}` total unread messages (for the badge on the Chat tab) |
+| POST | `/chat/direct` | User | `{phone}` -> `{id}`. One chat per pair (opening again returns the same one). 404 if the number is not a registered customer, 400 for yourself |
+| POST | `/chat/groups` | User | `{name (2-40), members?: [phone]}` -> `{id}`. The creator is the admin. 5 groups per 24 hours (429), up to 50 people |
+| GET | `/chat/threads/:id` | Member | `{id, kind, title, avatar, members[{phone,name,avatar,role,you}], isAdmin, inviteCode}`. `inviteCode` only for a group admin |
+| GET | `/chat/threads/:id/messages?after=` | Member | the latest 60 messages, or those after an ISO time. Marks the chat read. `[{id, senderId, senderName, body, createdAt, mine}]` |
+| POST | `/chat/threads/:id/messages` | Member | `{body (1-1000)}`. 20 messages a minute per customer (429) |
+| PATCH | `/chat/threads/:id` | Group admin | `{name}` renames the group |
+| POST | `/chat/threads/:id/members` | Group admin | `{phones: []}` adds registered customers (max 50 in a group) |
+| DELETE | `/chat/threads/:id/members/:phone` | Admin, or yourself | remove a person, or leave. The group keeps an admin (longest member takes over); an empty group is deleted. One to one chats cannot be left |
+| POST | `/chat/threads/:id/invite` | Group admin | new invite code; the old link stops working |
+| GET | `/chat/invite/:code` | User | `{id, name, memberCount, alreadyIn, full}` preview of a group link |
+| POST | `/chat/invite/:code/join` | User | joins the group -> `{id}` (400 if full) |
+
+## Find Player: "I need N players"
+
+Any registered customer (the host) can ask for more players for a **friendly** game: up to **11** players, on a day from tomorrow, within the next **6** days (never today). Every other registered customer gets an in-app notice (type `players`, and a push to devices unless they switched promotional notifications off): "<name> needs 6 Players for Upcoming Game. View the deal" linking to `/find-player/<id>`. Every route needs a signed-in customer.
+
+Money: the court price for that hour (taken when posted) is shared **equally** by everyone playing, the host included, whoever wins or loses, and paid at the venue. Once everyone has joined, the host pays an **advance of Rs. 300 online** (Fonepay QR) within 2 hours; that books the court, and the host's venue payment is their share minus the advance. If the advance is not paid in time the request is cancelled and the players are told.
+
+Status: `open` -> `awaiting_advance` (everyone joined) -> `confirmed` (advance paid, court booked) | `cancelled`; `expired` is shown for a request whose start time has passed.
+
+| Method | Path | Who | What |
+| --- | --- | --- | --- |
+| GET | `/player-requests/rules` | User | `{maxPlayers: 11, windowDays: 6, advanceFee: 300, perDay: 3, noteMax: 140, hours: [open start hours]}` |
+| GET | `/player-requests` | User | open requests that have not started (and your own / ones you joined), soonest first: `{id, posterName, mine, date, hour, playersNeeded, joined, spotsLeft, note, status, joinedByMe, joiners?, courtPrice, everyone, sharePerPlayer, hostShare, advanceFee, hostPaysAtVenue, advanceDueAt, confirmed}`. `joiners` only for the host |
+| POST | `/player-requests` | User | `{date, hour, players (1-11), note? (140)}` -> `{id}`. A day from tomorrow within the next 6 days (today is refused), an open hour. 3 requests per 24 hours (429); the same time twice is 409. Notifies everyone else |
+| GET | `/player-requests/:id` | User | one request with the split above (404 when gone) |
+| POST | `/player-requests/:id/join` | User | "I'm in". The spots can never go below zero (transaction); 409 if already joined, 400 for your own, full, cancelled or started. The host is told. The last join moves it to `awaiting_advance` |
+| POST | `/player-requests/:id/leave` | User | takes you out (not after the court is booked); an `awaiting_advance` request reopens |
+| POST | `/player-requests/:id/advance` | Host | only when `awaiting_advance`: books the court for the hour (held for the QR) and returns the payment order `{orderCode, method: "fonepay", amount: 300, remarks, qrPayload, expiresAt, status}`. Poll `/payments/:orderCode/status`; when paid the booking is `confirmed` / `partially_paid` (Rs. 300 paid, the rest at the venue) and the request `confirmed`. Asking again returns the same QR |
+| POST | `/player-requests/:id/cancel` | Host | cancels; the court booking is cancelled (an advance paid is marked for refund) and joiners are told (403 for anyone else) |
+
+## Unique Club
+
+Rs. 1,500 for 30 days. While a member is active, every court booking and Gamezone session gets **10% off**, and a hosted tournament gets 10% off its court charge (admin portal). A member **cannot use a promo code or a VIP code** on top: the club discount replaces them. The discount is recorded on the booking (`clubDiscount`) so the admin portal, receipts and the WhatsApp bill can show it. Renewing early adds 30 days on top of the days left; a reminder goes out 3 days before the end.
+
+| Method | Path | Who | What |
+| --- | --- | --- | --- |
+| GET | `/club` | User | `{fee: 1500, days: 30, percent: 10, member, expired, validUntil, daysLeft, since, payments}` |
+| POST | `/club/join` | User | starts (or renews) the club: returns the Fonepay QR order `{orderCode: "CLUB-XXXXXXXX", amount: 1500, qrPayload, expiresAt, ...}`. Poll `/payments/:orderCode/status`; when it is paid the club switches on. The same pending QR is returned if asked again |
+
+Where the discount shows up:
+- `POST /bookings/quote` returns `club: {percent, discount}` for a member (and `promo.ok = false` with a message if a promo code was typed); `POST /bookings/checkout` refuses a promo code from a member (400).
+- Gamezone: the total is already 10% lower; the session row has `clubDiscount`.
+- Admin portal: walk-in and bulk bookings for a member's number get 10% off (not when staff type a price); the booking, the Payments list, the final bill (CB-...), the WhatsApp invoice and a hosted tournament's bill show "Unique Club member discount". Payments > Unique Club lists the Rs. 1,500 payments.
+
+**Maturity rule.** The 10% on the **1-month membership plan** and on **hosting a tournament** (admin portal) is only for a club member who has been in the club for **15 days, or has played 5 games** (completed bookings dated on or after the day they joined). Court bookings and Gamezone get the 10% from the first day. `GET /club` reports it: `{mature, daysIn, gamesPlayed, daysToMature, gamesToMature, matureAfterDays: 15, matureAfterGames: 5}`. The check is made by the server when a membership is requested and when the tournament bill is made (at the closing time once the final bill is closed).

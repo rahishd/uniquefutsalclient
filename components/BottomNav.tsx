@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, CalendarDays, User, Swords, Gamepad2 } from "lucide-react";
+import { Home, CalendarDays, User, Gamepad2, MessageCircle } from "lucide-react";
 import { useT } from "@/lib/i18n";
+import { unreadStore } from "@/lib/chat";
 
 const LEFT_TABS = [
   { label: "Home", href: "/", icon: Home },
-  { label: "Opponent", href: "/opponent", icon: Swords },
+  { label: "Gamezone", href: "/gamezone", icon: Gamepad2 },
 ];
 const RIGHT_TABS = [
-  { label: "Gamezone", href: "/gamezone", icon: Gamepad2 },
+  { label: "Chat", href: "/chat", icon: MessageCircle },
   { label: "Profile", href: "/profile", icon: User },
 ];
 
@@ -19,6 +20,7 @@ const RIGHT_TABS = [
 export default function BottomNav() {
   const pathname = usePathname();
   const t = useT();
+  const unread = unreadStore.use().data ?? 0;
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
   const bookActive = isActive("/book");
 
@@ -31,7 +33,14 @@ export default function BottomNav() {
         aria-current={active ? "page" : undefined}
         className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-2 ${active ? "text-brand" : "text-slate-400"}`}
       >
-        <Icon size={21} strokeWidth={active ? 2.3 : 1.8} />
+        <span className="relative">
+          <Icon size={21} strokeWidth={active ? 2.3 : 1.8} />
+          {href === "/chat" && unread > 0 && (
+            <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[9px] font-bold leading-none text-white">
+              {unread > 9 ? "9+" : unread}
+            </span>
+          )}
+        </span>
         <span className={`text-[10px] leading-none ${active ? "font-semibold" : "font-medium"}`}>{t(label)}</span>
       </Link>
     );

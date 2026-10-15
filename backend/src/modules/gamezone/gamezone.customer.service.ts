@@ -1,3 +1,4 @@
+import { activeClub, clubDiscountOf } from "../club/club.service";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../config/db";
 import { AppError } from "../../middlewares/error.middleware";
@@ -116,7 +117,11 @@ export class GamezoneCustomerService {
       throw new AppError(400, "Signed-in customers do not send guest details");
     }
 
-    const total = gzTotal(plan.ratePerPersonHour, input.players, input.hours); // the server sets the price
+    const gross = gzTotal(plan.ratePerPersonHour, input.players, input.hours); // the server sets the price
+    // Unique Club: 10% off for an active member
+    const club = await activeClub(userId);
+    const clubDiscount = club ? clubDiscountOf(gross) : 0;
+    const total = gross - clubDiscount;
     const code = this.genCode(input.date);
     const online = input.method !== "venue";
 
@@ -135,6 +140,7 @@ export class GamezoneCustomerService {
             hours: input.hours,
             players: input.players,
             total,
+            clubDiscount,
             paymentMethod: input.method,
             paymentStatus: online ? "pending" : "pay_at_venue",
             holdExpiresAt: online ? new Date(Date.now() + QR_HOLD_MS) : null,
@@ -175,10 +181,10 @@ export class GamezoneCustomerService {
     return { booking: this.view(booking!, consoleRow.name), payment };
   }
 
-  view(b: { code: string; consoleId: string; gameTitle: string; date: string; startHour: number; hours: number; players: number; total: number; paymentMethod: string; paymentStatus: string; status: string }, consoleName?: string) {
+  view(b: { code: string; consoleId: string; gameTitle: string; date: string; startHour: number; hours: number; players: number; total: number; clubDiscount?: number; paymentMethod: string; paymentStatus: string; status: string }, consoleName?: string) {
     return {
       code: b.code, console: consoleName ?? b.consoleId, consoleId: b.consoleId, game: b.gameTitle, date: b.date, startHour: b.startHour, hours: b.hours,
-      players: b.players, total: b.total, paymentMethod: b.paymentMethod, paymentStatus: b.paymentStatus, status: b.status,
+      players: b.players, total: b.total, clubDiscount: b.clubDiscount ?? 0, paymentMethod: b.paymentMethod, paymentStatus: b.paymentStatus, status: b.status,
     };
   }
 

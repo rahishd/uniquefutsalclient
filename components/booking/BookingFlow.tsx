@@ -313,7 +313,7 @@ export default function BookingFlow({ initialDate, initialHour }: { initialDate?
             <div className="flex justify-between"><dt className="text-slate-400">Time</dt><dd className="font-medium">{formatHour(slot.hour)} – {formatHour(slot.hour + 1)}</dd></div>
             <div className="flex justify-between"><dt className="text-slate-400">Base price</dt><dd>{formatRs(q ? q.basePrice : base)}</dd></div>
             {q && q.discount > 0 && (
-              <div className="flex justify-between text-emerald-600"><dt>{free ? "Free game voucher" : q.vip ? q.vip.label : `Promo ${promo?.code ?? ""}`}</dt><dd>− {formatRs(q.discount)}</dd></div>
+              <div className="flex justify-between text-emerald-600"><dt>{free ? "Free game voucher" : q.club ? `Unique Club member (${q.club.percent}%)` : q.vip ? q.vip.label : `Promo ${promo?.code ?? ""}`}</dt><dd>− {formatRs(q.discount)}</dd></div>
             )}
             <div className="flex justify-between border-t border-white/60 pt-3 text-base"><dt className="font-medium">Total</dt><dd className="font-semibold">{formatRs(total)}</dd></div>
           </dl>
@@ -342,7 +342,14 @@ export default function BookingFlow({ initialDate, initialHour }: { initialDate?
           </button>
         )}
 
-        {!free && (
+        {!free && q?.club && (
+          <section className="glass rounded-3xl p-5" aria-label="Unique Club">
+            <p className="flex items-center gap-2 text-sm font-semibold"><Check size={16} className="text-emerald-600" /> Unique Club member: {q.club.percent}% off applied</p>
+            <p className="mt-1 text-xs text-slate-500">Promo codes are not used with your club discount.</p>
+          </section>
+        )}
+
+        {!free && !q?.club && (
           <section className="glass rounded-3xl p-5">
             <label htmlFor="promo" className="flex items-center gap-2 text-sm font-medium"><Tag size={16} className="text-brand" /> Promo code</label>
             <div className="mt-3 flex gap-2">

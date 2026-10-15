@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
-import { AlarmClock, Bell, BellRing, CalendarCheck, CreditCard, Crown, Gamepad2, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, X } from "lucide-react";
+import { AlarmClock, Bell, BellRing, CalendarCheck, CreditCard, Crown, Gamepad2, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, UserSearch, X } from "lucide-react";
 import {
   clearAll,
   markAllRead,
@@ -28,6 +28,7 @@ const META: Record<NoticeType, { icon: typeof Bell; tone: string; label: string 
   complaint: { icon: MessageSquareWarning, tone: "bg-rose-500/10 text-rose-600", label: "Complaint" },
   academy: { icon: GraduationCap, tone: "bg-teal-500/10 text-teal-600", label: "Academy" },
   referral: { icon: HeartHandshake, tone: "bg-pink-500/10 text-pink-600", label: "Refer & Earn" },
+  players: { icon: UserSearch, tone: "bg-sky-500/10 text-sky-600", label: "Players needed" },
 };
 
 // Any type without its own icon (a staff "general" notice, or a type added later) shows as a plain notice, never an error.
@@ -92,7 +93,7 @@ export default function NotificationBell() {
     setPerm(await requestSystemPermission());
   }
 
-  const badge = unread > 9 ? "9+" : String(unread);
+  const badge = unread > 99 ? "99+" : String(unread);
 
   return (
     <div className="relative">
@@ -109,11 +110,15 @@ export default function NotificationBell() {
         aria-controls={open ? panelId : undefined}
         className="relative flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       >
-        <Bell size={22} />
+        {/* while something is unread the bell rings and the number blinks (still, for people who asked for less motion) */}
+        <Bell size={22} className={unread > 0 ? "uf-bell-ring text-rose-500" : undefined} />
         {unread > 0 && (
-          <span aria-hidden className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-semibold text-white">
-            {badge}
-          </span>
+          <>
+            <span aria-hidden className="uf-badge-ping absolute -right-1 -top-1 h-5 w-5 rounded-full bg-rose-400" />
+            <span aria-hidden className="uf-badge-blink absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-semibold text-white">
+              {badge}
+            </span>
+          </>
         )}
       </button>
 

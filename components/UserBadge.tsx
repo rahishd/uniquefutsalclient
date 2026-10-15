@@ -7,6 +7,7 @@ import { useTeams } from "@/lib/teams";
 import { useT } from "@/lib/i18n";
 import DigitalIdButton from "@/components/digitalid/DigitalIdButton";
 import WifiButton from "@/components/wifi/WifiButton";
+import WhatsAppChat from "@/components/WhatsAppChat";
 
 // Top-left of the home header: the signed-in customer (with the (C) badge in Captain mode), or "Guest".
 export default function UserBadge() {
@@ -29,6 +30,7 @@ export default function UserBadge() {
     </Link>
     <DigitalIdButton />
     <WifiButton />
+    <WhatsAppChat />
     </div>
   );
 }

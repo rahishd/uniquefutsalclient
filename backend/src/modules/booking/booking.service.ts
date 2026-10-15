@@ -1,3 +1,4 @@
+import { activeClub, clubDiscountOf, CLUB_PERCENT } from "../club/club.service";
 import { prisma } from "../../config/db";
 import { uniqueBookingCode, fallbackBookingCode } from "../../utils/bookingCode";
 import { AppError } from "../../middlewares/error.middleware";
@@ -348,6 +349,16 @@ export class BookingService {
       const slot = hourlyPricing.find((p) => parseInt(p.id.replace("ts-", ""), 10) === startHour + i);
       basePrice += slot?.price || defaultHourlyRate;
     }
+    // Unique Club: an active member gets 10% off and cannot add a promo or VIP code (the discount replaces them).
+    const club = await activeClub(userId);
+    if (club) {
+      const clubDiscount = clubDiscountOf(basePrice);
+      const promoNote = promoCode && promoCode.trim() ? { ok: false, message: "Unique Club members get 10% off and cannot use a promo code." } : null;
+      return {
+        basePrice, discount: clubDiscount, total: Math.max(0, basePrice - clubDiscount), promo: promoNote, vip: null,
+        water: waterFor({ vip: false, promo: null }), club: { percent: CLUB_PERCENT, discount: clubDiscount },
+      };
+    }
     let discount = 0;
     let promo: { ok: boolean; code?: string; label?: string; message?: string } | null = null;
     let promoUsed: PromoCodeDTO | null = null;
@@ -697,9 +708,18 @@ export class BookingService {
     let appliedPromoCode: string | null = null;
     let appliedPromo: PromoCodeDTO | null = null;
 
+    // Unique Club: 10% off for an active member, and no promo or VIP code on top of it.
+    const clubMember = dto.isManual ? null : await activeClub(userId);
+    let clubDiscount = 0;
+    if (clubMember) {
+      if (dto.promoCode && dto.promoCode.trim()) throw new AppError(400, "Unique Club members get 10% off and cannot use a promo code.");
+      clubDiscount = clubDiscountOf(subtotal);
+      discountAmount = clubDiscount;
+    }
+
     // Validate and compute promo discount server-side (never trust frontend discountAmount).
-    const { vip, entered: vipTyped } = await vipForBooking(userId, dto.promoCode);
-    if (dto.promoCode && !vipTyped) {
+    const { vip, entered: vipTyped } = clubMember ? { vip: null, entered: false } : await vipForBooking(userId, dto.promoCode);
+    if (!clubMember && dto.promoCode && !vipTyped) {
       const normalizedCode = dto.promoCode.trim().toUpperCase();
       const promoCodes = await SettingsService.getPromoCodes();
       const promo = promoCodes.find(
@@ -843,6 +863,7 @@ export class BookingService {
         addOnsPrice,
         promoCode: appliedPromoCode,
         discountAmount,
+        clubDiscount,
         subtotal,
         totalPrice,
         paymentMethod: dto.paymentMethod,

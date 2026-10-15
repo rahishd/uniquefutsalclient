@@ -44,6 +44,8 @@ export const checkoutController = {
         total,
         promo: q.promo,
         vip: q.vip,
+        // Unique Club member: { percent, discount }; promo and VIP codes are not used with it
+        club: (q as { club?: { percent: number; discount: number } }).club ?? null,
         // complimentary mineral water: { bottles, excluded: "vip" | "promo" | null }
         water: q.water,
         usesVoucher,

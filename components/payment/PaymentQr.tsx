@@ -22,11 +22,12 @@ interface Props {
   guestPhone?: string; // a guest has no account: the server checks the order against this number
   onPaid: () => void; // called automatically once the server reports the order as paid
   onBack: () => void;
+  backLabel?: string; // default: "Change payment method"
 }
 
 // Shows the QR for the exact amount, then watches for the payment. The customer never has to
 // confirm anything: the screen moves on by itself when the server reports "paid".
-export default function PaymentQr({ method, orderId, amount, remarks, payload, expiresAt, guestPhone, onPaid, onBack }: Props) {
+export default function PaymentQr({ method, orderId, amount, remarks, payload, expiresAt, guestPhone, onPaid, onBack, backLabel = "Change payment method" }: Props) {
   const label = METHOD_LABEL[method];
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const reported = useRef(false);
@@ -101,7 +102,7 @@ export default function PaymentQr({ method, orderId, amount, remarks, payload, e
   return (
     <div className="space-y-5">
       <button type="button" onClick={onBack} className="flex items-center gap-1 text-sm text-brand">
-        <ChevronLeft size={18} /> Change payment method
+        <ChevronLeft size={18} /> {backLabel}
       </button>
 
       <header>

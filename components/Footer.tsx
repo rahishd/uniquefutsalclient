@@ -5,6 +5,7 @@ import { FaFacebookF, FaTiktok, FaWhatsapp } from "react-icons/fa6";
 import { site } from "@/lib/site";
 import { useT } from "@/lib/i18n";
 import PartnersStrip from "@/components/PartnersStrip";
+import Facilities from "@/components/Facilities";
 
 
 function Social({ href, label, children }: { href: string; label: string; children: React.ReactNode }) {
@@ -29,6 +30,9 @@ export default function Footer() {
       {/* the organisations the venue works with: between the promo codes above and the founder message */}
       <PartnersStrip />
 
+      {/* what the venue offers, between Corporate Network and the founder message */}
+      <Facilities />
+
       <section aria-label="A message from the founder" className="glass mb-10 overflow-hidden rounded-3xl">
         <div className="relative bg-slate-100 text-slate-700">
           {/* big quotation marks, as in the template */}
@@ -38,17 +42,13 @@ export default function Footer() {
           <div className="relative grid desk:grid-cols-[1.55fr_1fr]">
             <div className="space-y-3 px-6 pb-6 pt-16 text-sm leading-relaxed desk:px-12 desk:pb-12 desk:pt-24 desk:text-[17px] desk:leading-8">
               <h2 className="text-xl font-bold text-slate-900 desk:text-3xl">A Message from the Founder</h2>
-              <p className="font-semibold text-slate-900">Greetings to all our valued customers and players,</p>
-              <p>
-                I am Rahish Dumre, Founder of Unique Futsal. My vision for Unique Futsal began in 2017 with a simple idea: to create an indoor futsal facility that stands apart from others—not only through its facilities but also through the experience and relationships it builds, Since their name &quot;Unique&quot; was born. Established in 2018, Unique Futsal was founded on the principles of comfort, refreshment, and a welcoming, family-like environment.
-              </p>
-              <p>
-                Our journey has always been about providing more than just a place to play. In 2019, we introduced health insurance to support players against unexpected injuries. In 2021, we launched dedicated membership plans for men, women, and corporate groups. In 2023, we established our Children&apos;s Academy for ages 10–15, focusing on skill development, physical fitness, and discipline. In 2024, we introduced GameZone to extend the experience beyond the court and encourage social connections through digital entertainment.
-              </p>
-              <p>Looking ahead, my vision is to develop a technology-driven futsal experience with seamless online booking and integrated services.</p>
-              <p>Interestingly, this system is self-built by me. Briefly about my background: I hold a BSc (Hons) in Computing and an MSc (Hons) in Cyber Security Threat Intelligence from London Metropolitan University.</p>
-              <p>I believe futsal is more than a sport; it builds teamwork, promotes a healthy lifestyle, develops discipline, and strengthens communities.</p>
-              <p>Thank you for your continued trust and support. Unique Futsal is not just a venue; it is a community we build together.</p>
+              <p className="font-semibold text-slate-900">Greetings to our valued customers, players, and well-wishers,</p>
+              <p>My vision began in 2017 with a simple yet meaningful goal: to create a futsal facility that offers more than just a place to play. Established in 2018, Unique Futsal was built on the values of comfort, refreshment, innovation, and a welcoming, family-like environment—The name &quot;Unique&quot; was born since then.</p>
+              <p>Our journey has been driven by continuous improvement and a commitment to our community. In 2019, we introduced health insurance to support players against unexpected injuries. In 2021, we launched dedicated membership plans for men, women, and corporate groups. In 2023, we established our Children&apos;s Academy for ages 10–15, promoting football skills, physical fitness, and discipline. In 2024, we introduced GameZone, extending the experience beyond the court.</p>
+              <p>In 2025, we launched our 3% Charity Initiative, transforming my childhood dream of helping those in need into meaningful action. A portion of the profit generated through games contributes to supporting underprivileged children with food, shelter, and education. We believe every game can create an opportunity to make a difference. Every Game you play contributes 3% to them.</p>
+              <p>Looking ahead, I envision Unique Futsal becoming a technology-driven sports destination, offering seamless online booking and integrated digital services. As a Computing graduate from London Metropolitan University, I am personally developing our booking system, combining my passion for technology with my commitment to improving the customer experience.</p>
+              <p>To me, futsal is more than a sport. It builds teamwork, encourages a healthy lifestyle, develops discipline, and brings people together. Our ambition is to continue creating experiences that inspire players while contributing positively to society.</p>
+              <p>Thank you for your continued trust, support, and loyalty. Unique Futsal is more than a venue—it is a community built on shared passion, meaningful connections, and a vision for a better future.</p>
             </div>
 
             {/* a cut-out photo (transparent background), standing on the bottom edge of the card */}

@@ -5,9 +5,9 @@ import { FaWhatsapp } from "react-icons/fa6";
 import { CalendarX2, CreditCard, Crown, HelpCircle, Phone, X, Zap } from "lucide-react";
 import { site } from "@/lib/site";
 
-// Floating "urgent help" button on Home. It opens a WhatsApp chat with the venue admin in the
-// WhatsApp app. The message is pre-written from the topic the customer picks (no personal data
-// is put in the link). A chat INSIDE this app would need the backend; this is the simple, reliable way.
+// "Urgent help" WhatsApp button, shown in the Home header row next to the Digital ID and Wi-Fi icons. It opens a
+// WhatsApp chat with the venue admin in the WhatsApp app. The message is pre-written from the topic the customer picks
+// (no personal data is put in the link). A chat INSIDE this app would need the backend; this is the simple, reliable way.
 const TOPICS = [
   { label: "Booking problem", icon: CalendarX2, text: "Hello Unique Futsal, I need urgent help with my booking." },
   { label: "Payment issue", icon: CreditCard, text: "Hello Unique Futsal, I need urgent help with a payment." },
@@ -37,10 +37,9 @@ export default function WhatsAppChat() {
         onClick={() => setOpen(true)}
         aria-label="Need urgent help? Chat with us on WhatsApp"
         aria-haspopup="dialog"
-        className="fixed bottom-28 right-4 z-40 desk:bottom-6 desk:right-6 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_8px_24px_rgba(37,211,102,0.5)] transition active:scale-95"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white shadow-sm transition active:scale-95"
       >
-        <FaWhatsapp size={30} />
-        <span aria-hidden className="absolute inset-0 -z-10 animate-ping rounded-full bg-[#25D366]/40" />
+        <FaWhatsapp size={20} />
       </button>
 
       {open && (

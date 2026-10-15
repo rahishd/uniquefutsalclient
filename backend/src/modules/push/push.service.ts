@@ -29,7 +29,7 @@ export const setPushSender = (s: PushSender | null) => {
 };
 
 // Notice types a customer can switch off, and the one tied to the "Pop-up reminder" switch.
-const PROMO_TYPES = new Set(["promo"]);
+const PROMO_TYPES = new Set(["promo", "players"]);
 
 export class PushService {
   get enabled() {

@@ -8,6 +8,7 @@ import { errorText } from "@/lib/api";
 import { METHOD_LABEL, isOnline, type PayMethod } from "@/lib/payment";
 import { openSignIn, useSession } from "@/lib/session";
 import { bookGamezone, catalogStore, estimate, fetchGzSlots, myGzStore, type Catalog, type GzBooking, type GzCheckout } from "@/lib/gamezone";
+import { clubOff, clubStore } from "@/lib/club";
 import PaymentMethodPicker from "@/components/payment/PaymentMethodPicker";
 import PaymentQr from "@/components/payment/PaymentQr";
 
@@ -88,7 +89,11 @@ function Flow({ catalog }: { catalog: Catalog }) {
   const { hours: slots, error: slotsError } = useGzSlots(activeDate, hours, consoleId, version);
   const slot = slots && selHour !== null && slots.includes(selHour) ? { hour: selHour } : undefined;
   const plan = catalog.plans.find((p) => p.players === players) ?? catalog.plans[0];
-  const total = estimate(plan.ratePerPersonHour, players, hours);
+  const gross = estimate(plan.ratePerPersonHour, players, hours);
+  // Unique Club member: 10% off (the server takes the same amount off)
+  const club = clubStore.use().data;
+  const clubDiscount = club?.member ? clubOff(gross, club.percent) : 0;
+  const total = gross - clubDiscount;
   const registered = Boolean(session?.registered);
   const effMethod: PayMethod = !registered && method === "venue" ? "fonepay" : method;
   const phoneOk = /^9\d{9}$/.test(phone);
@@ -197,6 +202,7 @@ function Flow({ catalog }: { catalog: Catalog }) {
             <div className="flex justify-between"><dt className="text-slate-400">Game</dt><dd className="font-medium">{selGame}</dd></div>
             <div className="flex justify-between"><dt className="text-slate-400">Players</dt><dd className="font-medium">{plan.label}</dd></div>
             <div className="flex justify-between"><dt className="text-slate-400">Rate</dt><dd>{formatRs(plan.ratePerPersonHour)} × {players} {players === 1 ? "player" : "players"} × {hours} hr</dd></div>
+            {clubDiscount > 0 && <div className="flex justify-between text-emerald-600"><dt>Unique Club member ({club?.percent}%)</dt><dd>− {formatRs(clubDiscount)}</dd></div>}
             <div className="flex justify-between border-t border-white/60 pt-3 text-base"><dt className="font-medium">Total</dt><dd className="font-semibold">{formatRs(total)}</dd></div>
           </dl>
           <p className="mt-2 text-[11px] text-slate-400">The final price is set by the server.</p>

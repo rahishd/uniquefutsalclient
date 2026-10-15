@@ -57,6 +57,11 @@ teamRouter.delete("/me/members/:userId", asyncHandler(async (req: AuthRequest, r
 }));
 
 // Leaderboard and another team's stats: captains only
+// Find Player (declared before /:id so "find" is not read as a team id)
+teamRouter.get("/find", asyncHandler(async (req: AuthRequest, res: Response) => {
+  ok(res, "Teams", await teamService.findTeams(req.user!.id, req.query.q));
+}));
+
 teamRouter.get("/ranking", asyncHandler(async (req: AuthRequest, res: Response) => {
   await teamService.captainTeam(req.user!.id);
   ok(res, "Ranking", await teamService.ranking());

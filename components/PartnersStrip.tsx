@@ -16,7 +16,7 @@ export default function PartnersStrip() {
 
   return (
     <section aria-label="Corporate Network" className="mb-10">
-      <h2 className="text-center text-lg font-bold text-brand desk:text-2xl">Corporate Network. We Trusted</h2>
+      <h2 className="text-left text-lg font-bold text-brand desk:text-2xl">Corporate Network. We Trusted</h2>
       <div className="uf-partners mt-4 overflow-hidden desk:mt-6" style={{ ["--uf-partners-seconds" as string]: `${seconds}s` }}>
         <ul className="uf-partners-track flex w-max items-stretch gap-3 py-2 desk:gap-5">
           {track.map((p, i) => (

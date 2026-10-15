@@ -9,7 +9,6 @@ import PromoCodes from "@/components/PromoCodes";
 import BannerOffer from "@/components/BannerOffer";
 import TournamentSection from "@/components/TournamentSection";
 import KidSkills from "@/components/KidSkills";
-import WhatsAppChat from "@/components/WhatsAppChat";
 import AdStrip from "@/components/ads/AdStrip";
 import GallerySection from "@/components/ads/GallerySection";
 import ScrollBackdrop from "@/components/ScrollBackdrop";
@@ -54,7 +53,6 @@ export default function HomeScreen() {
         <div className="order-[10] empty:hidden desk:[&>*]:mt-0"><TournamentSection /></div>
       </aside>
 
-      <div className="order-[12]"><WhatsAppChat /></div>
     </div>
   );
 }

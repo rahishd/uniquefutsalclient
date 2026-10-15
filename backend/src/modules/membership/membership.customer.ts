@@ -1,3 +1,4 @@
+import { clubDiscountOf, clubMaturity } from "../club/club.service";
 import { Router, Response } from "express";
 import { body } from "express-validator";
 import { asyncHandler } from "../../utils/asyncHandler";
@@ -120,15 +121,19 @@ router.post(
     const plan = await prisma.membershipPlan.findUnique({ where: { id: planId } });
     if (!plan || !plan.isActive) throw new AppError(404, "That plan is not available");
     // The price is ours, never the browser's.
-    const total = planPrice(plan as unknown as PlanRow, duration, bucketFor(timeSlot));
-    if (total === null) throw new AppError(400, "This plan is not offered for that time of day. Please choose another time.");
+    const listTotal = planPrice(plan as unknown as PlanRow, duration, bucketFor(timeSlot));
+    if (listTotal === null) throw new AppError(400, "This plan is not offered for that time of day. Please choose another time.");
+    // Unique Club: a member who is 15 days in (or has played 5 games) gets 10% off the 1-month plan only (3-month plans keep their own price)
+    const clubDiscount = duration === "1_month" && (await clubMaturity(req.user!.id)).mature ? clubDiscountOf(listTotal) : 0;
+    const total = listTotal - clubDiscount;
     const advance = payment === "advance" && total > 1 ? advanceAmount(total) : null;
     let sub;
     try {
       sub = await membershipService.createSubscription(req.user!.id, {
         planId, timeSlot, startDate, chosenDuration: duration, totalPrice: total, chosenDays: [], isManual: true,
-        notes: advance ? `${ADVANCE_NOTE}: Rs. ${advance} now, Rs. ${total - advance} later` : undefined,
+        notes: [clubDiscount ? `UNIQUE_CLUB: -Rs. ${clubDiscount} (10% off the 1-month plan)` : null, advance ? `${ADVANCE_NOTE}: Rs. ${advance} now, Rs. ${total - advance} later` : null].filter(Boolean).join(" | ") || undefined,
       } as never);
+      if (clubDiscount) await prisma.membershipSubscription.update({ where: { id: (sub as { id: string }).id }, data: { discountAmount: clubDiscount } });
     } catch (e) {
       // the existing service throws plain Errors for rule problems: show them as a clear 400
       if (e instanceof AppError) throw e;
@@ -141,7 +146,7 @@ router.post(
         : `${plan.name} for Rs. ${total}. Pay at the venue and the staff will activate it.`,
       href: "/member", dedupeKey: `member-req-${(sub as { id: string }).id}`,
     });
-    res.status(201).json(ApiResponseUtil.success(201, "Membership requested", { id: (sub as { id: string }).id, total, advance }));
+    res.status(201).json(ApiResponseUtil.success(201, "Membership requested", { id: (sub as { id: string }).id, total, advance, clubDiscount }));
   }),
 );
 

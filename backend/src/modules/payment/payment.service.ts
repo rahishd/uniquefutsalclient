@@ -7,13 +7,14 @@ import { getGateway, OnlineMethod } from "../../services/paymentGateway";
 
 export const QR_HOLD_MS = 10 * 60 * 1000; // an unpaid QR (and the slot behind it) is held for 10 minutes
 
-export type PaymentPurpose = "game" | "gamezone" | "purchase" | "renew";
+export type PaymentPurpose = "game" | "gamezone" | "purchase" | "renew" | "club";
 
 const PURPOSE_LABEL: Record<PaymentPurpose, string> = {
   game: "Regular game",
   gamezone: "Gamezone PS5",
   purchase: "Membership purchase",
   renew: "Membership renew",
+  club: "Unique Club",
 };
 
 // The note the customer's payment carries, so the payment can be matched to its order.
@@ -107,14 +108,17 @@ export class PaymentService {
         logger.error(`Payment ${order.orderCode} arrived after the booking was cancelled: refund needed`);
         return false;
       }
+      // the order is for the whole price, or for an advance (Find Player): then the rest is paid at the venue
+      const paid = Math.min(order.amount, b.totalPrice);
+      const rest = b.totalPrice - paid;
       await prisma.booking.update({
         where: { id: b.id },
         data: {
-          paymentStatus: "completed",
+          paymentStatus: rest > 0 ? "partially_paid" : "completed",
           status: "confirmed",
-          amountPaidNow: b.totalPrice,
-          remainingAmount: 0,
-          onlineAmount: b.totalPrice,
+          amountPaidNow: paid,
+          remainingAmount: rest,
+          onlineAmount: paid,
           holdExpiresAt: null,
         },
       });
@@ -134,6 +138,14 @@ export class PaymentService {
       if (g.userId) {
         await notificationService.notify({ userId: g.userId, type: "payment", title: "Payment received", message: `Rs. ${order.amount} received for ${g.code}.`, href: "/gamezone", dedupeKey: `pay-${order.orderCode}` });
       }
+      return true;
+    }
+    if (order.purpose === "club") {
+      // Unique Club: Rs. 1,500 switches the club on (or adds 30 days) for the customer who paid
+      if (!order.userId) return false;
+      const { default: clubService } = await import("../club/club.service");
+      await clubService.activate(order.userId, order.orderCode);
+      await notificationService.notify({ userId: order.userId, type: "payment", title: "Payment received", message: `Rs. ${order.amount} received for Unique Club.`, href: "/club", dedupeKey: `pay-${order.orderCode}` });
       return true;
     }
     // Membership purchase / renewal: hooked up once the owner decides the membership model (see docs).

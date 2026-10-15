@@ -4,6 +4,8 @@ import logger from "../config/logger";
 import notificationService from "../modules/notification/notification.service";
 import paymentService from "../modules/payment/payment.service";
 import loyaltyService from "../modules/loyalty/loyalty.service";
+import playerRequestService from "../modules/playerrequest/playerrequest.service";
+import clubService from "../modules/club/club.service";
 import { addDaysKey, startsAtMs, todayKey } from "../utils/dates";
 
 // Jobs for the customer app. Each one is safe to run twice: notices carry a dedupe key and every state change is guarded.
@@ -58,9 +60,12 @@ export async function runAppJobs(which: "minute" | "tenMinutes" | "daily") {
     if (which === "minute") {
       const n = await paymentService.expireDue();
       if (n) logger.info(`Expired ${n} unpaid payment holds`);
+      const pr = await playerRequestService.sweep();
+      if (pr) logger.info(`Settled ${pr} Find Player requests`);
     } else if (which === "tenMinutes") {
       await sendAppReminders();
       await expireChallenges();
+      await clubService.remindExpiring();
     } else {
       await loyaltyService.warnExpiringPoints();
     }

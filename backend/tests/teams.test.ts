@@ -271,3 +271,23 @@ describe("cancelling an accepted challenge frees the court", () => {
     expect((await prisma.booking.findUnique({ where: { id: bookingId } }))?.status).toBe("cancelled");
   });
 });
+
+describe("Find Player: a captain looks for another team", () => {
+  it("is for captains only", async () => {
+    expect((await json("get", `/api/teams/find?q=${CAP_B}`, undefined)).status).toBe(401);
+    expect((await json("get", `/api/teams/find?q=${CAP_B}`, LONER)).status).toBe(403);
+  });
+  it("finds a team by the start of its captain's mobile number", async () => {
+    const r = await json("get", `/api/teams/find?q=${CAP_B.slice(0, 7)}`, CAP_A);
+    expect(r.status).toBe(200);
+    const hit = r.body.data.find((t: { id: string }) => t.id === teamB);
+    expect(hit).toMatchObject({ name: "Team Bravo Test", captainName: "Captain B" });
+    expect(r.body.data.some((t: { id: string }) => t.id === teamA)).toBe(false); // never your own team
+  });
+  it("finds a team by name, and never lists everyone for a short search", async () => {
+    const byName = await json("get", "/api/teams/find?q=bravo", CAP_A);
+    expect(byName.body.data.map((t: { id: string }) => t.id)).toContain(teamB);
+    expect((await json("get", "/api/teams/find?q=b", CAP_A)).body.data).toEqual([]);
+    expect((await json("get", "/api/teams/find?q=9800", CAP_A)).body.data).toEqual([]);
+  });
+});

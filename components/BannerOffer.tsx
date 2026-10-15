@@ -1,9 +1,10 @@
 "use client";
 
+import { Tag } from "lucide-react";
 import { promosStore } from "@/lib/promos";
 
-// The line above the Home banner heading. It is worked out from today's live booking promo codes (the same list as
-// "Live promo codes"), so it can never promise more than a customer can actually get. With no live code it says nothing.
+// The badge on the Home promo banner. It is worked out from today's live booking promo codes (the same list as
+// "Live promo codes"), so it can never promise more than a customer can actually get. With no live code it shows nothing.
 export default function BannerOffer() {
   const live = (promosStore.use().data ?? []).filter((p) => p.status === "active" && p.kind === "booking");
 
@@ -23,10 +24,17 @@ export default function BannerOffer() {
       : null;
 
   if (!value) return null;
+
+  // Colours are inline: the banner's own text rules would otherwise turn the badge text navy on navy.
   return (
-    <span className="inline-flex flex-col items-start rounded-xl bg-sky-400 px-3.5 py-2 text-white shadow-[0_8px_18px_-8px_rgba(56,189,248,0.8)] desk:px-5 desk:py-3">
-      <span className="text-[10px] font-bold uppercase leading-none tracking-[0.2em] text-white/90 desk:text-xs">Up to</span>
-      <span className="mt-1 text-2xl font-extrabold leading-none desk:text-4xl">{value} <span className="text-base font-bold desk:text-xl">OFF</span></span>
+    <span className="mb-3 flex flex-col items-start gap-1 desk:mb-4" style={{ color: "#0c0b5d" }}>
+      <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase leading-none tracking-[0.18em] desk:text-xs" style={{ color: "#0c0b5d" }}>
+        <Tag size={11} strokeWidth={2.6} aria-hidden />
+        Today
+      </span>
+      <span className="text-2xl font-extrabold leading-none desk:text-4xl" style={{ color: "#0c0b5d" }}>
+        Up to {value} <span className="text-base font-bold desk:text-xl">OFF</span>
+      </span>
     </span>
   );
 }

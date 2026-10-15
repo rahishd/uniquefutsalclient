@@ -1,5 +1,7 @@
 "use client";
 
+import { clubOff, clubStore } from "@/lib/club";
+import { BadgeCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, Crown, Loader2, MessageCircle, Phone, Star } from "lucide-react";
@@ -74,8 +76,17 @@ function RequestForm({ plans }: { plans: MembershipPlan[] }) {
   }, [startDate]);
 
   const plan = plans.find((p) => p.id === planId);
-  const priceFor = (sl: string) => plan?.prices[duration][timeOfDay(sl)] ?? null;
+  // Unique Club: a member pays 10% less for the 1-month plan only (the server takes the same amount off)
+  const club = clubStore.use().data;
+  const clubOn = !!club?.member && club.mature && duration === "1_month";
+  const clubWaiting = !!club?.member && !club.mature && duration === "1_month";
+  const listPrice = (sl: string) => plan?.prices[duration][timeOfDay(sl)] ?? null;
+  const priceFor = (sl: string) => {
+    const p = listPrice(sl);
+    return p !== null && clubOn ? p - clubOff(p, club!.percent) : p;
+  };
   const total = slot ? priceFor(slot) : null;
+  const clubSaved = slot && total !== null && clubOn ? (listPrice(slot) ?? total) - total : 0;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -158,6 +169,16 @@ function RequestForm({ plans }: { plans: MembershipPlan[] }) {
             ))}
           </div>
         </div>
+      )}
+      {clubWaiting && club && (
+        <p role="status" className="rounded-2xl bg-sky-500/10 px-4 py-3 text-sm text-sky-800">
+          Your Unique Club discount on the 1-month plan unlocks after {club.matureAfterDays} days in the club or {club.matureAfterGames} games played: {club.daysToMature} more day{club.daysToMature === 1 ? "" : "s"} or {club.gamesToMature} more game{club.gamesToMature === 1 ? "" : "s"}.
+        </p>
+      )}
+      {clubSaved > 0 && (
+        <p role="status" className="flex items-center gap-2 rounded-2xl bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-700">
+          <BadgeCheck size={16} /> Unique Club member: {club?.percent}% off the 1-month plan (− {formatRs(clubSaved)})
+        </p>
       )}
       {total !== null && (
         <p className="rounded-2xl bg-white/60 px-4 py-3 text-sm">

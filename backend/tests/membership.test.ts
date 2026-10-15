@@ -83,3 +83,54 @@ it("a 50% advance request keeps the choice, shows the advance, and cannot be ren
   const after = await prisma.membershipSubscription.findUnique({ where: { id: r.body.data.id } });
   expect(after?.paymentStatus).toBe("partial");
 });
+
+it("Unique Club: a member (15 days in) pays 10% less for the 1-month plan only", async () => {
+  await prisma.membershipSubscription.deleteMany({ where: { userId: M } });
+  const joined = new Date(Date.now() - 86400000 * 16);
+  await prisma.clubMember.upsert({ where: { userId: M }, create: { userId: M, startedAt: joined, validUntil: new Date(Date.now() + 86400000 * 10) }, update: { startedAt: joined, validUntil: new Date(Date.now() + 86400000 * 10) } });
+  // 4000 - 500 plan discount = 3500; the club takes 10% of that
+  const one = await post("/api/membership/request", { planId, timeSlot: "09:00-10:00", duration: "1_month", startDate: futureDate(1) }, tokenFor(M));
+  expect(one.status).toBe(201);
+  expect(one.body.data).toMatchObject({ total: 3150, clubDiscount: 350 });
+  const sub = await prisma.membershipSubscription.findUniqueOrThrow({ where: { id: one.body.data.id } });
+  expect(sub.totalPrice).toBe(3150);
+  expect(sub.discountAmount).toBe(350);
+  expect(sub.notes).toMatch(/UNIQUE_CLUB/);
+
+  // the 3-month plan keeps its own price
+  await prisma.membershipSubscription.deleteMany({ where: { userId: M } });
+  const three = await post("/api/membership/request", { planId, timeSlot: "09:00-10:00", duration: "3_months", startDate: futureDate(1) }, tokenFor(M));
+  expect(three.body.data).toMatchObject({ total: 11000, clubDiscount: 0 });
+
+  // an ended club gives nothing
+  await prisma.membershipSubscription.deleteMany({ where: { userId: M } });
+  await prisma.clubMember.update({ where: { userId: M }, data: { validUntil: new Date(Date.now() - 1000) } });
+  const lapsed = await post("/api/membership/request", { planId, timeSlot: "09:00-10:00", duration: "1_month", startDate: futureDate(1) }, tokenFor(M));
+  expect(lapsed.body.data).toMatchObject({ total: 3500, clubDiscount: 0 });
+  await prisma.clubMember.deleteMany({ where: { userId: M } });
+});
+
+it("Unique Club: a new member waits 15 days, or 5 completed games, for the membership discount", async () => {
+  await prisma.membershipSubscription.deleteMany({ where: { userId: M } });
+  const now = new Date();
+  await prisma.clubMember.upsert({ where: { userId: M }, create: { userId: M, startedAt: now, validUntil: new Date(Date.now() + 86400000 * 30) }, update: { startedAt: now, validUntil: new Date(Date.now() + 86400000 * 30) } });
+  const status = (await api().get("/api/club").set(bearer(tokenFor(M)))).body.data;
+  expect(status).toMatchObject({ member: true, mature: false, daysToMature: 15, gamesToMature: 5 });
+
+  // too early: the full plan price (4000 - 500 plan discount)
+  const early = await post("/api/membership/request", { planId, timeSlot: "09:00-10:00", duration: "1_month", startDate: futureDate(1) }, tokenFor(M));
+  expect(early.body.data).toMatchObject({ total: 3500, clubDiscount: 0 });
+  await prisma.membershipSubscription.deleteMany({ where: { userId: M } });
+
+  // 5 games played since joining unlocks it
+  const today = new Date().toISOString().slice(0, 10);
+  for (let i = 0; i < 5; i++) {
+    await prisma.booking.create({ data: { userId: M, date: today, startTime: `${String(6 + i).padStart(2, "0")}:00`, endTime: `${String(7 + i).padStart(2, "0")}:00`, duration: 1, basePrice: 1000, subtotal: 1000, totalPrice: 1000, paymentMethod: "venue", status: "completed", paymentStatus: "completed", code: `MT-CLUB-${i}` } as never });
+  }
+  const after = (await api().get("/api/club").set(bearer(tokenFor(M)))).body.data;
+  expect(after).toMatchObject({ mature: true, gamesPlayed: 5 });
+  const unlocked = await post("/api/membership/request", { planId, timeSlot: "09:00-10:00", duration: "1_month", startDate: futureDate(1) }, tokenFor(M));
+  expect(unlocked.body.data).toMatchObject({ total: 3150, clubDiscount: 350 });
+  await prisma.booking.deleteMany({ where: { userId: M } });
+  await prisma.clubMember.deleteMany({ where: { userId: M } });
+});

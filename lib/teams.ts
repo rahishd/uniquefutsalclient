@@ -176,3 +176,12 @@ export function splitPreview(courtPrice: number, loserPct: number) {
   const loser = Math.round((courtPrice * loserPct) / 100);
   return { loser, winner: courtPrice - loser };
 }
+
+/* ---------- Find Player ---------- */
+
+export interface FoundTeam extends RankedTeam {
+  captainName: string;
+}
+
+// Another team by its captain's mobile number (5+ digits, from the start) or by team name (2+ letters). Captains only.
+export const findTeams = (q: string) => api<FoundTeam[]>("/teams/find", { query: { q } });

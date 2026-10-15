@@ -74,6 +74,8 @@ export interface Quote {
   vip?: { code: string; label: string } | null;
   // complimentary mineral water: 2 bottles with a game, none when a VIP discount or a promo code (without the water switch) is applied
   water?: { bottles: number; excluded: "vip" | "promo" | null };
+  // set for an active Unique Club member: 10% off, no promo or VIP code
+  club?: { percent: number; discount: number } | null;
   usesVoucher: boolean;
   earnPoints: number; // points a signed-in customer will earn after the game
 }

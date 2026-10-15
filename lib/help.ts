@@ -7,7 +7,7 @@ import { EXPIRY_NOTICE_DAYS } from "@/lib/membership";
 import { MAX_ADVANCE_DAYS } from "@/lib/booking";
 import { GAME_POINTS_MONTHS, GZ_POINTS_PER_HOUR, MEMBERSHIP_POINTS, POINTS_CAPTAIN_WIN, RS_PER_POINT } from "@/lib/points";
 
-export type HelpIcon = "book" | "pay" | "rebook" | "member" | "points" | "promo" | "bell" | "captain" | "profile" | "trophy" | "install" | "guest" | "wifi";
+export type HelpIcon = "book" | "pay" | "rebook" | "member" | "points" | "promo" | "bell" | "captain" | "profile" | "trophy" | "install" | "guest" | "wifi" | "chat" | "players" | "language";
 
 export interface HelpTopic {
   id: string;
@@ -19,6 +19,30 @@ export interface HelpTopic {
 }
 
 export const helpTopics: HelpTopic[] = [
+  {
+    id: "home",
+    icon: "book",
+    title: "Finding your way around",
+    summary: "The bottom bar, Quick Access and the buttons at the top.",
+    points: [
+      "The bottom bar has Home, Gamezone, Book Now, Chat and Profile.",
+      "Quick Access on Home opens everything else: Opponent, Find Player, Unique Club, Membership, Points, My stats, Tournaments, Promos, Complaints, Children's Academy, Refer & Earn and Help.",
+      "At the top: the moon or sun switches dark mode, NP or EN switches the language, and the bell shows your notifications.",
+      "Next to Hello: your Digital ID (QR), the venue Wi-Fi and a green WhatsApp button to reach the venue.",
+      "Further down Home you will find our promo codes, tournaments, our corporate network, what makes us unique and a message from the founder.",
+    ],
+  },
+  {
+    id: "language",
+    icon: "language",
+    title: "Dark mode and Nepali",
+    summary: "Change how the app looks and the language it speaks.",
+    points: [
+      "Tap the moon (or sun) button at the top to switch between light and dark.",
+      "Tap NP to read the whole app in Nepali, and EN to go back to English.",
+      "The app remembers your choice on this phone.",
+    ],
+  },
   {
     id: "booking",
     icon: "book",
@@ -39,7 +63,7 @@ export const helpTopics: HelpTopic[] = [
     title: "Gamezone (PS5)",
     summary: "Book a PS5 console by the hour.",
     points: [
-      "Open Gamezone in Popular. Choose how many are playing: Solo Rs. 300 an hour, 2 players Rs. 200 each, 4 players Rs. 150 each.",
+      "Open the Gamezone tab at the bottom, or Quick Access > Gamezone. Choose how many are playing: Solo Rs. 300 an hour, 2 players Rs. 200 each, 4 players Rs. 150 each.",
       "Pick how many hours (up to 4). The price grows with the hours: rate × players × hours.",
       "Choose PS5 Station 1 or 2. Each console has its own free times, so the start times change when you switch.",
       "Choose your game: GTA 5, Forza Horizon, Red Dead Redemption or FIFA 26.",
@@ -68,18 +92,32 @@ export const helpTopics: HelpTopic[] = [
     points: [
       "Signed in: we already know your name and number. Every payment option is open, including Pay at venue.",
       "Guest: type your name and mobile number and pay the full amount online.",
-      "Quick Rebook, membership, points and your history need an account.",
+      "Book again, membership, points and your history need an account.",
     ],
   },
   {
     id: "rebook",
     icon: "rebook",
-    title: "Quick Rebook",
+    title: "Book again (your usual slot)",
     summary: "One tap to book your usual time again.",
     points: [
-      "We notice the day and hour you play most often and show it on Home.",
+      "We notice the day and hour you play most often and show a Book again card on Home, just above Quick Access.",
       "It appears only when that slot is still free. Tap it and the booking page opens with the time filled in.",
     ],
+  },
+  {
+    id: "club",
+    icon: "member",
+    title: "Unique Club",
+    summary: "Rs. 1,500 for 30 days and 10% off every game.",
+    points: [
+      "Open Quick Access > Unique Club and tap Join. Pay Rs. 1,500 with the Fonepay QR. The club switches on as soon as the payment arrives and lasts 30 days.",
+      "While you are a member you get 10% off court bookings and Gamezone, taken off automatically at checkout. A tournament you host at the venue gets 10% off the court charge too, and the 1-month membership plan is 10% cheaper (3-month plans keep their own price). Hosting a tournament and the membership plan discount unlock after you have been in the club for 15 days, or have played 5 games since you joined.",
+      "It is a sure shot discount: it replaces promo codes, so a member cannot add a promo code on top. The app knows you are a member.",
+      "The venue sees your club discount on your booking, payment and final bill, and it is shown on the bill sent to your WhatsApp.",
+      "We remind you 3 days before it ends. Renew any time to add 30 more days.",
+    ],
+    href: { label: "Unique Club", to: "/club" },
   },
   {
     id: "membership",
@@ -121,6 +159,7 @@ export const helpTopics: HelpTopic[] = [
       "While booking, tap View promo codes under the promo box to see the codes running now, and tap Use to apply one. You do not have to remember or type it.",
       "Some codes have rules (weekends only, mornings only, renewals only). The card says which.",
       "One code per booking.",
+      "The \"Up to ... off today\" offer on the Home banner follows the best code running now, so it always matches Promos.",
       "Some codes can be used only a few times, or once per customer. When a code has run out, it is taken off the list and the booking page says so.",
     ],
     href: { label: "See promos", to: "/promos" },
@@ -164,7 +203,7 @@ export const helpTopics: HelpTopic[] = [
     title: "Notifications and the \"I'm coming\" reminder",
     summary: "We tell you about bookings, payments and challenges.",
     points: [
-      "The bell on Home collects your messages. A red number on a Popular tile means something new is waiting there.",
+      "The bell at the top collects your messages. When something is new, the bell rings and shows how many are waiting. A red number on a Quick Access tile or on the Chat tab means something new is waiting there.",
       "One hour before your game a full-screen reminder asks \"Are you on your way?\". Slide to say you are coming and the venue is told.",
       "Prefer no full-screen pop-up? Turn off Pop-up reminder in Profile > Settings. You still get the bell message.",
       "Want alerts when the app is closed? Turn on Alerts when the app is closed in Profile > Settings and allow notifications. On iPhone, add the app to your Home Screen first.",
@@ -176,7 +215,7 @@ export const helpTopics: HelpTopic[] = [
     title: "Captain mode and challenges",
     summary: "Build a team and challenge other teams.",
     points: [
-      "In Profile, switch from Player to Captain, then name your team. You can have up to 12 players, yourself included.",
+      "In Profile, switch from Player to Captain, then name your team. You can have up to 12 players, yourself included. Find it later in Quick Access > Opponent.",
       "Only a captain can challenge another team, and needs at least 5 players. Teams are ranked with 1 to 5 stars from approved results.",
       "When you challenge, choose who pays: the loser pays 70%, 60% or all of it. Challenge games are paid at the venue after the game.",
       "After the game the winning captain enters the final score. The other captain approves it, and then the ratings update.",
@@ -190,6 +229,7 @@ export const helpTopics: HelpTopic[] = [
     title: "Your profile",
     summary: "Your bookings, stats, payments and settings.",
     points: [
+      "Tap the round picture at the top to add or change your photo. It also shows on Home and in your chats.",
       "My bookings shows your next game and your last game. Tap the arrow for the rest.",
       "Games played shows your latest game. Open the arrow for earlier games. Goals and assists are recorded by the venue for games you play from now on and shown next to each game.",
       "Payment history shows your two latest payments. Open the arrow for all of them.",
@@ -220,6 +260,7 @@ export const helpTopics: HelpTopic[] = [
     points: [
       "Home shows the current tournament with its details.",
       "Some tournaments are hosted at the venue for an organiser. They show who hosts them and the hours of each day, and the court is kept for them in those hours. They are listed under Also at the venue.",
+      "A team joins a tournament from the registration link the organiser shares: team name, captain and contact number. You do not need to list every player. The entry fee, if there is one, is shown on that page.",
       "Open it to see every round, the scores, who scored and when, and who plays next.",
       "Tap the bell on a match that has not finished to get live updates: a notification at kick-off, for every goal and at full time. Tap it again to stop. Sign in first. Turn on alerts in Profile > Settings to get them when the app is closed.",
     ],
@@ -231,7 +272,7 @@ export const helpTopics: HelpTopic[] = [
     title: "Send a complaint",
     summary: "Tell the venue about a problem, with photos if you like.",
     points: [
-      "On Home, tap Complaints in the Popular section. You need to be signed in.",
+      "On Home, tap Complaints in Quick Access. You need to be signed in.",
       "Pick what it is about, describe what happened, and add up to 3 photos if they help.",
       "You can add your booking code so we find the game faster.",
       "You get a reference like CP-7K3QX9. The venue's reply shows on the same page and in your notifications.",
@@ -245,7 +286,7 @@ export const helpTopics: HelpTopic[] = [
     title: "Children's Academy",
     summary: "Book a football class for your child, aged 10 to 14.",
     points: [
-      "On Home, tap Children's Academy in the Popular section. The guardian needs to be signed in.",
+      "On Home, tap Children's Academy in Quick Access. The guardian needs to be signed in.",
       "Fill in the guardian's name and number, an emergency contact, your address, then your child's name, age and health.",
       "Pick one of the class times the venue has opened, read the Terms and Conditions and tick to accept.",
       "You get a code like AC-7K3QX9. You can cancel from the same page until the class starts.",
@@ -259,7 +300,7 @@ export const helpTopics: HelpTopic[] = [
     title: "Refer & Earn",
     summary: "Book a game for another team and you both earn loyalty points.",
     points: [
-      "Open Refer & Earn in the Popular section. Pick a date and a time right there, no need to go to the booking page.",
+      "Open Refer & Earn in Quick Access. Pick a date and a time right there, no need to go to the booking page.",
       "Then type the other team's name and contact number (they need an account in the app) and tap Confirm booking.",
       "The slot is booked on your account and paid at the venue.",
       "The venue checks the referral. When it is approved, both of you get the points and a notification.",
@@ -281,12 +322,38 @@ export const helpTopics: HelpTopic[] = [
     ],
   },
   {
+    id: "find-player",
+    icon: "players",
+    title: "Find Player: need more players?",
+    summary: "Ask for extra players for a friendly game and everyone is notified.",
+    points: [
+      "Open Quick Access > Find Player. Use the minus and plus buttons to choose how many players you need (up to 11), for example +6.",
+      "Pick a day from tomorrow (the next 6 days) and the hour, add a short note if you like, and tap Notify all players.",
+      "Every registered player gets a notification: \"Your name needs 6 Players for Upcoming Game. View the deal\". You see how many have joined so far.",
+      "Players tap I'm in to join. When everyone has joined, pay the Rs. 300 advance (online) within 2 hours. That books the court.",
+      "It is a friendly game: the court price is shared equally by everyone playing, whether you win or lose, and paid at the venue. Your Rs. 300 counts towards your share.",
+      "You can post up to 3 requests a day, and cancel before the game. Captains can also challenge a team from the same page.",
+    ],
+  },
+  {
+    id: "chat",
+    icon: "chat",
+    title: "Chat with other players",
+    summary: "Message a player or make a group for your team.",
+    points: [
+      "Open the Chat tab. Tap New chat and type a player's mobile number (at least 5 digits) to find them.",
+      "Tap New group to make a group: give it a name and add players by mobile number.",
+      "A group admin can share an invite link, for example on WhatsApp. Anyone signed in who opens it can join.",
+      "Only registered Unique Futsal players can chat. A red number on the Chat tab means new messages. Leave a group any time from its info button.",
+    ],
+  },
+  {
     id: "urgent",
     icon: "bell",
     title: "Need urgent help?",
     summary: "Chat with the venue on WhatsApp from Home.",
     points: [
-      "On Home, tap the green WhatsApp button at the bottom right.",
+      "On Home, tap the green WhatsApp button next to the QR and Wi-Fi icons at the top.",
       "Pick what you need help with and WhatsApp opens with your message ready. Just press send.",
       "You can also call the venue from the same screen.",
     ],

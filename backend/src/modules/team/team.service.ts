@@ -55,6 +55,36 @@ export class TeamService {
     return new Map(users.map((u) => [u.phoneNumber, u.name ?? "Player"]));
   }
 
+  /**
+   * Find Player: a captain looks for another team by its captain's mobile number (at least 5 digits, matched from the
+   * start) or by team name (at least 2 letters). Only captains search, and never their own team. Never lists everyone.
+   */
+  async findTeams(userId: string, qRaw: unknown) {
+    const mine = await this.captainTeam(userId);
+    const q = typeof qRaw === "string" ? qRaw.trim() : "";
+    const compact = q.replace(/[\s-]/g, "");
+    const byNumber = /^\d{5,}$/.test(compact);
+    if (!byNumber && q.length < 2) return [];
+    const where = byNumber ? { captainId: { startsWith: compact } } : { name: { contains: q, mode: "insensitive" as const } };
+    const teams = await prisma.team.findMany({ where: { AND: [where, { NOT: { id: mine.id } }] }, orderBy: { name: "asc" }, take: 10 });
+    if (!teams.length) return [];
+    const [ranked, names] = await Promise.all([this.ranking(), this.names(teams.map((t) => t.captainId))]);
+    const byId = new Map(ranked.map((r) => [r.id, r]));
+    return teams.map((t) => {
+      const r = byId.get(t.id);
+      return {
+        id: t.id,
+        name: t.name,
+        area: t.area,
+        players: r?.players ?? 0,
+        record: r?.record ?? { played: 0, wins: 0, draws: 0, losses: 0 },
+        rating: r?.rating ?? null,
+        rank: r?.rank ?? null,
+        captainName: names.get(t.captainId) ?? "Captain",
+      };
+    });
+  }
+
   async ranking() {
     const [teams, stats] = await Promise.all([prisma.team.findMany({ include: { members: { select: { id: true } } } }), this.statsByTeam()]);
     const ranked = rankTeams(teams.map((t) => ({ id: t.id, name: t.name, area: t.area, players: t.members.length, stats: stats.get(t.id) ?? emptyStats() })));
