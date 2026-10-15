@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BarChart3, CalendarDays, ChevronRight, CircleHelp, Crown, Gamepad2, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy } from "lucide-react";
+import { BarChart3, CalendarDays, ChevronRight, CircleHelp, Crown, Gamepad2, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, Zap } from "lucide-react";
 import { markReadByTypes, noticesStore, type NoticeType } from "@/lib/notifications";
 import { useSession } from "@/lib/session";
 import { pendingActions, useTeams } from "@/lib/teams";
@@ -53,7 +53,10 @@ export default function PopularGrid() {
   return (
     <section className="mt-8 desk:mt-10">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium desk:text-xl">{tr("Popular")}</h2>
+        <h2 className="flex items-center gap-1.5 text-lg font-medium desk:text-xl">
+          <Zap size={16} strokeWidth={2.2} className="text-brand" aria-hidden />
+          {tr("Quick Access")}
+        </h2>
         <Link href="/profile" className="flex items-center text-sm text-brand">
           {tr("See all")} <ChevronRight size={16} />
         </Link>

@@ -59,16 +59,9 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-4 bg-white px-6 py-4 desk:px-12 desk:py-6">
-          <div className="flex items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.jpg" alt="" className="h-12 w-12 rounded-xl object-cover desk:h-16 desk:w-16" />
-            <span className="text-sm font-extrabold uppercase tracking-wide text-[#0c0b5d] desk:text-lg">Unique Futsal</span>
-          </div>
-          <p className="text-right">
-            <span className="block text-xs font-medium uppercase tracking-[0.25em] text-slate-500 desk:text-base">Founder</span>
-            <span className="block text-lg font-extrabold uppercase leading-tight text-slate-900 desk:text-4xl">Rahish Dumre</span>
-          </p>
+        <div className="bg-white px-6 py-4 text-center desk:px-12 desk:py-6">
+          <span className="block text-xs font-medium uppercase tracking-[0.25em] text-slate-500 desk:text-sm">Founder</span>
+          <span className="mt-0.5 block text-xl font-semibold tracking-wide text-slate-900 desk:text-3xl">Rahish Dumre</span>
         </div>
       </section>
 

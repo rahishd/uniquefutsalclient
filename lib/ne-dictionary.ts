@@ -739,6 +739,7 @@ export const NE_DICTIONARY: Record<string, string> = {
  "Book": "बुक",
  "My stats": "मेरो तथ्याङ्क",
  "Popular": "लोकप्रिय",
+ "Quick Access": "छिटो पहुँच",
  "See all": "सबै हेर्नुहोस्",
  "{0}, {1} new": "{0}, {1} नयाँ",
  "Your password was changed.": "तपाईंको पासवर्ड परिवर्तन भयो।",
