@@ -6,6 +6,7 @@ import paymentService from "../modules/payment/payment.service";
 import loyaltyService from "../modules/loyalty/loyalty.service";
 import playerRequestService from "../modules/playerrequest/playerrequest.service";
 import clubService from "../modules/club/club.service";
+import goalRushService from "../modules/goalrush/goalrush.service";
 import { addDaysKey, startsAtMs, todayKey } from "../utils/dates";
 
 // Jobs for the customer app. Each one is safe to run twice: notices carry a dedupe key and every state change is guarded.
@@ -66,6 +67,7 @@ export async function runAppJobs(which: "minute" | "tenMinutes" | "daily") {
       await sendAppReminders();
       await expireChallenges();
       await clubService.remindExpiring();
+      await goalRushService.abandonStale();
     } else {
       await loyaltyService.warnExpiringPoints();
     }

@@ -134,6 +134,7 @@ html.dark {
 
 /* Surfaces that keep their real colours (inverted a second time). */
 html.dark .bg-brand:not(.text-white),
+html.dark .uf-keep,
 html.dark [class*="bg-[#0c0b5d]"],
 html.dark [class*="from-[#005f7e]"],
 html.dark [class*="bg-[#f5822a]"] {
@@ -151,7 +152,7 @@ html.dark [style*="background-image"] {
 }
 
 /* ... except when they sit inside a surface that already keeps its colours (that would invert them twice). */
-html.dark :is(.bg-brand:not(.text-white), [class*="bg-[#0c0b5d]"], [class*="from-[#005f7e]"], [class*="bg-[#f5822a]"])
+html.dark :is(.bg-brand:not(.text-white), .uf-keep, [class*="bg-[#0c0b5d]"], [class*="from-[#005f7e]"], [class*="bg-[#f5822a]"])
   :is(img, video, iframe, canvas, svg.uf-kid, [style*="background-image"]) {
   filter: none;
 }

@@ -287,3 +287,20 @@ Where the discount shows up:
 - Admin portal: walk-in and bulk bookings for a member's number get 10% off (not when staff type a price); the booking, the Payments list, the final bill (CB-...), the WhatsApp invoice and a hosted tournament's bill show "Unique Club member discount". Payments > Unique Club lists the Rs. 1,500 payments.
 
 **Maturity rule.** The 10% on the **1-month membership plan** and on **hosting a tournament** (admin portal) is only for a club member who has been in the club for **15 days, or has played 5 games** (completed bookings dated on or after the day they joined). Court bookings and Gamezone get the 10% from the first day. `GET /club` reports it: `{mature, daysIn, gamesPlayed, daysToMature, gamesToMature, matureAfterDays: 15, matureAfterGames: 5}`. The check is made by the server when a membership is requested and when the tournament bill is made (at the closing time once the final bill is closed).
+
+## Unique Goal Rush (penalty game)
+
+A 5-shot penalty game against a goalkeeper played by the **server**. The app sends only where the player aimed and how hard; the server decides the kick's accuracy, the keeper's dive and the result (`src/modules/goalrush/goalrush.sim.ts`), so editing the browser cannot change a result. A copy of the engine in the app (`lib/goalrush-sim.ts`) is used only for the guest/practice mode, which earns nothing.
+
+Rules (enforced here): up to **3 games a calendar day** (Nepal time) for a signed-in customer; **every game started counts**, so a bad start cannot be thrown away. A game is exactly 5 shots, taken in order, at least 0.6 s apart. When the 5th shot is in, the game is finished and, **in the same transaction**, earns loyalty points **only with at least 3 goals out of 5: every 3 goals = 1 point** (so 1 point for 3, 4 or 5 goals; 0 for fewer): a `LoyaltyEntry` of kind `goal_rush` (sourceType `goal_rush`, sourceId = game id, unique), valid 3 months. At most 3 points a day. Sending a shot again returns the stored result (idempotent). A game left for 30 minutes, or from an earlier day, is abandoned: it counts for its day and earns nothing. Starts are serialised per customer (advisory lock), shots per game (row lock). Every finished game is written to the audit log.
+
+| Method | Path | Who | What |
+| --- | --- | --- | --- |
+| GET | `/goal-rush/rules` | Public | `{shotsPerGame: 5, gamesPerDay: 3, goalsToQualify: 3, goalsPerPoint: 3, pointsPerGame: 1, maxPointsPerDay: 3}` |
+| GET | `/goal-rush/me` | User | `{rules, allowance: {day, limit, used, left, pointsToday, maxPointsPerDay, resetsAt}, active: game or null, balance: valid loyalty points, recent: last 10 games}` |
+| POST | `/goal-rush/games` | User | starts a game (201) or returns the one still being played (200, `resumed: true`). 429 when the 3 games of the day are used |
+| GET | `/goal-rush/games/:id` | Owner | the game with its shots |
+| POST | `/goal-rush/games/:id/shots` | Owner | `{no (1-5), aimX, aimY, power (0-1)}` -> `{shot: {no, outcome: goal/save/wide/over/post, ballX, ballY, keeper}, game, allowance}`. 409 out of order or over, 429 too fast, 404 not yours. After shot 5 the game has `status: "completed"`, `points` and `rewardId` |
+| GET | `/goal-rush/history` | User | finished and abandoned games, newest first |
+
+Admin portal: `GET /admin/goal-rush` (totals for today, this month and all time, games per day for 14 days, players worth a look, the games list) and `GET /admin/goal-rush/:id` (one game shot by shot with its reward reference); permission `goalrush.view`. Nothing can be edited there; a reward is corrected with Loyalty Points > Adjust, which is logged.

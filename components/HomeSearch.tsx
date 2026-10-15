@@ -29,6 +29,7 @@ const PAGES: { title: string; href: string; words: string }[] = [
   { title: "Complaints", href: "/complaints", words: "complaint problem issue feedback" },
   { title: "Children's Academy", href: "/academy", words: "academy children kids class coaching" },
   { title: "Refer and Earn", href: "/refer", words: "refer earn friend referral" },
+  { title: "Unique Goal Rush (penalty game)", href: "/goal-rush", words: "goal rush game play penalty shootout score earn points mini game keeper" },
   { title: "Unique Club", href: "/club", words: "club unique club member discount 10 percent offer" },
   { title: "Help", href: "/help", words: "help support faq contact" },
 ];

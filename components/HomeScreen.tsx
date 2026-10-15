@@ -5,6 +5,7 @@ import HomeSearch from "@/components/HomeSearch";
 import UserBadge from "@/components/UserBadge";
 import QuickRebook from "@/components/QuickRebook";
 import PopularGrid from "@/components/PopularGrid";
+import GoalRushCard from "@/components/goalrush/GoalRushCard";
 import PromoCodes from "@/components/PromoCodes";
 import BannerOffer from "@/components/BannerOffer";
 import TournamentSection from "@/components/TournamentSection";
@@ -40,7 +41,11 @@ export default function HomeScreen() {
           <KidSkills className="pointer-events-none absolute bottom-0 right-0 h-[230px] w-auto desk:right-10 desk:h-[300px]" />
         </section>
 
-        <div className="order-[7]"><PopularGrid /></div>
+        <div className="order-[7]">
+          <PopularGrid />
+          {/* the penalty mini game, right under Quick Access */}
+          <GoalRushCard />
+        </div>
         <div className="order-[11]"><GallerySection /></div>
       </div>
 

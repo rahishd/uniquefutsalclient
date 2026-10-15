@@ -134,6 +134,20 @@ export const helpTopics: HelpTopic[] = [
     href: { label: "See plans", to: "/member" },
   },
   {
+    id: "goal-rush",
+    icon: "points",
+    title: "Unique Goal Rush: Play. Score. Earn.",
+    summary: "A penalty game: score 3 or more of your 5 penalties and win 1 loyalty point.",
+    points: [
+      "Tap Play & Earn Now on the Goal Rush card under Quick Access on Home.",
+      "Aim by moving the mouse or dragging over the goal, time the power bar, then press SHOOT (or click, or press Space). A harder shot is faster but can go wide.",
+      "Every game is 5 penalties against our goalkeeper. Score at least 3 goals to earn: every 3 goals = 1 loyalty point, so a game earns 1 point. Fewer than 3 goals, no points.",
+      "You can play 3 games a day, so up to 3 points a day. A game you start counts for the day, even if you leave it.",
+      "The points go into your Unique Futsal loyalty balance and last 3 months. Guests can play practice games without points.",
+    ],
+    href: { label: "Play Goal Rush", to: "/goal-rush" },
+  },
+  {
     id: "points",
     icon: "points",
     title: "Loyalty points and free games",
