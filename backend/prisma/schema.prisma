@@ -1080,3 +1080,24 @@ model GoalRushShot {
 
   @@unique([gameId, no])
 }
+
+// Gift Card: a customer buys loyalty points (Rs. 10 a point) or books and pays a game for a registered friend
+// (migration 20261029000001_gift_cards). Points gifts are paid with their own order (code = Gift.code); a game gift is a
+// normal booking on the friend's account, paid by the buyer (order code = the booking id).
+model Gift {
+  id        String    @id @default(cuid())
+  code      String    @unique // GIFT-XXXXXXXX
+  kind      String // points | game
+  buyerId   String // phone of the customer who pays
+  friendId  String // phone of the friend who receives it
+  points    Int? // points gifts
+  bookingId String?   @unique // game gifts
+  amount    Int // rupees paid
+  message   String?
+  status    String    @default("pending") // pending | paid | expired | refunded (cancelled by the venue, buyer paid back)
+  paidAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([buyerId, createdAt])
+  @@index([friendId])
+}

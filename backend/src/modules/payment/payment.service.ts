@@ -7,7 +7,7 @@ import { getGateway, OnlineMethod } from "../../services/paymentGateway";
 
 export const QR_HOLD_MS = 10 * 60 * 1000; // an unpaid QR (and the slot behind it) is held for 10 minutes
 
-export type PaymentPurpose = "game" | "gamezone" | "purchase" | "renew" | "club";
+export type PaymentPurpose = "game" | "gamezone" | "purchase" | "renew" | "club" | "gift_points";
 
 const PURPOSE_LABEL: Record<PaymentPurpose, string> = {
   game: "Regular game",
@@ -15,6 +15,7 @@ const PURPOSE_LABEL: Record<PaymentPurpose, string> = {
   purchase: "Membership purchase",
   renew: "Membership renew",
   club: "Unique Club",
+  gift_points: "Gift Card points",
 };
 
 // The note the customer's payment carries, so the payment can be matched to its order.
@@ -126,6 +127,9 @@ export class PaymentService {
         await notificationService.notify({ userId: b.userId, type: "payment", title: "Payment received", message: `Rs. ${order.amount} received for booking ${b.code || b.id}.`, href: "/profile", dedupeKey: `pay-${order.orderCode}` });
         await notificationService.notify({ userId: b.userId, type: "booking", title: "Booking confirmed", message: `${b.date} · ${b.startTime} – ${b.endTime}.`, href: "/profile", dedupeKey: `booked-${b.id}` });
       }
+      // a game bought for a friend (Gift Card): tell both of them
+      const { default: giftService } = await import("../gift/gift.service");
+      await giftService.onGamePaid(b.id);
       return true;
     }
     if (order.purpose === "gamezone") {
@@ -147,6 +151,11 @@ export class PaymentService {
       await clubService.activate(order.userId, order.orderCode);
       await notificationService.notify({ userId: order.userId, type: "payment", title: "Payment received", message: `Rs. ${order.amount} received for Unique Club.`, href: "/club", dedupeKey: `pay-${order.orderCode}` });
       return true;
+    }
+    if (order.purpose === "gift_points") {
+      // Gift Card: the points go to the friend
+      const { default: giftService } = await import("../gift/gift.service");
+      return giftService.deliverPoints(order.orderCode);
     }
     // Membership purchase / renewal: hooked up once the owner decides the membership model (see docs).
     logger.warn(`markPaid for ${order.purpose} ${order.orderCode}: membership activation is not wired yet`);
@@ -186,6 +195,8 @@ export class PaymentService {
       const g = await prisma.gzBooking.updateMany({ where: { code: orderCode, status: "confirmed", paymentStatus: "pending" }, data: { status: "expired" } });
       if (g.count > 0) await prisma.gzSlot.deleteMany({ where: { bookingCode: orderCode } });
     }
+    // a Gift Card that was never paid (points: its own order; game: the booking it was for)
+    await prisma.gift.updateMany({ where: { status: "pending", OR: [{ code: orderCode }, { bookingId: orderCode }] }, data: { status: "expired" } });
   }
 
   // Job (every minute): expire everything that ran out of time.

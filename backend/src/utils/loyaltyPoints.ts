@@ -20,6 +20,7 @@ export const POINTS_CAPTAIN_WIN = 5;
 export const GAME_POINTS_MONTHS = 3;
 export const GOODS_POINTS_MONTHS = 12;
 export const REFERRAL_POINTS_MONTHS = 12;
+export const GIFT_POINTS_MONTHS = 12; // points a friend bought for you
 export const EXPIRY_WARN_DAYS = 30;
 export const MEMBERSHIP_POINTS: Record<string, number> = { quarterly: 30, half: 70 };
 
@@ -32,7 +33,7 @@ export function periodOfHour(hour: number): Period {
   return hour < 10 ? "Morning" : hour < 17 ? "Day" : "Evening";
 }
 
-export type LoyaltyKind = "game" | "captain_win" | "goods" | "membership" | "free_game" | "referral" | "goal_rush";
+export type LoyaltyKind = "game" | "captain_win" | "goods" | "membership" | "free_game" | "referral" | "goal_rush" | "gift";
 
 export const r1 = (n: number) => Math.round(n * 10) / 10;
 
@@ -52,6 +53,7 @@ export function expiryFor(kind: LoyaltyKind, earnedOn: string): string | null | 
   if (kind === "game" || kind === "captain_win" || kind === "goal_rush") return addMonthsKey(earnedOn, GAME_POINTS_MONTHS);
   if (kind === "goods") return addMonthsKey(earnedOn, GOODS_POINTS_MONTHS);
   if (kind === "referral") return addMonthsKey(earnedOn, REFERRAL_POINTS_MONTHS);
+  if (kind === "gift") return addMonthsKey(earnedOn, GIFT_POINTS_MONTHS);
   if (kind === "membership") return null;
   return undefined; // spending has no expiry
 }

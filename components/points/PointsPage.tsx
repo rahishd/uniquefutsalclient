@@ -18,6 +18,7 @@ const KIND: Record<LoyaltyRow["kind"], { icon: typeof Star; tone: string }> = {
   free_game: { icon: Gift, tone: "bg-orange-400/20 text-orange-600" },
   referral: { icon: HeartHandshake, tone: "bg-pink-400/20 text-pink-600" },
   goal_rush: { icon: Goal, tone: "bg-emerald-400/20 text-emerald-700" },
+  gift: { icon: Gift, tone: "bg-rose-400/20 text-rose-600" },
 };
 
 const SHOWN = 4;

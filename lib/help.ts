@@ -325,6 +325,21 @@ export const helpTopics: HelpTopic[] = [
     href: { label: "Refer & Earn", to: "/refer" },
   },
   {
+    id: "giftcard",
+    icon: "points",
+    title: "Gift Card",
+    summary: "Buy loyalty points for a friend, or book a game in their name.",
+    points: [
+      "Open Gift Card in Quick Access and choose Buy Loyalty Points for my friend, or Book Game Instead.",
+      "Type your friend's mobile number and tap Find. Your friend needs an account in the app; you see their first name to check it is the right person.",
+      "Points cost Rs. 10 each, from 10 to 500 points. 125 points are enough for a free day game.",
+      "Book Game Instead: pick the day and the hour. The game is booked in your friend's name and you pay the full price. If they have Unique Club or a VIP code, their discount counts.",
+      "Pay with the Fonepay QR. As soon as the payment arrives the points or the booking reach your friend, and both of you get a notification. Gifted points last 12 months.",
+      "A gifted game cannot be cancelled in the app. Please contact the venue to change it. You can send up to 5 gifts a day.",
+    ],
+    href: { label: "Gift Card", to: "/gift-card" },
+  },
+  {
     id: "digitalid",
     icon: "profile",
     title: "Digital ID card",

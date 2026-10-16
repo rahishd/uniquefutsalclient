@@ -188,6 +188,12 @@ A customer books a game for ANOTHER team on their own account, then files it her
 | POST | `/refer` | User | `{bookingCode, friendPhone, teamName}` -> referral `RF-XXXXXX`, pending. 404 booking not yours or friend not registered, 400 yourself / bad fields, 409 cancelled, too old or already referred, 403 paused, 429 over 5 a day. Friend is notified (`type: "referral"`) |
 | POST | `/refer/book` | User | `{date, startTime "HH:00", friendPhone, friendName}`: one step. Reserves the slot on the caller's account (1 hour, pay at the venue, 10-day window) and files the referral for it; if filing fails (friend not registered, over 5 a day, ...) the reservation is cancelled again and the slot freed. Same errors as `POST /refer` plus 400 for a bad date/time |
 | DELETE | `/refer/:id` | User | withdraw while pending (referrer only) |
+| GET | `/gifts/rules` | Guest | Gift Card: `{rsPerPoint: 10, minPoints: 10, maxPoints: 500, perDay: 5}` |
+| GET | `/gifts` | User | `{rules, gifts[]}`: gifts I sent (any status) and gifts I received (paid only); `role` sent/received, `otherName` is a first name only |
+| GET | `/gifts/friend/:phone` | User | `{phone, firstName}` of a registered customer. 400 bad number or yourself, 404 not registered |
+| POST | `/gifts/points` | User | `{friendPhone, points (whole, 10-500), message?}` -> `{gift, payment}`, order `GIFT-XXXXXXXX` for points x Rs. 10 (purpose `gift_points`). When paid: LoyaltyEntry kind `gift` for the friend (12 months), both notified. 429 over 5 gifts a day |
+| POST | `/gifts/game/quote` | User | `{friendPhone, date, startTime}` -> the friend's price for that hour (their club / VIP discount counts) |
+| POST | `/gifts/game` | User | `{friendPhone, date, startTime "HH:00", message?}`: 1-hour booking on the FRIEND's account (notes `GIFT_FROM:<buyer>`), held 10 minutes, paid in full by the buyer (order = booking id, purpose `game`). Unpaid: slot freed, gift `expired`. The friend cannot cancel a gifted game in the app (409) |
 
 Table `Referral` (migration `20261011000001_refer_earn`, additive; one referral per booking). Notification type `referral` added.
 

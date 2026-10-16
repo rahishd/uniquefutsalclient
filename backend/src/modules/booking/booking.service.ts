@@ -1446,6 +1446,10 @@ export class BookingService {
     if (!existing.userId || existing.userId !== userId) {
       throw new AppError(403, "You cannot cancel this booking");
     }
+    // a game a friend paid for (Gift Card): the money is theirs, so the venue handles any change
+    if (existing.notes?.includes("GIFT_FROM:")) {
+      throw new AppError(409, "This game was a gift. Please contact the venue to change it.");
+    }
 
     // Only upcoming-ish bookings can be cancelled.
     if (existing.status === "completed" || existing.status === "cancelled") {

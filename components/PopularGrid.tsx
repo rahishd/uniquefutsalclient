@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BarChart3, CalendarDays, ChevronRight, CircleHelp, Crown, Gamepad2, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, UserSearch, Zap, BadgeCheck, Lock } from "lucide-react";
+import { BarChart3, CalendarDays, ChevronRight, CircleHelp, Crown, Gamepad2, Gift, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, UserSearch, Zap, BadgeCheck, Lock } from "lucide-react";
 import { markReadByTypes, noticesStore, type NoticeType } from "@/lib/notifications";
 import { openSignIn, useSession } from "@/lib/session";
 import { pendingActions, useTeams } from "@/lib/teams";
@@ -25,6 +25,7 @@ const TILES: Tile[] = [
   { label: "Find Player", href: "/find-player", icon: UserSearch, tone: "text-brand", types: ["players"] },
   { label: "Unique Club", href: "/club", icon: BadgeCheck, tone: "text-brand" },
   { label: "Membership", href: "/member", icon: Crown, tone: "text-brand", types: ["membership"] },
+  { label: "Gift Card", href: "/gift-card", icon: Gift, tone: "text-brand" },
   { label: "Points", href: "/points", icon: Star, tone: "text-brand", types: ["points"] },
   { label: "My stats", href: "/profile", icon: BarChart3, tone: "text-brand" },
   { label: "Tournaments", href: "/tournaments", icon: Trophy, tone: "text-brand", types: ["tournament"] },
