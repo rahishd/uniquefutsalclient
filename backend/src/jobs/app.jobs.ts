@@ -25,7 +25,7 @@ export async function sendAppReminders(now = Date.now()): Promise<number> {
     if (start - now > HOUR + 10 * 60000 || start <= now) continue;
     await notificationService.notify({
       userId: b.userId!, type: "reminder", title: "Your game starts in about an hour",
-      message: `${b.date} · ${b.startTime} – ${b.endTime}. Booking ${b.code || fallbackBookingCode(b.id)}.`, href: "/profile", dedupeKey: `remind-${b.id}`,
+      message: `${b.date} · ${b.startTime} – ${b.endTime}. Booking ${b.code || fallbackBookingCode(b.id)}.`, href: `/booking/${b.code || fallbackBookingCode(b.id)}`, dedupeKey: `remind-${b.id}`,
     });
     sent++;
   }
@@ -36,7 +36,7 @@ export async function sendAppReminders(now = Date.now()): Promise<number> {
     if (start - now > HOUR + 10 * 60000 || start <= now) continue;
     await notificationService.notify({
       userId: g.userId!, type: "reminder", title: "Your PS5 session starts in about an hour",
-      message: `${g.date} · ${String(g.startHour).padStart(2, "0")}:00 for ${g.hours} hr. ${g.code}.`, href: "/gamezone", dedupeKey: `remind-${g.code}`,
+      message: `${g.date} · ${String(g.startHour).padStart(2, "0")}:00 for ${g.hours} hr. ${g.code}.`, href: `/booking/${g.code}`, dedupeKey: `remind-${g.code}`,
     });
     sent++;
   }

@@ -1,5 +1,6 @@
 "use client";
 
+import ShareBooking, { bookingShareText } from "@/components/ShareBooking";
 import CharityLine from "@/components/CharityLine";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
@@ -183,6 +184,15 @@ function Flow({ catalog }: { catalog: Catalog }) {
           <div className="flex justify-between border-t border-white/60 pt-3 text-base"><dt className="font-medium">Total</dt><dd className="font-semibold">{formatRs(done.total)}</dd></div>
           <CharityLine amount={done.total} />
         </dl>
+        <ShareBooking
+          registered={registered}
+          text={bookingShareText(paid ? "🎮 Gamezone booked" : "🎮 Gamezone reserved", [
+            ["Date", longDate(done.date)],
+            ["Time", `${formatHour(done.startHour)} – ${formatHour(done.startHour + done.hours)}`],
+            ["Console", done.console],
+            ["Game", done.game],
+          ], done.code)}
+        />
         <Link href="/" className="glass-btn block rounded-full py-3.5 text-center text-sm font-medium text-white">Back to home</Link>
       </div>
     );

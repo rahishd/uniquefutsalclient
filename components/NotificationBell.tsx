@@ -108,10 +108,10 @@ export default function NotificationBell() {
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
-        className="relative flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white text-brand shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:ring-brand/40 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       >
         {/* while something is unread the bell rings and the number blinks (still, for people who asked for less motion) */}
-        <Bell size={22} className={unread > 0 ? "uf-bell-ring text-rose-500" : undefined} />
+        <Bell size={24} className={unread > 0 ? "uf-bell-ring text-rose-500" : undefined} />
         {unread > 0 && (
           <>
             <span aria-hidden className="uf-badge-ping absolute -right-1 -top-1 h-5 w-5 rounded-full bg-rose-400" />

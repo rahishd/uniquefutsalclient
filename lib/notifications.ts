@@ -29,12 +29,24 @@ interface Payload {
 }
 
 const EMPTY: Notices = { items: [], unreadByType: {} };
+
+// A notice about ONE booking (booked, paid, reminder) opens that booking's details (/booking/<code>), not the page for
+// making a new one. The booking code is in the message (court UF-XXXXXX, Gamezone UF-GZ-...). Notices about something
+// else (a cancelled hour, points, ...) keep the link the server gave them.
+const BOOKING_CODE = /(?<![A-Z0-9-])(UF-[A-Z0-9][A-Z0-9-]{3,})/;
+const BOOKING_LINKS = new Set(["/profile", "/gamezone", "/book"]);
+export function noticeHref(n: { type: string; body: string; href: string | null | undefined }): string | undefined {
+  const code = BOOKING_CODE.exec(n.body)?.[1];
+  const about = n.type === "booking" || n.type === "gamezone" || n.type === "reminder" || n.type === "payment";
+  if (code && about && n.href && BOOKING_LINKS.has(n.href)) return `/booking/${code}`;
+  return n.href ?? undefined;
+}
 let known: Set<string> | null = null; // ids already seen, so only NEW notices raise a phone alert
 
 export const noticesStore = createRemoteStore<Notices>(
   async () => {
     const r = await api<Payload>("/notifications", { query: { limit: 50 } });
-    const items: Notice[] = r.items.map((i) => ({ ...i, at: new Date(i.at).getTime(), href: i.href ?? undefined }));
+    const items: Notice[] = r.items.map((i) => ({ ...i, at: new Date(i.at).getTime(), href: noticeHref(i) }));
     if (known) {
       for (const n of items) if (!n.read && !known.has(n.id)) void showSystemNotification(n.title, n.body, n.href);
     }

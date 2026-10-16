@@ -20,7 +20,7 @@ const LINKS = [
 export default function DeskNav() {
   const pathname = usePathname();
   const t = useT();
-  const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
+  const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/"));
   return (
     <nav aria-label="Main" className="ml-auto hidden items-center gap-1 desk:flex">
       {LINKS.map((l) => {

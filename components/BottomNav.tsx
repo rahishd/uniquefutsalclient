@@ -21,7 +21,7 @@ export default function BottomNav() {
   const pathname = usePathname();
   const t = useT();
   const unread = unreadStore.use().data ?? 0;
-  const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
+  const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/"));
   const bookActive = isActive("/book");
 
   const sideTab = ({ label, href, icon: Icon }: (typeof LEFT_TABS)[number]) => {

@@ -172,7 +172,7 @@ export class GamezoneCustomerService {
         type: "gamezone",
         title: "Gamezone booked",
         message: `PS5 · ${game.title} · ${input.date} ${String(input.hour).padStart(2, "0")}:00 for ${input.hours} hr. ID ${code}.`,
-        href: "/gamezone",
+        href: `/booking/${code}`,
         dedupeKey: `gz-created-${code}`,
       });
     }

@@ -125,7 +125,7 @@ export class PaymentService {
       });
       if (b.userId) {
         await notificationService.notify({ userId: b.userId, type: "payment", title: "Payment received", message: `Rs. ${order.amount} received for booking ${b.code || b.id}.`, href: "/profile", dedupeKey: `pay-${order.orderCode}` });
-        await notificationService.notify({ userId: b.userId, type: "booking", title: "Booking confirmed", message: `${b.date} · ${b.startTime} – ${b.endTime}.`, href: "/profile", dedupeKey: `booked-${b.id}` });
+        await notificationService.notify({ userId: b.userId, type: "booking", title: "Booking confirmed", message: `${b.date} · ${b.startTime} – ${b.endTime}. Booking ${b.code || b.id}.`, href: `/booking/${b.code || b.id}`, dedupeKey: `booked-${b.id}` });
       }
       // a game bought for a friend (Gift Card): tell both of them
       const { default: giftService } = await import("../gift/gift.service");

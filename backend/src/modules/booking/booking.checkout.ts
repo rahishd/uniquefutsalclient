@@ -141,7 +141,7 @@ export const checkoutController = {
         type: "booking",
         title: method === "venue" || voucherId ? "Booking reserved" : "Booking created",
         message: `${date} · ${startTime} – ${booking.endTime}. Code ${(booking as { code?: string | null }).code || booking.id}.`,
-        href: "/profile",
+        href: `/booking/${(booking as { code?: string | null }).code || booking.id}`,
         dedupeKey: `booking-created-${booking.id}`,
       });
     }

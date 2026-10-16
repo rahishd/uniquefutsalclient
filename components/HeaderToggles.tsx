@@ -15,7 +15,7 @@ export function LangSync() {
 }
 
 const round =
-  "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 active:scale-95";
+  "flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-brand shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:ring-brand/40 hover:shadow-md active:scale-95";
 
 // Two round buttons on the right of the header. Each one shows the OTHER option and switches to it when tapped:
 // the moon turns dark mode on (and becomes a sun), and "NP" switches to Nepali (and becomes "EN").
@@ -25,9 +25,9 @@ export default function HeaderToggles() {
   const dark = theme === "dark";
   const ne = lang === "ne";
   return (
-    <div className="ml-auto flex shrink-0 items-center gap-2 desk:ml-0">
+    <div className="ml-auto flex shrink-0 items-center gap-1.5 desk:ml-0">
       <button type="button" onClick={() => setTheme(dark ? "light" : "dark")} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"} title={dark ? "Light mode" : "Dark mode"} className={round}>
-        {dark ? <Sun size={18} /> : <Moon size={18} />}
+        {dark ? <Sun size={15} /> : <Moon size={15} />}
       </button>
       <button type="button" onClick={() => setLang(ne ? "en" : "ne")} aria-label={ne ? "Switch to English" : "Switch to Nepali"} title={ne ? "English" : "नेपाली"} className={`${round} text-[11px] font-bold tracking-wide`}>
         {ne ? "EN" : "NP"}

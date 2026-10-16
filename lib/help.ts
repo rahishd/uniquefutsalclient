@@ -54,6 +54,7 @@ export const helpTopics: HelpTopic[] = [
       "Choose a court, add a promo code if you have one, then pay.",
       "Every game includes 2 complimentary mineral water bottles. A game booked with a promo code or a VIP discount does not include them, and the booking screen tells you as soon as you apply one.",
       "Your booking ID appears at the end. Find it later in Profile > My bookings.",
+      "On the confirmation, tap WhatsApp or Chat or Group to share the booking (date, time and booking ID) with your team. Gamezone bookings can be shared the same way.",
       "3% of what you pay goes to our Charity Fund. The exact amount is shown with the HandHeart icon while you pay, on your confirmation and on the final bill. It comes from our profit and is not added to your price.",
     ],
     href: { label: "Book now", to: "/book" },

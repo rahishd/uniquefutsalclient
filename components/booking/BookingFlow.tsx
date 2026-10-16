@@ -1,5 +1,6 @@
 "use client";
 
+import ShareBooking, { bookingShareText } from "@/components/ShareBooking";
 import CharityLine from "@/components/CharityLine";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
@@ -288,6 +289,14 @@ export default function BookingFlow({ initialDate, initialHour }: { initialDate?
           </div>
           <CharityLine amount={done.totalPrice} />
         </dl>
+
+        <ShareBooking
+          registered={registered}
+          text={bookingShareText(paid ? "⚽ Futsal game booked" : "⚽ Futsal game reserved", [
+            ["Date", longDate(done.date)],
+            ["Time", `${formatHour(hourOf(done.startTime))} – ${formatHour(hourOf(done.startTime) + done.duration)}`],
+          ], done.code ?? done.id)}
+        />
 
         <button type="button" onClick={() => downloadIcs(done)} className="glass flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-sm font-medium text-brand">
           <CalendarPlus size={18} /> Add to calendar
