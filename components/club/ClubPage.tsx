@@ -1,5 +1,6 @@
 "use client";
 
+import CharityLine from "@/components/CharityLine";
 import { useState } from "react";
 import Link from "next/link";
 import { BadgeCheck, CalendarDays, Check, Crown, Gamepad2, Loader2, Tag, Trophy } from "lucide-react";
@@ -69,6 +70,7 @@ export default function ClubPage() {
         <p className="text-sm font-medium">Monthly club fee</p>
         <p className="mt-1 text-4xl font-bold">{formatRs(club.fee)}</p>
         <p className="mt-1 text-sm">for {club.days} days · {club.percent}% off bookings</p>
+        <div className="mt-2"><CharityLine amount={club.fee} as="note" align="left" /></div>
       </section>
 
       {welcome && (

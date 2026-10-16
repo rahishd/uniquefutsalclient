@@ -41,3 +41,21 @@ describe("customer Digital ID", () => {
     expect((await api().get("/api/me/digital-id").set(bearer(tokenFor("admin-test", "superadmin")))).status).toBe(403);
   });
 });
+
+describe("customer Digital ID: Unique Club badge", () => {
+  it("shows club membership on the card only while the club is active", async () => {
+    await prisma.clubMember.deleteMany({ where: { userId: A } });
+    const none = await api().get("/api/me/digital-id").set(bearer(tokenFor(A)));
+    expect(none.body.data.club).toEqual({ member: false, validUntil: null });
+
+    await prisma.clubMember.create({ data: { userId: A, validUntil: new Date(Date.now() + 10 * 86400000) } });
+    const on = await api().get("/api/me/digital-id").set(bearer(tokenFor(A)));
+    expect(on.body.data.club.member).toBe(true);
+    expect(on.body.data.club.validUntil).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+
+    await prisma.clubMember.update({ where: { userId: A }, data: { validUntil: new Date(Date.now() - 1000) } });
+    const ended = await api().get("/api/me/digital-id").set(bearer(tokenFor(A)));
+    expect(ended.body.data.club.member).toBe(false);
+    await prisma.clubMember.deleteMany({ where: { userId: A } });
+  });
+});

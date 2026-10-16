@@ -1,5 +1,6 @@
 "use client";
 
+import CharityLine from "@/components/CharityLine";
 import { clubOff, clubStore } from "@/lib/club";
 import { BadgeCheck } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -180,6 +181,7 @@ function RequestForm({ plans }: { plans: MembershipPlan[] }) {
           <BadgeCheck size={16} /> Unique Club member: {club?.percent}% off the 1-month plan (− {formatRs(clubSaved)})
         </p>
       )}
+      {total !== null && total > 0 && <CharityLine amount={total} as="note" />}
       {total !== null && (
         <p className="rounded-2xl bg-white/60 px-4 py-3 text-sm">
           Total <b>{formatRs(total)}</b> for {DURATION_LABEL[duration]}, paid at the venue.

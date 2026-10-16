@@ -1,5 +1,6 @@
 "use client";
 
+import CharityLine from "@/components/CharityLine";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Check, ChevronLeft, Gamepad2, Loader2, Minus, Plus } from "lucide-react";
@@ -180,6 +181,7 @@ function Flow({ catalog }: { catalog: Catalog }) {
             <div key={k} className="flex justify-between gap-4"><dt className="text-slate-400">{k}</dt><dd className="text-right font-medium">{v}</dd></div>
           ))}
           <div className="flex justify-between border-t border-white/60 pt-3 text-base"><dt className="font-medium">Total</dt><dd className="font-semibold">{formatRs(done.total)}</dd></div>
+          <CharityLine amount={done.total} />
         </dl>
         <Link href="/" className="glass-btn block rounded-full py-3.5 text-center text-sm font-medium text-white">Back to home</Link>
       </div>
@@ -204,6 +206,7 @@ function Flow({ catalog }: { catalog: Catalog }) {
             <div className="flex justify-between"><dt className="text-slate-400">Rate</dt><dd>{formatRs(plan.ratePerPersonHour)} × {players} {players === 1 ? "player" : "players"} × {hours} hr</dd></div>
             {clubDiscount > 0 && <div className="flex justify-between text-emerald-600"><dt>Unique Club member ({club?.percent}%)</dt><dd>− {formatRs(clubDiscount)}</dd></div>}
             <div className="flex justify-between border-t border-white/60 pt-3 text-base"><dt className="font-medium">Total</dt><dd className="font-semibold">{formatRs(total)}</dd></div>
+            <CharityLine amount={total} />
           </dl>
           <p className="mt-2 text-[11px] text-slate-400">The final price is set by the server.</p>
         </section>

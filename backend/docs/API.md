@@ -195,7 +195,7 @@ Table `Referral` (migration `20261011000001_refer_earn`, additive; one referral 
 
 | Method | Path | Who | Notes |
 |---|---|---|---|
-| GET | `/me/digital-id` | User | `{name, phone, payload "UFID1.<random 192-bit token>", createdAt, replacedAt}`; made on first use. The QR holds only the token, no personal data; only staff in the admin portal can resolve it |
+| GET | `/me/digital-id` | User | `{name, phone, payload "UFID1.<random 192-bit token>", createdAt, replacedAt, club: {member, validUntil}}` (`club.member` puts a gold "Unique Club Member" badge on the card); made on first use. The QR holds only the token, no personal data; only staff in the admin portal can resolve it |
 | POST | `/me/digital-id/replace` | User | new token, the old QR stops working |
 
 Table `DigitalId` (migration `20261015000001_digital_id`, additive). The admin portal has the same table (its `sql/015`) and the staff scan endpoints (see its `docs/API.md`).

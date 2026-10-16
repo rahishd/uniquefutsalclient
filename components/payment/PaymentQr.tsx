@@ -1,5 +1,6 @@
 "use client";
 
+import CharityLine from "@/components/CharityLine";
 import { useEffect, useRef, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import { Check, ChevronLeft, Clock, Copy, Download, Loader2 } from "lucide-react";
@@ -113,6 +114,7 @@ export default function PaymentQr({ method, orderId, amount, remarks, payload, e
       <section className="glass rounded-3xl p-5 text-center">
         <p className="text-xs text-slate-400">Amount to pay</p>
         <p className="text-3xl font-semibold">{rs(amount)}</p>
+        <div className="mt-1"><CharityLine amount={amount} as="note" /></div>
 
         <div className="mx-auto mt-4 w-fit rounded-2xl bg-white p-3 shadow-inner ring-1 ring-slate-100" style={expired ? { opacity: 0.25 } : undefined}>
           <QRCodeCanvas

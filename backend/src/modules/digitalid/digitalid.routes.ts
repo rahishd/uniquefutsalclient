@@ -26,7 +26,13 @@ async function view(userId: string) {
     }
   }
   if (!row) throw new AppError(500, "Could not make your Digital ID");
-  return { name: user.name || "Player", phone: user.phoneNumber, payload: QR_PREFIX + row.token, createdAt: row.createdAt, replacedAt: row.rotatedAt };
+  // Unique Club members get a club badge on the card
+  const club = await prisma.clubMember.findUnique({ where: { userId } });
+  const member = !!club && club.validUntil.getTime() > Date.now();
+  return {
+    name: user.name || "Player", phone: user.phoneNumber, payload: QR_PREFIX + row.token, createdAt: row.createdAt, replacedAt: row.rotatedAt,
+    club: { member, validUntil: club && member ? club.validUntil.toISOString().slice(0, 10) : null },
+  };
 }
 
 // The signed-in customer's card (made on first use).

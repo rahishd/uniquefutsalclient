@@ -1,5 +1,6 @@
 "use client";
 
+import CharityLine from "@/components/CharityLine";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { CalendarPlus, Check, ChevronDown, ChevronLeft, Droplets, Gift, Loader2, Lock, Tag, X } from "lucide-react";
@@ -285,6 +286,7 @@ export default function BookingFlow({ initialDate, initialHour }: { initialDate?
             <dt className="font-medium">Total</dt>
             <dd className="font-semibold">{formatRs(done.totalPrice)}</dd>
           </div>
+          <CharityLine amount={done.totalPrice} />
         </dl>
 
         <button type="button" onClick={() => downloadIcs(done)} className="glass flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-sm font-medium text-brand">
@@ -316,6 +318,7 @@ export default function BookingFlow({ initialDate, initialHour }: { initialDate?
               <div className="flex justify-between text-emerald-600"><dt>{free ? "Free game voucher" : q.club ? `Unique Club member (${q.club.percent}%)` : q.vip ? q.vip.label : `Promo ${promo?.code ?? ""}`}</dt><dd>− {formatRs(q.discount)}</dd></div>
             )}
             <div className="flex justify-between border-t border-white/60 pt-3 text-base"><dt className="font-medium">Total</dt><dd className="font-semibold">{formatRs(total)}</dd></div>
+            <CharityLine amount={total} />
           </dl>
           <p className="mt-2 text-[11px] text-slate-400">The final price is set by the server.</p>
           {registered && !free && q && q.earnPoints > 0 && (

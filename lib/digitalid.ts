@@ -8,6 +8,7 @@ export interface DigitalId {
   payload: string; // "UFID1." + random token: what goes inside the QR
   createdAt: string;
   replacedAt: string | null;
+  club?: { member: boolean; validUntil: string | null }; // Unique Club badge on the card
 }
 
 export const loadDigitalId = () => api<DigitalId>("/me/digital-id");
