@@ -258,6 +258,10 @@ Registered customers can chat one to one or in groups (text only). Every route n
 | POST | `/chat/threads/:id/invite` | Group admin | new invite code; the old link stops working |
 | GET | `/chat/invite/:code` | User | `{id, name, memberCount, alreadyIn, full}` preview of a group link |
 | POST | `/chat/invite/:code/join` | User | joins the group -> `{id}` (400 if full) |
+| GET | `/chat/friends` | User | `{friends[{id,phone,name,avatar}], incoming[{id,from,at}], outgoing[{id,to,at}]}` |
+| POST | `/chat/friends/request` | User | `{phone}` -> `{id, status}`. 404 if not a registered customer, 400 for yourself, 409 if already friends or already sent, 429 after 20 requests in 24 hours. If they already asked you, you become friends (`status: accepted`). The other person gets a notice |
+| POST | `/chat/friends/:id/accept` | Receiver | accepts a request sent to you (404 for anyone else). The sender gets a notice |
+| DELETE | `/chat/friends/:id` | Either side | declines a request, cancels one you sent, or removes a friend |
 
 ## Find Player: "I need N players"
 

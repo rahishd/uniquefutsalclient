@@ -83,3 +83,30 @@ export function chatTime(iso: string) {
   if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
+
+// ---- friends ----
+export interface Friend extends ChatPerson {
+  id: string; // the friendship, used to remove it
+}
+export interface FriendRequestIn {
+  id: string;
+  from: ChatPerson;
+  at: string;
+}
+export interface FriendRequestOut {
+  id: string;
+  to: ChatPerson;
+  at: string;
+}
+export interface FriendsOverview {
+  friends: Friend[];
+  incoming: FriendRequestIn[];
+  outgoing: FriendRequestOut[];
+}
+
+const NO_FRIENDS: FriendsOverview = { friends: [], incoming: [], outgoing: [] };
+export const friendsStore = createRemoteStore<FriendsOverview>(() => api<FriendsOverview>("/chat/friends"), { pollMs: 15000, signedOut: NO_FRIENDS });
+
+export const sendFriendRequest = (phone: string) => api<{ id: string; status: "pending" | "accepted" }>("/chat/friends/request", { method: "POST", body: { phone } });
+export const acceptFriend = (id: string) => api<{ accepted: true }>(`/chat/friends/${id}/accept`, { method: "POST" });
+export const removeFriend = (id: string) => api<{ removed: true }>(`/chat/friends/${id}`, { method: "DELETE" });

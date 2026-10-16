@@ -4,6 +4,7 @@ import { asyncHandler } from "../../utils/asyncHandler";
 import { ApiResponseUtil } from "../../utils/apiResponse";
 import { authMiddleware, AuthRequest } from "../../middlewares/auth.middleware";
 import validateRequest from "../../middlewares/validate.middleware";
+import friendsService from "./friends.service";
 import chatService, { BODY_MAX, GROUP_MAX_MEMBERS, GROUP_NAME_MAX, GROUP_NAME_MIN } from "./chat.service";
 
 const ok = (res: Response, message: string, data?: unknown, status = 200) => res.status(status).json(ApiResponseUtil.success(status, message, data));
@@ -15,6 +16,20 @@ chatRouter.use(authMiddleware);
 chatRouter.get("/rules", (_req, res: Response) => {
   ok(res, "Chat rules", { bodyMax: BODY_MAX, groupMax: GROUP_MAX_MEMBERS, groupNameMin: GROUP_NAME_MIN, groupNameMax: GROUP_NAME_MAX });
 });
+
+// friends (declared before the /threads routes)
+chatRouter.get("/friends", asyncHandler(async (req: AuthRequest, res: Response) => {
+  ok(res, "Friends", await friendsService.overview(req.user!.id));
+}));
+chatRouter.post("/friends/request", [body("phone").isString()], validateRequest, asyncHandler(async (req: AuthRequest, res: Response) => {
+  ok(res, "Request sent", await friendsService.request(req.user!.id, req.body.phone), 201);
+}));
+chatRouter.post("/friends/:id/accept", asyncHandler(async (req: AuthRequest, res: Response) => {
+  ok(res, "Friend added", await friendsService.accept(req.user!.id, req.params.id));
+}));
+chatRouter.delete("/friends/:id", asyncHandler(async (req: AuthRequest, res: Response) => {
+  ok(res, "Removed", await friendsService.remove(req.user!.id, req.params.id));
+}));
 
 chatRouter.get("/people", asyncHandler(async (req: AuthRequest, res: Response) => {
   ok(res, "People", await chatService.people(req.user!.id, req.query.q));

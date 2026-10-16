@@ -1101,3 +1101,18 @@ model Gift {
   @@index([buyerId, createdAt])
   @@index([friendId])
 }
+
+// Friends (Chat tab): one row per pair of customers. A request is "pending" until the other person accepts; declining or
+// removing deletes the row. Members are User.phoneNumber values.
+model Friendship {
+  id          String    @id @default(cuid())
+  pairKey     String    @unique // "phoneA|phoneB" (sorted): one row per pair
+  requesterId String
+  addresseeId String
+  status      String    @default("pending") // pending | accepted
+  createdAt   DateTime  @default(now())
+  respondedAt DateTime?
+
+  @@index([requesterId, status])
+  @@index([addresseeId, status])
+}
