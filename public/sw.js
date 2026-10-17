@@ -78,6 +78,11 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const href = (event.notification.data && event.notification.data.href) || "/";
+  // a web address (a notice made to open a link) opens in its own tab; a page of the app reuses the open window
+  if (/^https?:\/\//i.test(href)) {
+    event.waitUntil(self.clients.openWindow(href));
+    return;
+  }
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((wins) => {
       for (const w of wins) {

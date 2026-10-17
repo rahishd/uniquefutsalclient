@@ -15,7 +15,8 @@ class TournamentController {
     try {
       const tournaments = await tournamentService.getAllTournaments();
       // Team registrations hold phone numbers and emails: only staff see them.
-      const data = isStaff(req) ? tournaments : await Promise.all(tournaments.map((t) => publicTournament(t)));
+      // customers see only tournaments that are switched on and not cancelled
+      const data = isStaff(req) ? tournaments : await Promise.all(tournaments.filter((t) => t.isActive && t.status !== "cancelled").map((t) => publicTournament(t)));
       res.status(200).json({ success: true, data });
     } catch (error) {
       next(error);

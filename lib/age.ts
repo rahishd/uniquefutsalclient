@@ -8,6 +8,13 @@ export const AGE_GROUPS = ["open", "15-20", "20-25", "25-30", "30-35", "35-40", 
 export type AgeGroup = (typeof AGE_GROUPS)[number];
 
 export const ageGroupLabel = (g: string) => (g === "open" ? "Open" : g === "40+" ? "40+" : g);
+/** A request's groups as one label: "Open", "20 to 25 years", "20 to 25 years or 30 to 35 years". */
+export const groupsText = (groups: string[]) => {
+  if (groups.length === 0 || groups.includes("open")) return "Open";
+  const one = (g: string) => (g === "40+" ? "40 and over" : g.replace("-", " to ")) + " years";
+  return groups.map(one).join(" or ");
+};
+
 export const ageGroupHint = (g: string) => (g === "open" ? "Anyone can join" : `Players aged ${g === "40+" ? "40 and over" : g.replace("-", " to ")}`);
 
 const pad = (n: number) => String(n).padStart(2, "0");

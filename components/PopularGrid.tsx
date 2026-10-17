@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BarChart3, CalendarDays, ChevronRight, CircleHelp, Crown, Gamepad2, Gift, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, UserSearch, Zap, BadgeCheck, Lock } from "lucide-react";
+import { BarChart3, CalendarDays, ChevronRight, CircleHelp, Crown, Gamepad2, Gift, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, UserSearch, Zap, BadgeCheck, Lock, ShieldCheck } from "lucide-react";
 import EvCarIcon from "@/components/ev/EvCarIcon";
 import { markReadByTypes, noticesStore, type NoticeType } from "@/lib/notifications";
 import { openSignIn, useSession } from "@/lib/session";
@@ -35,11 +35,12 @@ const TILES: Tile[] = [
   { label: "Complaints", href: "/complaints", icon: MessageSquareWarning, tone: "text-brand", types: ["complaint"] },
   { label: "Children's Academy", href: "/academy", icon: GraduationCap, tone: "text-brand", types: ["academy"] },
   { label: "Refer & Earn", href: "/refer", icon: HeartHandshake, tone: "text-brand", types: ["referral"] },
+  { label: "Verify Documents", href: "/verify", icon: ShieldCheck, tone: "text-brand" },
   { label: "Help", href: "/help", icon: CircleHelp, tone: "text-brand" },
 ];
 
 // A guest (no account) can book a court and Gamezone, and read Help. Everything else needs an account.
-const GUEST_OK = new Set(["/book", "/gamezone", "/help"]);
+const GUEST_OK = new Set(["/book", "/gamezone", "/help", "/verify"]);
 
 const NO_UNREAD: Partial<Record<NoticeType, number>> = {};
 

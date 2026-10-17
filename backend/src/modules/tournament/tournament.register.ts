@@ -26,6 +26,8 @@ export async function registrationState(t: T) {
   let closedReason: string | null = null;
   if (!t.isActive || t.status === "cancelled") closedReason = "Registration for this tournament is closed.";
   else if (t.status === "completed" || t.endDate < todayKey()) closedReason = "This tournament has finished.";
+  // once the first day has started, the team list is fixed: no sign-ups while the tournament runs
+  else if (t.startDate <= todayKey()) closedReason = "Registration is closed because the tournament has started.";
   else if (limit !== null && registered >= limit) closedReason = "All team places are taken.";
   return { registered, limit, spotsLeft: limit === null ? null : Math.max(0, limit - registered), open: closedReason === null, closedReason };
 }

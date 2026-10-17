@@ -68,12 +68,13 @@ export async function api<T = unknown>(path: string, opts: Options = {}, retried
     setTokens(null); // the sign-in is no longer valid
   }
 
-  let json: { data?: T; message?: string } = {};
+  let json: { data?: T; message?: string; code?: string } = {};
   try {
     json = await res.json();
   } catch {
     // no body
   }
+  if (res.status === 403 && json.code === "ACCOUNT_SUSPENDED" && tokens) setTokens(null); // suspended: sign out, the message says why
   if (!res.ok) throw new ApiError(res.status, json.message || "Something went wrong. Please try again.");
   return json.data as T;
 }

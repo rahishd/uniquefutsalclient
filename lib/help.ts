@@ -311,6 +311,19 @@ export const helpTopics: HelpTopic[] = [
     href: { label: "Children's Academy", to: "/academy" },
   },
   {
+    id: "verify",
+    icon: "pay",
+    title: "Verify Documents",
+    summary: "Check that a Unique Futsal bill or document is genuine.",
+    points: [
+      "Every receipt carries a short verification code. Find it under your payments in Profile (Payment history) and on the PDF.",
+      "Anyone, even without an account, can open Quick Access > Verify Documents and type the code. A genuine code shows the bill: what was paid for, the total, how it was paid and the date.",
+      "A code that does not match shows a warning that the bill may be fake. Do not accept it, and contact Unique Futsal.",
+      "The customer's phone number is never shown, and the name is shortened. After several wrong codes in a row, checking pauses for an hour.",
+      "Schools, banks and colleges that work with Unique Futsal can also get a reference document with its own code. Type that code in the same place to see it.",
+    ],
+  },
+  {
     id: "refer",
     icon: "bell",
     title: "Refer & Earn",
@@ -375,7 +388,7 @@ export const helpTopics: HelpTopic[] = [
     points: [
       "Open Quick Access > Find Player. Use the minus and plus buttons to choose how many players you need (up to 11), for example +6.",
       "Pick a day from tomorrow (the next 6 days) and the hour, choose who can join, add a short note if you like, and tap Notify.",
-      "Who can join: Open (anyone) or an age group: 15-20, 20-25, 25-30, 30-35, 35-40 or 40+. A player belongs to the group their age starts at (20 is in 20-25). Your age comes from the date of birth asked when you create an account; older accounts can add it in Profile.",
+      "Age group: choose Open (anyone), or tick one or more age groups: 15-20, 20-25, 25-30, 30-35, 35-40 or 40+. Only players in the groups you pick are notified and can join. Your age comes from the date of birth asked when you create an account; older accounts can add it in Profile.",
       "Open: every registered player is notified. An age group: only players in that group are notified and can join.",
       "The notification says: \"Your name needs 6 Players for Upcoming Game. View the deal\". You see how many have joined so far.",
       "Players tap I'm in to join. When everyone has joined, pay the Rs. 300 advance (online) within 2 hours. That books the court.",

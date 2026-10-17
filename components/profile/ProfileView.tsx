@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bell, Camera, Check, ChevronDown, ChevronRight, Crown, Download, Loader2, LogOut, Pencil, Star, Trophy, UserRound, X } from "lucide-react";
+import { Bell, Camera, Check, ChevronDown, ChevronRight, Crown, Download, Loader2, LogOut, Pencil, ShieldCheck, Star, Trophy, UserRound, X } from "lucide-react";
 import { downloadPdf } from "@/lib/pdf";
 import { errorText } from "@/lib/api";
 import { openSignIn, signOut, useSession } from "@/lib/session";
@@ -273,9 +273,9 @@ function RegisteredProfile() {
         await downloadPdf({
           filename: "unique-futsal-payments.pdf",
           title: "Payment history",
-          lines: [who],
-          columns: [{ header: "Date", width: 95 }, { header: "Booking ID", width: 180 }, { header: "Amount", width: 95 }, { header: "Status", width: 90 }],
-          rows: payments.map((p) => [dayLabel(p.date), p.kind === "bill" ? `${p.code} (bill)` : p.code, rs(p.amount), p.status]),
+          lines: [who, "To check a bill, type its Verification code at the Verify Documents page of the Unique Futsal app."],
+          columns: [{ header: "Date", width: 85 }, { header: "Booking ID", width: 140 }, { header: "Amount", width: 85 }, { header: "Status", width: 70 }, { header: "Verify code", width: 135 }],
+          rows: payments.map((p) => [dayLabel(p.date), p.kind === "bill" ? `${p.code} (bill)` : p.code, rs(p.amount), p.status, p.verifyCode ?? ""]),
         });
       }
     } finally {
@@ -334,6 +334,12 @@ function RegisteredProfile() {
       <li key={p.id} className="flex flex-wrap items-center justify-between py-3 first:pt-0 last:pb-0">
         <span><span className="block font-medium">{dayLabel(p.date)}</span><span className="font-mono text-[11px] text-slate-400">{p.code}</span></span>
         <span className="text-right"><span className="block font-medium">{rs(p.amount)}</span><span className="text-[11px] text-emerald-600">{p.status}</span></span>
+        {p.verifyCode && (
+          <span className="mt-2 flex w-full basis-full items-center justify-between rounded-xl bg-[#0c0b5d]/5 px-3 py-2 text-xs">
+            <span className="flex items-center gap-1.5 font-medium text-[#0c0b5d]"><ShieldCheck size={14} aria-hidden /> Verification code <b className="font-mono text-sm tracking-widest">{p.verifyCode}</b></span>
+            <Link href={`/verify?code=${p.verifyCode}`} className="font-semibold text-brand underline">Verify</Link>
+          </span>
+        )}
         {p.kind === "bill" && p.lines && (
           <span className="mt-2 block w-full basis-full text-xs text-slate-500">
             {p.lines.map((l, i) => <span key={i} className="flex justify-between"><span>{l.type === "goods" && l.quantity > 1 ? `${l.quantity} x ` : ""}{l.label}</span><span>{rs(l.amount)}</span></span>)}

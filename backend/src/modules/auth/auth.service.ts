@@ -18,6 +18,7 @@ import crypto from "crypto";
 import env from "../../config/env";
 import { isValidDob, MAX_AGE, MIN_AGE } from "../../utils/age";
 import { todayKey } from "../../utils/dates";
+import { SUSPENDED_MESSAGE } from "../../middlewares/auth.middleware";
 
 const RETRYABLE_DB_ERROR_CODES = new Set(["P1001", "P1002", "P1008", "P1017"]);
 const RETRYABLE_DB_ERROR_PATTERN =
@@ -56,6 +57,8 @@ export class AuthService {
     if (!isValidPassword) {
       throw new AppError(401, "Invalid phone number or password");
     }
+
+    if (!user.isActive) throw new AppError(403, SUSPENDED_MESSAGE);
 
     if (!user.isVerified && env.OTP_ENABLED) {
       // Automatically resend OTP if they try to login while unverified
@@ -426,6 +429,7 @@ export class AuthService {
     if (!user) {
       throw new AppError(401, "User not found");
     }
+    if (!user.isActive) throw new AppError(403, SUSPENDED_MESSAGE);
 
     if (!user.phoneNumber) {
       throw new AppError(500, "User phone number is not configured");

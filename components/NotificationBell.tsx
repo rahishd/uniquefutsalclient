@@ -52,6 +52,14 @@ export default function NotificationBell() {
   const unread = notices.filter((n) => !n.read).length;
 
   const [open, setOpen] = useState(false);
+  // While the panel is open the page behind must not scroll: lock it, and let the list scroll on its own.
+  useEffect(() => {
+    if (!open) return;
+    const html = document.documentElement;
+    const prev = html.style.overflow;
+    html.style.overflow = "hidden";
+    return () => { html.style.overflow = prev; };
+  }, [open]);
   const [perm, setPerm] = useState<ReturnType<typeof notificationSupport>>("unsupported");
   const [announce, setAnnounce] = useState("");
   const panelId = useId();
@@ -134,7 +142,7 @@ export default function NotificationBell() {
             role="dialog"
             aria-label="Notifications"
             tabIndex={-1}
-            className="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2.5rem))] rounded-3xl p-4 outline-none shadow-[0_20px_50px_rgba(12,11,93,0.25)] ring-1 ring-white/80"
+            className="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2.5rem))] overscroll-contain rounded-3xl p-4 outline-none shadow-[0_20px_50px_rgba(12,11,93,0.25)] ring-1 ring-white/80"
             style={{ background: "#ffffff" }}
           >
             <div className="flex items-center justify-between">
@@ -163,7 +171,7 @@ export default function NotificationBell() {
               <p className="py-10 text-center text-sm text-slate-400">You&apos;re all caught up.</p>
             ) : (
               <>
-                <ul className="mt-3 max-h-[55vh] space-y-2 overflow-y-auto pr-1">
+                <ul className="mt-3 max-h-[55vh] space-y-2 overflow-y-auto overscroll-contain pr-1">
                   {notices.map((n) => {
                     const { icon: Icon, tone, label } = metaFor(n.type);
                     const inner = (
@@ -188,7 +196,7 @@ export default function NotificationBell() {
                     return (
                       <li key={n.id}>
                         {n.href ? (
-                          <Link href={n.href} onClick={() => openNotice(n)} className={cls}>{inner}</Link>
+                          <Link href={n.href} onClick={() => openNotice(n)} className={cls} {...(/^https?:\/\//i.test(n.href) ? { target: "_blank", rel: "noopener noreferrer" } : {})}>{inner}</Link>
                         ) : (
                           <button type="button" onClick={() => openNotice(n)} className={cls}>{inner}</button>
                         )}

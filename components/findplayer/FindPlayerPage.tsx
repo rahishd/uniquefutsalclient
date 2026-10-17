@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { BellRing, Cake, Loader2, Minus, Plus, UserSearch } from "lucide-react";
+import { BellRing, Cake, Check, Loader2, Minus, Plus, UserSearch } from "lucide-react";
 import { errorText } from "@/lib/api";
 import { askConfirm } from "@/lib/confirm";
 import { dateKey, formatHour } from "@/lib/booking";
@@ -11,7 +11,7 @@ import { openSignIn, useSession } from "@/lib/session";
 import { useTeams } from "@/lib/teams";
 import { FALLBACK_RULES, loadRules, playersLabel, postRequest, requestsStore, type PlayerRules } from "@/lib/playerRequests";
 import { markReadByTypes } from "@/lib/notifications";
-import { ageGroupHint, ageGroupLabel } from "@/lib/age";
+import { ageGroupLabel, groupsText } from "@/lib/age";
 import { profileStore } from "@/lib/profile";
 import RequestCard from "@/components/findplayer/RequestCard";
 import TeamFinder from "@/components/captain/TeamFinder";
@@ -29,7 +29,17 @@ export default function FindPlayerPage() {
   const [date, setDate] = useState<string | null>(null);
   const [hour, setHour] = useState<number | null>(null);
   const [note, setNote] = useState("");
-  const [ageGroup, setAgeGroup] = useState("open");
+  const [ageGroups, setAgeGroups] = useState<string[]>(["open"]); // "open" or one or more groups
+  // Open is on its own; picking a group turns Open off; untick everything and it goes back to Open
+  const toggleGroup = (g: string) =>
+    setAgeGroups((cur) => {
+      if (g === "open") return ["open"];
+      const base = cur.filter((x) => x !== "open");
+      const next = base.includes(g) ? base.filter((x) => x !== g) : [...base, g];
+      return next.length === 0 ? ["open"] : next;
+    });
+  const everyone = ageGroups.includes("open");
+  const chosenText = groupsText(ageGroups);
   const hasDob = profileStore.use().data?.dateOfBirth;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,12 +71,12 @@ export default function FindPlayerPage() {
 
   async function submit() {
     if (chosenHour === null) return;
-    const who = ageGroup === "open" ? "all registered players" : `registered players aged ${ageGroupLabel(ageGroup)}`;
-    if (!(await askConfirm(`Send "${session?.registered ? session.name : "You"} needs ${playersLabel(players)}" to ${who}?`, { confirmLabel: ageGroup === "open" ? "Notify everyone" : "Notify group", title: ageGroup === "open" ? "Notify all players?" : "Notify this age group?" }))) return;
+    const who = everyone ? "all registered players" : `registered players aged ${chosenText}`;
+    if (!(await askConfirm(`Send "${session?.registered ? session.name : "You"} needs ${playersLabel(players)}" to ${who}?`, { confirmLabel: everyone ? "Notify everyone" : "Notify groups", title: everyone ? "Notify all players?" : "Notify these age groups?" }))) return;
     setBusy(true);
     setError(null);
     try {
-      const { id } = await postRequest({ date: chosenDate, hour: chosenHour, players, note: note.trim() || undefined, ageGroup });
+      const { id } = await postRequest({ date: chosenDate, hour: chosenHour, players, note: note.trim() || undefined, ageGroups });
       requestsStore.refresh();
       // the host lands on the deal page, which shows how many players have joined so far
       router.push(`/find-player/${id}`);
@@ -158,22 +168,26 @@ export default function FindPlayerPage() {
             </div>
 
             <div>
-              <p className="text-sm font-medium">Who can join?</p>
-              <div className="-mx-1 mt-2 flex flex-wrap gap-2 px-1" role="radiogroup" aria-label="Age group">
-                {rules.ageGroups.map((g) => (
-                  <button
-                    key={g}
-                    type="button"
-                    role="radio"
-                    aria-checked={ageGroup === g}
-                    onClick={() => setAgeGroup(g)}
-                    className={`rounded-full px-4 py-2 text-sm font-medium ${ageGroup === g ? "glass-active" : "border border-slate-200 bg-white text-slate-600"}`}
-                  >
-                    {ageGroupLabel(g)}
-                  </button>
-                ))}
+              <p className="text-sm font-medium">Age group</p>
+              <p className="mt-0.5 text-xs text-slate-400">Pick one or more. Only players in the chosen groups are notified and can join.</p>
+              <div className="-mx-1 mt-2 flex flex-wrap gap-2 px-1" role="group" aria-label="Age groups">
+                {rules.ageGroups.map((g) => {
+                  const on = ageGroups.includes(g);
+                  return (
+                    <button
+                      key={g}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => toggleGroup(g)}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium ${on ? "glass-active" : "border border-slate-200 bg-white text-slate-600"}`}
+                    >
+                      {on && <Check size={14} aria-hidden />}
+                      {ageGroupLabel(g)}
+                    </button>
+                  );
+                })}
               </div>
-              <p className="mt-1.5 text-xs text-slate-400">{ageGroupHint(ageGroup)}. {ageGroup === "open" ? "Every registered player is notified." : "Only players in this age group are notified and can join."}</p>
+              <p className="mt-2 text-xs text-slate-400">{everyone ? "Anyone can join. Every registered player is notified." : `Players aged ${chosenText} are notified and can join.`}</p>
             </div>
 
             <label className="block text-sm font-medium">
@@ -193,7 +207,7 @@ export default function FindPlayerPage() {
               onClick={submit}
               className="glass-btn flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-sm font-semibold disabled:opacity-50"
             >
-              {busy ? <Loader2 size={16} className="animate-spin" /> : <BellRing size={16} />} {ageGroup === "open" ? "Notify all players" : `Notify players aged ${ageGroupLabel(ageGroup)}`}
+              {busy ? <Loader2 size={16} className="animate-spin" /> : <BellRing size={16} />} {everyone ? "Notify all players" : `Notify ${chosenText}`}
             </button>
             <p className="-mt-2 text-center text-xs text-slate-400">
               A friendly game: the court price is shared equally, win or lose. Once everyone has joined you pay a Rs. {rules.advanceFee} advance to book the court.

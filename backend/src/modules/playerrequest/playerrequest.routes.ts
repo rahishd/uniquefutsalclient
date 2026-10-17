@@ -24,7 +24,7 @@ playerRequestRouter.get("/", asyncHandler(async (req: AuthRequest, res: Response
 
 playerRequestRouter.post(
   "/",
-  [body("date").isString(), body("hour").isInt({ min: 0, max: 23 }).toInt(), body("players").isInt({ min: 1, max: MAX_PLAYERS }).toInt(), body("note").optional({ values: "null" }).isString(), body("ageGroup").optional({ values: "null" }).isString()],
+  [body("date").isString(), body("hour").isInt({ min: 0, max: 23 }).toInt(), body("players").isInt({ min: 1, max: MAX_PLAYERS }).toInt(), body("note").optional({ values: "null" }).isString(), body("ageGroups").optional({ values: "null" }).isArray({ max: 7 }), body("ageGroup").optional({ values: "null" }).isString()],
   validateRequest,
   asyncHandler(async (req: AuthRequest, res: Response) => ok(res, "Request posted", await service.create(req.user!.id, req.body), 201)),
 );

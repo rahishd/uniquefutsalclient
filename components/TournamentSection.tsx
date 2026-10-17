@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, MapPin, Radio, Trophy } from "lucide-react";
+import { ChevronRight, ListOrdered, Radio, Trophy } from "lucide-react";
 import { fmtDay } from "@/lib/promos";
 import { formatRs } from "@/lib/booking";
-import { site } from "@/lib/site";
 import { hoursLabel, tournamentStore } from "@/lib/tournament";
 
 export default function TournamentSection() {
@@ -16,9 +15,9 @@ export default function TournamentSection() {
   return (
     <section className="mt-8 desk:mt-10" aria-label="Tournament">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">Tournament</h2>
-        <Link href="/tournaments" className="flex items-center text-sm text-brand">
-          Tie-sheet <ChevronRight size={16} />
+        <h2 className="flex items-center gap-2 text-lg font-medium"><Trophy size={18} className="text-amber-500" aria-hidden /> Tournament</h2>
+        <Link href="/tournaments" className="flex items-center gap-1.5 text-sm text-brand">
+          <ListOrdered size={15} aria-hidden /> Tie-sheet <ChevronRight size={16} />
         </Link>
       </div>
 
@@ -34,9 +33,6 @@ export default function TournamentSection() {
                 {t.hosted.days.map((d) => <li key={d.date}>{fmtDay(d.date)}: {hoursLabel(d)}</li>)}
               </ul>
             )}
-            <p className="mt-1 flex items-center gap-1 text-xs text-slate-400">
-              <MapPin size={12} /> {site.name}, {site.address}
-            </p>
           </div>
           {t.prizePool > 0 && (
             <span className="flex shrink-0 items-center gap-1 rounded-full bg-amber-400/15 px-2.5 py-1 text-xs font-semibold text-amber-600">

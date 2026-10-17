@@ -93,4 +93,41 @@ export const registrationPath = (id: string) => `/tournaments/${encodeURICompone
 export const registrationLink = (id: string) => `${typeof window !== "undefined" ? window.location.origin : ""}${registrationPath(id)}`;
 
 // Is a tournament still worth offering registration for (not finished)?
-export const canRegister = (t: { status?: string; endDate: string }) => t.status !== "completed";
+// Sign-up is open only before the tournament starts; once it is live (or finished) the team list is fixed.
+export const canRegister = (t: { status?: string }) => t.status === "upcoming";
+
+// ---- upcoming tournaments (the "View Upcoming Tournaments" page) ----
+// The public list: every tournament the venue runs. The page keeps the ones that have not started.
+export const tournamentListStore = createRemoteStore<Tournament[]>(() => api<Tournament[]>("/tournaments", { auth: "none" }), { pollMs: 60000 });
+
+// ---- tie-sheet PDF ----
+const sideName = (n: string | null) => n ?? "To be decided";
+const MATCH_STATE: Record<MatchStatus, string> = { finished: "Full time", live: "Live", upcoming: "Upcoming" };
+
+/** The whole tie-sheet as a table for downloadPdf: one row per match with its score, status, time and scorers. */
+export function tieSheetPdf(t: Tournament) {
+  const rows = t.rounds.flatMap((r) =>
+    r.matches.map((m) => [
+      r.name,
+      `${sideName(m.home)} vs ${sideName(m.away)}`,
+      m.homeScore !== null && m.awayScore !== null ? `${m.homeScore} - ${m.awayScore}` : "-",
+      m.note && m.status !== "live" ? `${MATCH_STATE[m.status]} (${m.note})` : MATCH_STATE[m.status],
+      matchTime(m) || "-",
+      (m.goals ?? []).map((g) => `${g.scorer || "Goal"}${g.minute !== null ? ` ${g.minute}'` : ""} (${g.side === "home" ? sideName(m.home) : sideName(m.away)})`).join(", ") || "-",
+    ]),
+  );
+  return {
+    filename: `${t.name.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "tournament"}-tie-sheet.pdf`,
+    title: `${t.name}: Tie-sheet`,
+    lines: [`${t.startDate} to ${t.endDate}`, t.format ?? `${t.teams} teams`],
+    columns: [
+      { header: "Round", width: 62 },
+      { header: "Match", width: 125 },
+      { header: "Score", width: 40 },
+      { header: "Status", width: 62 },
+      { header: "When", width: 76 },
+      { header: "Goals", width: 150 },
+    ],
+    rows,
+  };
+}

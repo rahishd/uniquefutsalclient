@@ -7,7 +7,7 @@ import paymentService, { QR_HOLD_MS } from "../payment/payment.service";
 import notificationService from "../notification/notification.service";
 import pushService from "../push/push.service";
 import { addDaysKey, startsAtMs, todayKey } from "../../utils/dates";
-import { AgeGroup, dobFilter, inAgeGroup, isAgeGroup } from "../../utils/age";
+import { AgeGroup, dobFilterAny, groupsLabel, inAnyGroup, isAgeGroup, normaliseGroups, parseGroups } from "../../utils/age";
 
 // Find Player: "I need N more players" for a friendly game. Everything is decided here: the number, the window (from tomorrow, 6 days),
 // who may join (a request is open to anyone or to one age group), that the spots never go below zero (inside a transaction), the equal split of the court price (win
@@ -75,8 +75,9 @@ export class PlayerRequestService {
       playersNeeded: r.playersNeeded,
       ageGroup: r.ageGroup,
       // false when the game is for another age group (or the viewer has not given a date of birth yet)
-      eligible: inAgeGroup(viewerDob, r.ageGroup as AgeGroup, todayKey()),
-      needsDob: r.ageGroup !== "open" && !viewerDob,
+      ageGroups: parseGroups(r.ageGroup),
+      eligible: inAnyGroup(viewerDob, parseGroups(r.ageGroup), todayKey()),
+      needsDob: !parseGroups(r.ageGroup).includes("open") && !viewerDob,
       joined,
       spotsLeft: Math.max(r.playersNeeded - joined, 0),
       note: r.note,
@@ -173,8 +174,11 @@ export class PlayerRequestService {
     }
   }
 
-  async create(userId: string, input: { date?: unknown; hour?: unknown; players?: unknown; note?: unknown; ageGroup?: unknown }) {
-    const ageGroup: AgeGroup = input.ageGroup === undefined || input.ageGroup === null || input.ageGroup === "" ? "open" : isAgeGroup(input.ageGroup) ? input.ageGroup : (() => { throw new AppError(400, "Choose Open or one of the age groups."); })();
+  async create(userId: string, input: { date?: unknown; hour?: unknown; players?: unknown; note?: unknown; ageGroup?: unknown; ageGroups?: unknown }) {
+    // several groups: a list (ageGroups), or the older single value (ageGroup); Open means anyone
+    const picked = Array.isArray(input.ageGroups) ? input.ageGroups : [input.ageGroup].filter((v) => v !== undefined && v !== null && v !== "");
+    if (picked.some((v) => !isAgeGroup(v))) throw new AppError(400, "Choose Open or one or more of the age groups.");
+    const ageGroups: AgeGroup[] = normaliseGroups(picked);
     const date = typeof input.date === "string" ? input.date : "";
     const hour = Number(input.hour);
     const players = Number(input.players);
@@ -196,18 +200,18 @@ export class PlayerRequestService {
     if (dup) throw new AppError(409, "You already have a request for that time.");
 
     const courtPrice = (await BookingService.quote(date, hh(hour), 1)).basePrice;
-    const row = await prisma.playerRequest.create({ data: { userId, date, startHour: hour, playersNeeded: players, ageGroup, note: note || null, courtPrice } });
-    void this.broadcast(row.id, userId, players, ageGroup);
+    const row = await prisma.playerRequest.create({ data: { userId, date, startHour: hour, playersNeeded: players, ageGroup: ageGroups.join(","), note: note || null, courtPrice } });
+    void this.broadcast(row.id, userId, players, ageGroups);
     return { id: row.id };
   }
 
   /** One in-app notice (and a push to devices) to every other registered customer. Runs after the answer is sent. */
-  private async broadcast(requestId: string, posterId: string, players: number, ageGroup: AgeGroup) {
+  private async broadcast(requestId: string, posterId: string, players: number, groups: AgeGroup[]) {
     try {
       const names = await namesOf([posterId]);
       const title = "Players needed";
-      const message = `${names.get(posterId) ?? "A player"} needs ${plural(players)}${ageGroup === "open" ? "" : ` aged ${ageLabel(ageGroup)}`} for Upcoming Game. View the deal`;
-      const ageWhere = dobFilter(ageGroup, todayKey()); // Open: everyone; a group: only people whose date of birth puts them in it
+      const message = `${names.get(posterId) ?? "A player"} needs ${plural(players)}${groups.includes("open") ? "" : ` aged ${groupsLabel(groups)}`} for Upcoming Game. View the deal`;
+      const ageWhere = dobFilterAny(groups, todayKey()); // Open: everyone; a group: only people whose date of birth puts them in it
       const href = `/find-player/${requestId}`;
       const CHUNK = 500;
       let cursor: string | undefined;
@@ -249,7 +253,7 @@ export class PlayerRequestService {
     for (const r of rows) settled.push(await this.reconcile(r));
     const dob = await viewerDobOf(userId);
     const involved = (r: Row) => r.userId === userId || r.joins.some((j) => j.userId === userId);
-    const live = settled.filter((r) => startsAt(r) > Date.now() && r.status !== "cancelled" && (involved(r) || (r.status === "open" && inAgeGroup(dob, r.ageGroup as AgeGroup, todayKey()))));
+    const live = settled.filter((r) => startsAt(r) > Date.now() && r.status !== "cancelled" && (involved(r) || (r.status === "open" && inAnyGroup(dob, parseGroups(r.ageGroup), todayKey()))));
     const names = await namesOf([...new Set(live.flatMap((r) => [r.userId, ...r.joins.map((j) => j.userId)]))]);
     return live.map((r) => this.view(r, userId, names, dob));
   }
@@ -267,8 +271,8 @@ export class PlayerRequestService {
     if (startsAt(r) <= Date.now()) throw new AppError(400, "This game has already started.");
     if (r.joins.some((j) => j.userId === userId)) throw new AppError(409, "You have already joined.");
     const dob = await viewerDobOf(userId);
-    if (!inAgeGroup(dob, r.ageGroup as AgeGroup, todayKey())) {
-      throw new AppError(403, dob ? `This game is for players aged ${ageLabel(r.ageGroup)}.` : "Add your date of birth in your Profile to join age-group games.");
+    if (!inAnyGroup(dob, parseGroups(r.ageGroup), todayKey())) {
+      throw new AppError(403, dob ? `This game is for players aged ${groupsLabel(parseGroups(r.ageGroup))}.` : "Add your date of birth in your Profile to join age-group games.");
     }
 
     // the spots can never go below zero, even when two people tap at once

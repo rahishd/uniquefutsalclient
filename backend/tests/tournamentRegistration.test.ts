@@ -2,6 +2,7 @@ import { api, bearer, futureDate, makeUser, prisma, tokenFor } from "./helpers";
 
 const CAPTAIN = "9800000611";
 let open: string; // upcoming, 2 team places
+let live: string; // started today, still running
 let done: string; // finished
 
 const team = (over: Record<string, unknown> = {}) => ({
@@ -19,6 +20,7 @@ beforeAll(async () => {
   await prisma.user.deleteMany({ where: { phoneNumber: CAPTAIN } });
   await makeUser(CAPTAIN, "Captain Test");
   open = (await prisma.tournament.create({ data: { name: "REGTEST Cup", prizePool: 5000, entryFee: 1500, minTeams: 2, maxTeams: 2, startDate: futureDate(10), endDate: futureDate(12) } })).id;
+  live = (await prisma.tournament.create({ data: { name: "REGTEST Live", prizePool: 0, minTeams: 2, maxTeams: 8, startDate: futureDate(0), endDate: futureDate(2) } })).id;
   done = (await prisma.tournament.create({ data: { name: "REGTEST Old", prizePool: 0, minTeams: 2, maxTeams: 8, startDate: futureDate(-9), endDate: futureDate(-7), status: "completed" } })).id;
 });
 
@@ -80,6 +82,16 @@ describe("Team registration from the shareable link", () => {
     await prisma.registration.updateMany({ where: { tournamentId: open, teamName: "Second FC" }, data: { status: "rejected" } });
     expect((await api().get(`/api/tournaments/${open}/registration`)).body.data.open).toBe(true);
     expect((await api().post(`/api/tournaments/${open}/register`).set(bearer(tokenFor(CAPTAIN))).send(team({ teamName: "Third FC", contactPhone: "9855555555" }))).status).toBe(201);
+  });
+
+  it("closes once the tournament has started: no one can register while it runs", async () => {
+    const info = await api().get(`/api/tournaments/${live}/registration`);
+    expect(info.body.data.open).toBe(false);
+    expect(info.body.data.closedReason).toMatch(/started/i);
+    const r = await api().post(`/api/tournaments/${live}/register`).set(bearer(tokenFor(CAPTAIN))).send(team({ contactPhone: "9877777777", teamName: "Too Late FC" }));
+    expect(r.status).toBe(409);
+    expect(r.body.message).toMatch(/started/i);
+    expect(await prisma.registration.count({ where: { tournamentId: live } })).toBe(0);
   });
 
   it("refuses a finished tournament and an unknown one", async () => {

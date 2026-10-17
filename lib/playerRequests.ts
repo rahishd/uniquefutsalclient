@@ -12,7 +12,7 @@ export interface PlayerRequest {
   date: string;
   hour: number;
   playersNeeded: number;
-  ageGroup: string; // "open" (anyone) or "20-25" etc.
+  ageGroups: string[]; // ["open"] (anyone), or one or more groups such as ["20-25", "30-35"]
   eligible: boolean; // false: the game is for another age group, or the viewer has no date of birth yet
   needsDob: boolean; // an age-group game and the viewer has not given a date of birth
   joined: number;
@@ -68,7 +68,7 @@ export const requestsStore = createRemoteStore<PlayerRequest[]>(() => api<Player
 
 export const loadRules = () => api<PlayerRules>("/player-requests/rules");
 export const loadRequest = (id: string) => api<PlayerRequest>(`/player-requests/${encodeURIComponent(id)}`);
-export const postRequest = (r: { date: string; hour: number; players: number; note?: string; ageGroup?: string }) =>
+export const postRequest = (r: { date: string; hour: number; players: number; note?: string; ageGroups?: string[] }) =>
   api<{ id: string }>("/player-requests", { method: "POST", body: r });
 export const joinRequest = (id: string) => api<PlayerRequest>(`/player-requests/${encodeURIComponent(id)}/join`, { method: "POST" });
 export const leaveRequest = (id: string) => api<PlayerRequest>(`/player-requests/${encodeURIComponent(id)}/leave`, { method: "POST" });

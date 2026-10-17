@@ -30,6 +30,7 @@ import { clubRouter } from "../modules/club";
 import { goalRushRouter } from "../modules/goalrush";
 import { academyRouter } from "../modules/academy";
 import { referRouter } from "../modules/refer";
+import { verifyRouter } from "../modules/verify";
 import { giftRouter } from "../modules/gift";
 import { evRouter } from "../modules/ev";
 import { contentRouter } from "../modules/content";
@@ -73,6 +74,7 @@ router.use("/club", clubRouter);
 router.use("/goal-rush", goalRushRouter);
 router.use("/academy", academyRouter);
 router.use("/refer", referRouter);
+router.use("/verify", verifyRouter); // public: is this bill or document genuine?
 router.use("/gifts", giftRouter);
 router.use("/ev", evRouter);
 router.use("/content", contentRouter);

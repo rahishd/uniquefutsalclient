@@ -8,6 +8,7 @@ import { AppError } from "../../middlewares/error.middleware";
 import { prisma } from "../../config/db";
 import { todayKey } from "../../utils/dates";
 import { ageOn, isValidDob, MAX_AGE, MIN_AGE } from "../../utils/age";
+import { codeKey, ensurePaymentCodes } from "../verify/verify.codes";
 import sharp from "sharp";
 
 const router = Router();
@@ -241,14 +242,20 @@ router.get(
     // A game paid inside a final bill is shown in that bill, not twice
     const inBills = new Set(bills.flatMap((b) => b.bookingIds));
     const bookings = bookingsAll.filter((b) => !inBills.has(b.id));
+    // every receipt carries a verification code (anyone can check it on the Verify page)
+    const codes = await ensurePaymentCodes([
+      ...bills.map((b) => ({ sourceType: "checkout" as const, sourceId: b.id })),
+      ...bookings.map((b) => ({ sourceType: "booking" as const, sourceId: b.id })),
+      ...gz.map((g) => ({ sourceType: "gamezone" as const, sourceId: g.code })),
+    ]);
     const billItems = bills.map((b) => ({
-      id: b.id, code: b.code, kind: "bill", date: todayKey(b.createdAt), time: "", amount: b.total, method: b.paymentMethod, status: "Paid",
+      id: b.id, code: b.code, verifyCode: codes.get(codeKey("checkout", b.id)) ?? null, kind: "bill", date: todayKey(b.createdAt), time: "", amount: b.total, method: b.paymentMethod, status: "Paid",
       lines: JSON.parse(b.lines) as unknown, points: Number(b.pointsGoods) + Number(b.pointsGames),
     }));
     const items = [
       ...billItems,
-      ...bookings.map((b) => ({ id: b.id, code: b.code || "UF-" + b.id.slice(-6).toUpperCase(), kind: "game", date: b.date, time: `${b.startTime} - ${b.endTime}`, amount: b.totalPrice, method: b.paymentMethod, status: "Paid" })),
-      ...gz.map((g) => ({ id: g.code, code: g.code, kind: "gamezone", date: g.date, time: `${String(g.startHour).padStart(2, "0")}:00 - ${String(g.startHour + g.hours).padStart(2, "0")}:00`, amount: g.total, method: g.paymentMethod, status: "Paid" })),
+      ...bookings.map((b) => ({ id: b.id, code: b.code || "UF-" + b.id.slice(-6).toUpperCase(), verifyCode: codes.get(codeKey("booking", b.id)) ?? null, kind: "game", date: b.date, time: `${b.startTime} - ${b.endTime}`, amount: b.totalPrice, method: b.paymentMethod, status: "Paid" })),
+      ...gz.map((g) => ({ id: g.code, code: g.code, verifyCode: codes.get(codeKey("gamezone", g.code)) ?? null, kind: "gamezone", date: g.date, time: `${String(g.startHour).padStart(2, "0")}:00 - ${String(g.startHour + g.hours).padStart(2, "0")}:00`, amount: g.total, method: g.paymentMethod, status: "Paid" })),
     ].sort((a, b) => b.date.localeCompare(a.date));
     res.json(ApiResponseUtil.success(200, "Payments", items));
   }),

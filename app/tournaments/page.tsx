@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { Banknote, ChevronLeft, MapPin, CalendarDays, Trophy, Users } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, Banknote, ChevronLeft, Download, Loader2, MapPin, CalendarDays, Trophy, Users } from "lucide-react";
 import PlaceholderPage from "@/components/PlaceholderPage";
 import TieSheet from "@/components/TieSheet";
-import { formatRs } from "@/lib/booking";
+import LiveGoals from "@/components/tournament/LiveGoals";
+import { downloadPdf } from "@/lib/pdf";
+import { dateKey, formatRs } from "@/lib/booking";
 import { fmtDay } from "@/lib/promos";
 import { site } from "@/lib/site";
-import { HostedEvent, canRegister, eventsStore, hoursLabel, registrationPath, tournamentStore } from "@/lib/tournament";
+import { HostedEvent, canRegister, eventsStore, hoursLabel, registrationPath, tieSheetPdf, tournamentStore, type Tournament } from "@/lib/tournament";
 import ShareRegistration from "@/components/tournament/ShareRegistration";
 
 // Tournaments the venue hosts for a manager: the host and the hours of each day
@@ -20,7 +23,8 @@ function EventList({ events }: { events: HostedEvent[] }) {
           <p className="text-xs text-slate-400">{fmtDay(e.startDate)}{e.startDate !== e.endDate ? ` – ${fmtDay(e.endDate)}` : ""}{e.hostName ? ` · Hosted by ${e.hostName}` : ""}</p>
           <p className="mt-2 text-sm"><span className="text-slate-400">Entry fee:</span> <b className="font-medium">{e.entryFee && e.entryFee > 0 ? `${formatRs(e.entryFee)} per team` : "Free entry"}</b></p>
           <ul className="mt-3 space-y-1 text-sm">{e.days.map((d) => <li key={d.date} className="flex justify-between"><span>{fmtDay(d.date)}</span><span className="text-slate-500">{hoursLabel(d)}</span></li>)}</ul>
-          <RegisterBox id={e.id} name={e.name} />
+          {/* sign-up closes when the event starts */}
+          {e.startDate > dateKey(new Date()) ? <RegisterBox id={e.id} name={e.name} /> : <p className="mt-3 rounded-2xl bg-white/60 p-3 text-center text-xs text-slate-500">Registration is closed: this event has started.</p>}
         </li>
       ))}
     </ul>
@@ -66,8 +70,8 @@ export default function TournamentsPage() {
       </Link>
 
       <header className="mt-4">
-        <span className="rounded-full bg-rose-500/10 px-3 py-1 text-xs font-medium capitalize text-rose-500">{t.status}</span>
-        <h1 className="mt-3 text-2xl font-semibold leading-tight">{t.name}</h1>
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${t.status === "live" ? "bg-rose-500/10 text-rose-600" : t.status === "upcoming" ? "bg-sky-500/10 text-sky-700" : "bg-slate-500/10 text-slate-600"}`}>{t.status === "live" && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-500" />}{t.status}</span>
+        <h1 className="mt-3 text-2xl font-bold leading-tight text-slate-900">{t.name}</h1>
       </header>
 
       <dl className="glass mt-5 grid grid-cols-2 gap-4 rounded-3xl p-5 text-sm">
@@ -136,22 +140,50 @@ export default function TournamentsPage() {
         </section>
       )}
 
-      {events.length > 0 && (
-        <section className="mt-8" aria-label="Other tournaments at the venue">
-          <h2 className="mb-3 text-lg font-medium">Also at the venue</h2>
-          <EventList events={events} />
-        </section>
-      )}
+      <LiveGoals rounds={t.rounds} />
 
-      <h2 className="mb-3 mt-8 text-lg font-medium">Tie-sheet</h2>
-      {t.rounds.length === 0 ? (
-        <p className="glass rounded-2xl px-4 py-6 text-center text-sm text-slate-500">{t.hosted ? "The tie-sheet will appear here if the organiser shares one." : "The tie-sheet will appear here once the draw is made."}</p>
-      ) : (
-        <>
-          <TieSheet rounds={t.rounds} />
-          <p className="mt-2 text-xs text-slate-400">Swipe sideways to see every round.</p>
-        </>
-      )}
+      <section aria-label="Tie-sheet" className="mt-8">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="text-lg font-bold text-slate-900">Tie-sheet</h2>
+          {t.rounds.length > 0 && <TieSheetPdfButton t={t} />}
+        </div>
+        {t.rounds.length === 0 ? (
+          <p className="rounded-3xl border border-slate-100 bg-white px-4 py-8 text-center text-sm text-slate-500 shadow-sm">{t.hosted ? "The tie-sheet will appear here if the organiser shares one." : "The tie-sheet will appear here once the draw is made."}</p>
+        ) : (
+          <>
+            <TieSheet rounds={t.rounds} />
+            <p className="mt-2 text-xs text-slate-400">Swipe sideways to see every round.</p>
+          </>
+        )}
+      </section>
+
+      <footer className="mt-10 border-t border-slate-200/70 pt-6">
+        <Link href="/tournaments/upcoming" className="group flex items-center justify-between rounded-2xl bg-[#0c0b5d] px-5 py-4 text-white shadow-[0_12px_28px_-14px_rgba(12,11,93,0.8)]">
+          <span>
+            <span className="block text-sm font-bold">View Upcoming Tournaments</span>
+            <span className="block text-xs text-white/70">See what is coming next and register your team</span>
+          </span>
+          <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
+        </Link>
+      </footer>
     </div>
+  );
+}
+
+// Downloads the tie-sheet (every match, score, status, time and scorers) as a PDF. jsPDF loads only when this is tapped.
+function TieSheetPdfButton({ t }: { t: Tournament }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={async () => {
+        setBusy(true);
+        try { await downloadPdf(tieSheetPdf(t)); } finally { setBusy(false); }
+      }}
+      className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-[#0c0b5d] shadow-sm transition hover:bg-slate-50 disabled:opacity-60"
+    >
+      {busy ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Download PDF
+    </button>
   );
 }

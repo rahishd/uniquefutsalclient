@@ -20,12 +20,12 @@ export default function GoalRushCard() {
     <section aria-labelledby="goal-rush-heading" className="mt-8 desk:mt-10">
       <div className="flex items-end justify-between gap-3">
         <div>
-          <h2 id="goal-rush-heading" className="flex items-center gap-1.5 text-lg font-medium desk:text-xl">
+          <h2 id="goal-rush-heading" className="flex items-center gap-1.5 text-lg font-bold desk:text-xl">
             <Goal size={17} strokeWidth={2.2} className="text-brand" aria-hidden /> Unique Goal Rush
           </h2>
-          <p className="text-sm text-slate-500">Play &amp; Earn</p>
+          <p className="text-sm font-semibold text-slate-500">Play &amp; Earn</p>
         </div>
-        <Link href="/goal-rush" className="flex items-center text-sm text-brand">
+        <Link href="/goal-rush" className="flex items-center text-sm font-semibold text-brand">
           Play <ChevronRight size={16} />
         </Link>
       </div>

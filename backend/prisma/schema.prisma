@@ -1160,3 +1160,26 @@ model EvPort {
   providerConfig String? // JSON for the provider (webhook url and secret, device id)
   createdAt DateTime @default(now())
 }
+
+// Document verification: a short code on a receipt (kind "payment") or on a document staff made for a school, bank or college
+// (kind "document"). Anyone can type the code on the customer site to see whether it is genuine and, if so, what it covers.
+// The code is 4 digits (5 or 6 only when every shorter code is used). A payment code points at the paid record; a document
+// code carries its own text and photos (ContentMedia ids). A revoked code no longer verifies.
+model DocVerification {
+  id         String    @id @default(cuid())
+  code       String    @unique
+  kind       String // payment | document
+  sourceType String? // payment: checkout | booking | gamezone
+  sourceId   String?
+  title      String?
+  issuedTo   String?
+  orgType    String? // school | bank | college | company | other
+  details    String?
+  mediaIds   String[]  @default([])
+  issuedBy   String?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@unique([sourceType, sourceId])
+  @@index([kind, createdAt])
+}

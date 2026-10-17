@@ -24,7 +24,7 @@ export default function HomeScreen() {
       <ScrollBackdrop />
       <div className="contents tab:col-span-6 tab:block desk:col-span-8">
         {/* Who is signed in. The bell lives in the page header (components/CompanyHeader.tsx). */}
-        <header className="order-1 flex items-center justify-between">
+        <header className="glass order-1 flex items-center justify-between rounded-3xl p-3">
           <UserBadge />
         </header>
 

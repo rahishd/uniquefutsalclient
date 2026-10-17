@@ -122,7 +122,7 @@ describe("Find Player age groups", () => {
     expect(r.status).toBe(201);
     groupId = r.body.data.id;
     const mine = await noticeFor(P22, groupId);
-    expect(mine?.message).toBe("Age Poster needs 2 Players aged 20-25 years for Upcoming Game. View the deal");
+    expect(mine?.message).toBe("Age Poster needs 2 Players aged 20 to 25 years for Upcoming Game. View the deal");
     await sleep(500);
     expect(await prisma.notification.count({ where: { userId: P33, href: `/find-player/${groupId}` } })).toBe(0);
     expect(await prisma.notification.count({ where: { userId: NODOB, href: `/find-player/${groupId}` } })).toBe(0);
@@ -137,7 +137,7 @@ describe("Find Player age groups", () => {
 
     const wrong = await post(P33, `/api/player-requests/${groupId}/join`);
     expect(wrong.status).toBe(403);
-    expect(wrong.body.message).toBe("This game is for players aged 20-25 years.");
+    expect(wrong.body.message).toBe("This game is for players aged 20 to 25 years.");
     const none = await post(NODOB, `/api/player-requests/${groupId}/join`);
     expect(none.status).toBe(403);
     expect(none.body.message).toBe("Add your date of birth in your Profile to join age-group games.");
@@ -157,5 +157,24 @@ describe("Find Player age groups", () => {
     for (const u of [P22, P33, NODOB]) expect(await noticeFor(u, id)).not.toBeNull();
     expect((await post(NODOB, `/api/player-requests/${id}/join`)).status).toBe(200);
     expect((await get(P33, `/api/player-requests/${id}`)).body.data.ageGroup).toBe("open");
+  });
+
+  it("a request can cover several age groups; a player in any of them is in", async () => {
+    const r = await post(POSTER, "/api/player-requests", { date: futureDate(5), hour: 18, players: 2, ageGroups: ["30-35", "20-25", "20-25"] });
+    expect(r.status).toBe(201);
+    const id = r.body.data.id;
+    const row = await prisma.playerRequest.findUnique({ where: { id } });
+    expect(row?.ageGroup).toBe("20-25,30-35"); // cleaned, in age order, no repeats
+    expect((await get(P22, `/api/player-requests/${id}`)).body.data).toMatchObject({ ageGroups: ["20-25", "30-35"], eligible: true });
+    expect((await get(P33, `/api/player-requests/${id}`)).body.data).toMatchObject({ eligible: true }); // 33 is in 30-35
+    expect((await get(NODOB, `/api/player-requests/${id}`)).body.data).toMatchObject({ eligible: false, needsDob: true });
+    expect((await post(P33, `/api/player-requests/${id}/join`)).status).toBe(200);
+  });
+
+  it("Open with other groups counts as Open; a bad group is refused", async () => {
+    const r = await post(P22, "/api/player-requests", { date: futureDate(6), hour: 18, players: 1, ageGroups: ["open", "40+"] });
+    expect(r.status).toBe(201);
+    expect((await get(P33, `/api/player-requests/${r.body.data.id}`)).body.data.ageGroup).toBe("open");
+    expect((await post(POSTER, "/api/player-requests", { date: futureDate(6), hour: 19, players: 1, ageGroups: ["10-12"] })).status).toBe(400);
   });
 });

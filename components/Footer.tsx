@@ -37,9 +37,6 @@ export default function Footer() {
 
       <section aria-label="A message from the founder" className="glass mb-10 overflow-hidden rounded-3xl">
         <div className="relative bg-slate-100 text-slate-700">
-          {/* big quotation marks, as in the template */}
-          <span aria-hidden className="pointer-events-none absolute left-3 top-0 select-none font-serif text-[8rem] leading-none text-slate-300 desk:left-8 desk:text-[13rem]">“</span>
-          <span aria-hidden className="pointer-events-none absolute bottom-0 left-4 select-none font-serif text-[8rem] leading-[0.6] text-slate-300 desk:bottom-6 desk:left-auto desk:right-[38%] desk:text-[13rem]">”</span>
 
           <div className="relative grid desk:grid-cols-[1.55fr_1fr]">
             <div className="space-y-3 px-6 pb-6 pt-16 text-sm leading-relaxed desk:px-12 desk:pb-12 desk:pt-24 desk:text-[17px] desk:leading-8">
@@ -57,6 +54,7 @@ export default function Footer() {
                 {more ? t("Show less") : t("Read More")}
                 {more ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
+
             </div>
 
             {/* a cut-out photo (transparent background), standing on the bottom edge of the card */}
@@ -64,6 +62,7 @@ export default function Footer() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/founder.webp" alt="Rahish Dumre, Founder of Unique Futsal" className="block w-3/4 max-w-[340px] object-contain object-bottom desk:w-full desk:max-w-[460px]" />
             </div>
+
           </div>
         </div>
 
@@ -71,7 +70,21 @@ export default function Footer() {
           <span className="block text-xs font-medium uppercase tracking-[0.25em] text-slate-500 desk:text-sm">Founder</span>
           <span className="mt-0.5 block text-xl font-semibold tracking-wide text-slate-900 desk:text-3xl">Rahish Dumre</span>
         </div>
+        {/* the same ISO certification box, under the founder's name card */}
       </section>
+
+      {/* the ISO certification card: its own card, so it reads as separate from the founder card */}
+        <div className="mb-10 mt-4 rounded-2xl bg-[#0c0b5d] p-4 text-white shadow-[0_14px_30px_-16px_rgba(12,11,93,0.8)]">
+        <div className="flex items-center gap-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/iso-certification.png" alt="ISO certification" className="h-14 w-auto shrink-0 rounded-md bg-white p-1" />
+          <p className="text-sm font-semibold leading-snug">Nepal&apos;s First ISO Certified Futsal</p>
+        </div>
+        <div className="mt-3 border-t border-white/25 pt-3">
+          <p className="text-sm font-bold">ISO 9001:2015 Certification</p>
+          <p className="mt-1 text-xs leading-relaxed text-white/90">Since 2026, Unique Futsal has upheld quality-driven operations, earning ISO 9001:2015 certification for its commitment to efficient management, consistent service standards, customer satisfaction, safety, and continuous improvement.</p>
+        </div>
+      </div>
 
       <div className="space-y-10 desk:grid desk:grid-cols-3 desk:gap-10 desk:space-y-0">
         <div>

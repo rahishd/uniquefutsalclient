@@ -82,6 +82,7 @@ export interface PaymentItem {
   date: string;
   time: string;
   code: string; // short booking code to show
+  verifyCode: string | null; // the receipt's verification code (anyone can check it on the Verify page)
   amount: number;
   method: string;
   status: string;

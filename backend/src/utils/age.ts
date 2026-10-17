@@ -58,3 +58,36 @@ export function dobFilter(g: AgeGroup, today: string): { dateOfBirth?: { lte: st
   if (!r) return {};
   return { dateOfBirth: { lte: yearsAgo(today, r.from), ...(Number.isFinite(r.to) ? { gt: yearsAgo(today, r.to) } : {}) } };
 }
+
+// ---- several age groups on one request ----
+// Stored as one text value: "open", or the chosen groups joined by commas (e.g. "20-25,30-35"). Old requests hold one group.
+const ORDER = AGE_GROUPS.filter((g) => g !== "open") as AgeGroup[];
+export function parseGroups(stored: string | null | undefined): AgeGroup[] {
+  const list = (stored ?? "").split(",").map((s) => s.trim()).filter(isAgeGroup);
+  if (list.length === 0 || list.includes("open")) return ["open"];
+  return ORDER.filter((g) => list.includes(g));
+}
+
+/** Cleans what the customer picked: "open" wins, otherwise the groups in age order without repeats. */
+export function normaliseGroups(picked: unknown[]): AgeGroup[] {
+  const list = picked.filter(isAgeGroup);
+  if (list.length === 0 || list.includes("open")) return ["open"];
+  return ORDER.filter((g) => list.includes(g));
+}
+
+/** In at least one of the groups (Open: everyone). */
+export function inAnyGroup(dob: string | null | undefined, groups: AgeGroup[], today: string): boolean {
+  return groups.includes("open") || groups.some((g) => inAgeGroup(dob, g, today));
+}
+
+/** Database filter for people in any of the groups (Open: no filter). */
+export function dobFilterAny(groups: AgeGroup[], today: string): { OR?: object[] } {
+  if (groups.includes("open")) return {};
+  return { OR: groups.map((g) => dobFilter(g, today)) };
+}
+
+/** "20 to 25 years, 30 to 35 years" style label for messages. */
+export function groupsLabel(groups: AgeGroup[]): string {
+  if (groups.includes("open")) return "Open";
+  return groups.map((g) => (g === "40+" ? "40 and over" : g.replace("-", " to ")) + " years").join(", ");
+}
