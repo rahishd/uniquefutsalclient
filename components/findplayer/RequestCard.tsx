@@ -6,6 +6,7 @@ import { CalendarClock, Check, ChevronRight, Clock, Loader2, UserMinus, UserPlus
 import { errorText } from "@/lib/api";
 import { askConfirm } from "@/lib/confirm";
 import { formatHour, formatRs, parseKey } from "@/lib/booking";
+import { ageGroupLabel } from "@/lib/age";
 import { cancelRequest, joinRequest, leaveRequest, playersLabel, requestsStore, type PlayerRequest } from "@/lib/playerRequests";
 
 export function whenText(r: Pick<PlayerRequest, "date" | "hour">) {
@@ -50,6 +51,10 @@ export default function RequestCard({ r, detail = false, onChanged, onPayAdvance
         </div>
         <span className="shrink-0 rounded-full bg-sky-100 px-3 py-1.5 text-sm font-bold text-[#0c0b5d]">+{r.playersNeeded}</span>
       </div>
+
+      <p className="mt-2 inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+        {r.ageGroup === "open" ? "Open · anyone can join" : `Ages ${ageGroupLabel(r.ageGroup)}`}
+      </p>
 
       {r.note && <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600">&ldquo;{r.note}&rdquo;</p>}
 
@@ -135,6 +140,12 @@ export default function RequestCard({ r, detail = false, onChanged, onPayAdvance
                 </button>
               )}
             </>
+          ) : !r.eligible ? (
+            r.needsDob ? (
+              <Link href="/profile" className="glass-btn flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 text-sm font-semibold">Add your date of birth to join</Link>
+            ) : (
+              <span className="flex flex-1 items-center justify-center rounded-full bg-slate-100 py-2.5 text-sm font-semibold text-slate-500">For ages {ageGroupLabel(r.ageGroup)} only</span>
+            )
           ) : (
             <button
               type="button"

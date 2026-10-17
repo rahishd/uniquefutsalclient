@@ -10,6 +10,7 @@ export interface SignupDTO {
   password: string;
   name: string;
   phoneNumber: string;
+  dateOfBirth?: string; // YYYY-MM-DD; required for a customer signing up (checked in AuthService.signup)
 }
 
 export interface RefreshTokenDTO {

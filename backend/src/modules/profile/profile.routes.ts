@@ -7,6 +7,7 @@ import validateRequest from "../../middlewares/validate.middleware";
 import { AppError } from "../../middlewares/error.middleware";
 import { prisma } from "../../config/db";
 import { todayKey } from "../../utils/dates";
+import { ageOn, isValidDob, MAX_AGE, MIN_AGE } from "../../utils/age";
 import sharp from "sharp";
 
 const router = Router();
@@ -86,6 +87,8 @@ router.get(
         phone: user.phoneNumber,
         email: user.email,
         avatar: user.avatar,
+        dateOfBirth: user.dateOfBirth,
+        age: user.dateOfBirth ? ageOn(user.dateOfBirth, todayKey()) : null,
         location: p.location,
         position: p.position,
         registeredAt: user.createdAt,
@@ -103,19 +106,27 @@ router.patch(
     body("email").optional({ nullable: true, checkFalsy: true }).isEmail().withMessage("Enter a valid email").normalizeEmail(),
     body("location").optional({ nullable: true }).isString().trim().isLength({ max: 120 }),
     body("position").optional({ nullable: true, checkFalsy: true }).isIn(POSITIONS).withMessage("Position must be GK, DEF, MID or FWD"),
+    body("dateOfBirth").optional({ values: "falsy" }).matches(/^\d{4}-\d{2}-\d{2}$/).withMessage("Enter a valid date of birth"),
   ],
   validateRequest,
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const id = req.user!.id;
-    const { name, email, location, position } = req.body;
+    const { name, email, location, position, dateOfBirth } = req.body;
     if (email) {
       const taken = await prisma.user.findFirst({ where: { email, NOT: { phoneNumber: id } }, select: { phoneNumber: true } });
       if (taken) throw new AppError(409, "This email is already used by another account");
     }
+    // The date of birth decides which age-group games a customer sees, so it is set once here (customers who signed up
+    // before it was asked can add it); changing it later is for venue staff.
+    if (dateOfBirth) {
+      const current = await prisma.user.findUnique({ where: { phoneNumber: id }, select: { dateOfBirth: true } });
+      if (current?.dateOfBirth && current.dateOfBirth !== dateOfBirth) throw new AppError(409, "Your date of birth is already saved. Please contact the venue to change it.");
+      if (!isValidDob(dateOfBirth, todayKey())) throw new AppError(400, `Enter a real date of birth (age ${MIN_AGE} to ${MAX_AGE}).`);
+    }
     // The mobile number is the account's identity and is never changed here.
     await prisma.user.update({
       where: { phoneNumber: id },
-      data: { ...(name !== undefined && { name }), ...(email !== undefined && { email: email || null }) },
+      data: { ...(name !== undefined && { name }), ...(email !== undefined && { email: email || null }), ...(dateOfBirth && { dateOfBirth }) },
     });
     await prisma.userPrefs.upsert({
       where: { userId: id },

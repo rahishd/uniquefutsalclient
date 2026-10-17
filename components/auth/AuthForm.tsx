@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Eye, EyeOff, Loader2, Lock, Phone, User } from "lucide-react";
+import { Cake, CheckCircle2, Eye, EyeOff, Loader2, Lock, Phone, User } from "lucide-react";
 import { errorText } from "@/lib/api";
 import { signIn, signUp, useSession } from "@/lib/session";
 import { site } from "@/lib/site";
 import { googleConfig, requestPasswordReset, resetPasswordWithGoogle, type GoogleConfig } from "@/lib/google";
 import GoogleButton from "@/components/auth/GoogleButton";
 import { useT } from "@/lib/i18n";
+import { dobKey, dobOk } from "@/lib/age";
 
 // A soft grey field with its icon on the left; focus shows a blue ring, a bad value turns it red with the message under it.
 const field = "flex items-center gap-3 rounded-2xl bg-slate-100 px-4 py-3.5 ring-1 transition focus-within:bg-white focus-within:ring-2";
@@ -29,6 +30,7 @@ export default function AuthForm() {
   const [done, setDone] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [dob, setDob] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -42,7 +44,8 @@ export default function AuthForm() {
 
   const phoneOk = /^9\d{9}$/.test(phone);
   const phoneBad = phone.length > 0 && !phoneOk;
-  const ok = phoneOk && password.length >= 6 && (mode === "in" || name.trim().length >= 2);
+  const dobBad = dob.length > 0 && !dobOk(dob);
+  const ok = phoneOk && password.length >= 6 && (mode === "in" || (name.trim().length >= 2 && dobOk(dob)));
 
   function go(m: "in" | "up" | "reset") {
     setMode(m);
@@ -88,7 +91,7 @@ export default function AuthForm() {
     setError(null);
     try {
       if (mode === "in") await signIn(phone, password);
-      else await signUp({ name: name.trim(), phone, password });
+      else await signUp({ name: name.trim(), phone, password, dateOfBirth: dob });
       window.location.assign(nextPath());
     } catch (err) {
       setError(errorText(err));
@@ -154,6 +157,28 @@ export default function AuthForm() {
           <div className={`${field} ring-transparent focus-within:ring-sky-300`}>
             <User size={18} className="shrink-0 text-slate-400" />
             <input style={noBorder} className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("Full name")} aria-label="Full name" autoComplete="name" />
+          </div>
+        )}
+
+        {mode === "up" && (
+          <div>
+            <label className={`${field} ${dobBad ? "ring-2 ring-rose-400" : "ring-transparent focus-within:ring-sky-300"}`}>
+              <Cake size={18} className={`shrink-0 ${dobBad ? "text-rose-400" : "text-slate-400"}`} />
+              <span className="shrink-0 text-[15px] text-slate-400">{t("Date of birth")}</span>
+              <input
+                style={noBorder}
+                className={`${inputCls} min-w-0 text-right`}
+                type="date"
+                value={dob}
+                min={dobKey(100)}
+                max={dobKey(5)}
+                onChange={(e) => setDob(e.target.value)}
+                aria-label="Date of birth"
+                aria-invalid={dobBad}
+                autoComplete="bday"
+              />
+            </label>
+            {dobBad && <p className="mt-1.5 px-5 text-sm font-medium text-rose-500">{t("Enter a real date of birth")}</p>}
           </div>
         )}
 

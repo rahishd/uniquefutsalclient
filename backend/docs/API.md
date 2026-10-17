@@ -27,13 +27,13 @@ Times use Nepal time. Dates are `YYYY-MM-DD`. Money is whole rupees.
 
 | Method | Path | Who | Notes |
 |---|---|---|---|
-| POST | `/auth/signup` | Guest | `{name, phoneNumber (9XXXXXXXXX), password>=6, email?}` -> `{token, refreshToken, user}`. 409 if the number already exists (an existing account is never taken over) |
+| POST | `/auth/signup` | Guest | `{name, phoneNumber (9XXXXXXXXX), password>=6, dateOfBirth (YYYY-MM-DD, required: a real date, age 5 to 100), email?}` -> `{token, refreshToken, user}`. 400 without a real date of birth. 409 if the number already exists (an existing account is never taken over) |
 | POST | `/auth/login` | Guest | `{identifier: phone, password}`. Limited to 5 tries / 15 min / IP |
 | POST | `/auth/refresh` | Guest | `{refreshToken}` |
 | GET | `/auth/me` | User | account basics |
 | POST | `/auth/check-phone` | Guest | `{exists, isVerified}` only |
 | POST | `/auth/verify-otp`, `/resend-otp`, `/forgot-password`, `/reset-password` | - | 503 while `OTP_ENABLED=false` |
-| GET/PATCH | `/me/profile` | User | `customerCode, name, phone, email, location, position, status, mode`. Phone cannot change |
+| GET/PATCH | `/me/profile` | User | `customerCode, name, phone, email, dateOfBirth, age, location, position, status, mode`. Phone cannot change. PATCH may send `dateOfBirth` only while none is saved (accounts from before it was asked); a saved one is changed by venue staff (409) |
 | GET/PUT | `/me/preferences` | User | `smsReminders, promoNotifications, popupReminder, language(en/ne)` |
 | PUT | `/me/mode` | User | `{mode: player|captain}` |
 | GET | `/push/public-key` | Guest | `{enabled, publicKey}` (VAPID) the app needs to subscribe a device |
@@ -285,11 +285,11 @@ Status: `open` -> `awaiting_advance` (everyone joined) -> `confirmed` (advance p
 
 | Method | Path | Who | What |
 | --- | --- | --- | --- |
-| GET | `/player-requests/rules` | User | `{maxPlayers: 11, windowDays: 6, advanceFee: 300, perDay: 3, noteMax: 140, hours: [open start hours]}` |
+| GET | `/player-requests/rules` | User | `{maxPlayers: 11, windowDays: 6, advanceFee: 300, perDay: 3, noteMax: 140, hours: [open start hours], ageGroups: ["open","15-20","20-25","25-30","30-35","35-40","40+"]}` |
 | GET | `/player-requests` | User | open requests that have not started (and your own / ones you joined), soonest first: `{id, posterName, mine, date, hour, playersNeeded, joined, spotsLeft, note, status, joinedByMe, joiners?, courtPrice, everyone, sharePerPlayer, hostShare, advanceFee, hostPaysAtVenue, advanceDueAt, confirmed}`. `joiners` only for the host |
-| POST | `/player-requests` | User | `{date, hour, players (1-11), note? (140)}` -> `{id}`. A day from tomorrow within the next 6 days (today is refused), an open hour. 3 requests per 24 hours (429); the same time twice is 409. Notifies everyone else |
+| POST | `/player-requests` | User | `{date, hour, players (1-11), note? (140), ageGroup? ("open" by default, or one of the age groups)}` -> `{id}`. An age-group request is notified only to registered customers whose age (from the date of birth) is in the group: a group is from its first age up to, not including, the next (20 is in 20-25; 40+ is 40 and over); Open goes to everyone. A day from tomorrow within the next 6 days (today is refused), an open hour. 3 requests per 24 hours (429); the same time twice is 409. Notifies everyone else |
 | GET | `/player-requests/:id` | User | one request with the split above (404 when gone) |
-| POST | `/player-requests/:id/join` | User | "I'm in". The spots can never go below zero (transaction); 409 if already joined, 400 for your own, full, cancelled or started. The host is told. The last join moves it to `awaiting_advance` |
+| POST | `/player-requests/:id/join` | User | "I'm in". Age-group requests only for people in the group (403; "Add your date of birth in your Profile…" when they have none). Requests also show `ageGroup`, `eligible`, `needsDob`; a customer outside the group does not see the request in the list. The spots can never go below zero (transaction); 409 if already joined, 400 for your own, full, cancelled or started. The host is told. The last join moves it to `awaiting_advance` |
 | POST | `/player-requests/:id/leave` | User | takes you out (not after the court is booked); an `awaiting_advance` request reopens |
 | POST | `/player-requests/:id/advance` | Host | only when `awaiting_advance`: books the court for the hour (held for the QR) and returns the payment order `{orderCode, method: "fonepay", amount: 300, remarks, qrPayload, expiresAt, status}`. Poll `/payments/:orderCode/status`; when paid the booking is `confirmed` / `partially_paid` (Rs. 300 paid, the rest at the venue) and the request `confirmed`. Asking again returns the same QR |
 | POST | `/player-requests/:id/cancel` | Host | cancels; the court booking is cancelled (an advance paid is marked for refund) and joiners are told (403 for anyone else) |

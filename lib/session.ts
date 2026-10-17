@@ -121,8 +121,8 @@ export async function signIn(phone: string, password: string) {
   emit();
 }
 
-export async function signUp(input: { name: string; phone: string; password: string }) {
-  const r = await api<AuthResult>("/auth/signup", { method: "POST", body: { name: input.name, phoneNumber: input.phone, password: input.password }, auth: "none" });
+export async function signUp(input: { name: string; phone: string; password: string; dateOfBirth: string }) {
+  const r = await api<AuthResult>("/auth/signup", { method: "POST", body: { name: input.name, phoneNumber: input.phone, password: input.password, dateOfBirth: input.dateOfBirth }, auth: "none" });
   cached = toSession(r.user);
   saveUser(cached);
   setTokens({ token: r.token, refreshToken: r.refreshToken });

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BellRing, Loader2, Minus, Plus, UserSearch } from "lucide-react";
+import Link from "next/link";
+import { BellRing, Cake, Loader2, Minus, Plus, UserSearch } from "lucide-react";
 import { errorText } from "@/lib/api";
 import { askConfirm } from "@/lib/confirm";
 import { dateKey, formatHour } from "@/lib/booking";
@@ -10,6 +11,8 @@ import { openSignIn, useSession } from "@/lib/session";
 import { useTeams } from "@/lib/teams";
 import { FALLBACK_RULES, loadRules, playersLabel, postRequest, requestsStore, type PlayerRules } from "@/lib/playerRequests";
 import { markReadByTypes } from "@/lib/notifications";
+import { ageGroupHint, ageGroupLabel } from "@/lib/age";
+import { profileStore } from "@/lib/profile";
 import RequestCard from "@/components/findplayer/RequestCard";
 import TeamFinder from "@/components/captain/TeamFinder";
 
@@ -26,6 +29,8 @@ export default function FindPlayerPage() {
   const [date, setDate] = useState<string | null>(null);
   const [hour, setHour] = useState<number | null>(null);
   const [note, setNote] = useState("");
+  const [ageGroup, setAgeGroup] = useState("open");
+  const hasDob = profileStore.use().data?.dateOfBirth;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,11 +61,12 @@ export default function FindPlayerPage() {
 
   async function submit() {
     if (chosenHour === null) return;
-    if (!(await askConfirm(`Send "${session?.registered ? session.name : "You"} needs ${playersLabel(players)}" to all registered players?`, { confirmLabel: "Notify everyone", title: "Notify all players?" }))) return;
+    const who = ageGroup === "open" ? "all registered players" : `registered players aged ${ageGroupLabel(ageGroup)}`;
+    if (!(await askConfirm(`Send "${session?.registered ? session.name : "You"} needs ${playersLabel(players)}" to ${who}?`, { confirmLabel: ageGroup === "open" ? "Notify everyone" : "Notify group", title: ageGroup === "open" ? "Notify all players?" : "Notify this age group?" }))) return;
     setBusy(true);
     setError(null);
     try {
-      const { id } = await postRequest({ date: chosenDate, hour: chosenHour, players, note: note.trim() || undefined });
+      const { id } = await postRequest({ date: chosenDate, hour: chosenHour, players, note: note.trim() || undefined, ageGroup });
       requestsStore.refresh();
       // the host lands on the deal page, which shows how many players have joined so far
       router.push(`/find-player/${id}`);
@@ -76,7 +82,7 @@ export default function FindPlayerPage() {
     <main className="mx-auto w-full max-w-md space-y-6 px-5 pb-32 pt-8 tab:max-w-2xl desk:max-w-2xl desk:pb-16">
       <header>
         <h1 className="flex items-center gap-2 text-2xl font-semibold"><UserSearch size={24} className="text-brand" /> Find Player</h1>
-        <p className="mt-1 text-sm text-slate-500">Need more players for your game? Say how many. Every registered player is notified and can join.</p>
+        <p className="mt-1 text-sm text-slate-500">Need more players for your game? Say how many and who can join: anyone, or one age group. Only those players are notified.</p>
       </header>
 
       {!registered ? (
@@ -151,6 +157,25 @@ export default function FindPlayerPage() {
               )}
             </div>
 
+            <div>
+              <p className="text-sm font-medium">Who can join?</p>
+              <div className="-mx-1 mt-2 flex flex-wrap gap-2 px-1" role="radiogroup" aria-label="Age group">
+                {rules.ageGroups.map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    role="radio"
+                    aria-checked={ageGroup === g}
+                    onClick={() => setAgeGroup(g)}
+                    className={`rounded-full px-4 py-2 text-sm font-medium ${ageGroup === g ? "glass-active" : "border border-slate-200 bg-white text-slate-600"}`}
+                  >
+                    {ageGroupLabel(g)}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1.5 text-xs text-slate-400">{ageGroupHint(ageGroup)}. {ageGroup === "open" ? "Every registered player is notified." : "Only players in this age group are notified and can join."}</p>
+            </div>
+
             <label className="block text-sm font-medium">
               Note <span className="font-normal text-slate-400">(optional)</span>
               <input
@@ -168,13 +193,22 @@ export default function FindPlayerPage() {
               onClick={submit}
               className="glass-btn flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-sm font-semibold disabled:opacity-50"
             >
-              {busy ? <Loader2 size={16} className="animate-spin" /> : <BellRing size={16} />} Notify all players
+              {busy ? <Loader2 size={16} className="animate-spin" /> : <BellRing size={16} />} {ageGroup === "open" ? "Notify all players" : `Notify players aged ${ageGroupLabel(ageGroup)}`}
             </button>
             <p className="-mt-2 text-center text-xs text-slate-400">
               A friendly game: the court price is shared equally, win or lose. Once everyone has joined you pay a Rs. {rules.advanceFee} advance to book the court.
             </p>
             {error && <p role="alert" className="rounded-xl bg-red-500/10 p-3 text-sm text-red-600">{error}</p>}
           </section>
+
+          {hasDob === null && (
+            <section aria-label="Add your date of birth" className="glass flex items-start gap-3 rounded-3xl p-4">
+              <Cake size={20} className="mt-0.5 shrink-0 text-brand" />
+              <p className="text-sm text-slate-600">
+                Add your date of birth to see and join age-group games. <Link href="/profile" className="font-semibold text-brand underline">Open Profile</Link>
+              </p>
+            </section>
+          )}
 
           {mine.length > 0 && (
             <section aria-label="Your requests" className="space-y-3">

@@ -39,6 +39,7 @@ router.post(
     body("email").optional().isEmail().normalizeEmail(),
     body("password").isLength({ min: 6 }),
     body("name").trim().notEmpty(),
+    body("dateOfBirth").optional({ values: "falsy" }).matches(/^\d{4}-\d{2}-\d{2}$/).withMessage("Enter your date of birth"),
     body("phoneNumber")
       .notEmpty()
       .withMessage("Phone number is required")

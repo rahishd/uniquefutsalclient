@@ -12,6 +12,8 @@ export interface Profile {
   avatar: string | null; // path of the profile picture, or null when there is none
   location: string | null;
   position: string | null; // GK | DEF | MID | FWD
+  dateOfBirth: string | null; // YYYY-MM-DD; saved once (a customer who signed up earlier can add it)
+  age: number | null;
   registeredAt: string;
   status: "Active" | "Suspended";
   mode: "player" | "captain";
@@ -26,8 +28,8 @@ export const POSITIONS: { value: string; label: string }[] = [
 
 export const profileStore = createRemoteStore<Profile | null>(() => api<Profile>("/me/profile"), { signedOut: null });
 
-export async function saveProfile(p: { name: string; email: string; location: string; position: string }) {
-  await api("/me/profile", { method: "PATCH", body: { name: p.name, email: p.email, location: p.location, position: p.position || null } });
+export async function saveProfile(p: { name: string; email: string; location: string; position: string; dateOfBirth?: string }) {
+  await api("/me/profile", { method: "PATCH", body: { name: p.name, email: p.email, location: p.location, position: p.position || null, ...(p.dateOfBirth ? { dateOfBirth: p.dateOfBirth } : {}) } });
   updateSessionName(p.name);
   await profileStore.refresh();
 }

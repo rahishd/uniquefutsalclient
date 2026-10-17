@@ -16,6 +16,8 @@ import { uploadBase64ToR2 } from "../../utils/r2storage";
 import smsService from "../../services/sms.service";
 import crypto from "crypto";
 import env from "../../config/env";
+import { isValidDob, MAX_AGE, MIN_AGE } from "../../utils/age";
+import { todayKey } from "../../utils/dates";
 
 const RETRYABLE_DB_ERROR_CODES = new Set(["P1001", "P1002", "P1008", "P1017"]);
 const RETRYABLE_DB_ERROR_PATTERN =
@@ -117,6 +119,12 @@ export class AuthService {
       }
     }
 
+    // A customer signing up must give a real date of birth (it decides which age-group games they see). Staff may add one later.
+    if (!isAdmin && !isValidDob(dto.dateOfBirth, todayKey())) {
+      throw new AppError(400, `Enter your date of birth (age ${MIN_AGE} to ${MAX_AGE}).`);
+    }
+    const dateOfBirth = isValidDob(dto.dateOfBirth, todayKey()) ? dto.dateOfBirth : null;
+
     const hashedPassword = await HashUtil.hash(dto.password);
 
     if (isAdmin) {
@@ -127,6 +135,7 @@ export class AuthService {
           name: dto.name,
           email: dto.email || null,
           password: hashedPassword,
+          dateOfBirth,
           isVerified: true,
           role: "user",
         },
@@ -170,6 +179,7 @@ export class AuthService {
           name: dto.name,
           email: dto.email || null,
           password: hashedPassword,
+          dateOfBirth,
           isVerified: true,
           role: "user",
         },
@@ -195,6 +205,7 @@ export class AuthService {
         name: dto.name,
         email: dto.email || null,
         password: hashedPassword,
+        dateOfBirth,
         otp,
         expiresAt,
         createdAt: new Date(),
@@ -204,6 +215,7 @@ export class AuthService {
         name: dto.name,
         email: dto.email || null,
         password: hashedPassword,
+        dateOfBirth,
         otp,
         expiresAt,
       },
@@ -260,6 +272,7 @@ export class AuthService {
           name: pending.name,
           email: pending.email,
           password: pending.password,
+          ...(pending.dateOfBirth ? { dateOfBirth: pending.dateOfBirth } : {}),
           isVerified: true,
         },
         create: {
@@ -267,6 +280,7 @@ export class AuthService {
           name: pending.name,
           email: pending.email,
           password: pending.password,
+          dateOfBirth: pending.dateOfBirth,
           isVerified: true,
           role: "user",
         },

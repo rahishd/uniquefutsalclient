@@ -24,7 +24,7 @@ export const authController = {
   }),
 
   signup: asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { email, password, name, phoneNumber }: SignupDTO = req.body;
+    const { email, password, name, phoneNumber, dateOfBirth }: SignupDTO = req.body;
 
     const result = await AuthService.signup(
       {
@@ -32,6 +32,7 @@ export const authController = {
         password,
         name,
         phoneNumber,
+        dateOfBirth,
       },
       req.user?.role === "admin" || req.user?.role === "superadmin",
     );

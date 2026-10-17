@@ -19,6 +19,7 @@ import { CaptainSummary, ModeToggle } from "@/components/captain/CaptainProfile"
 import AccountSecurity from "@/components/profile/AccountSecurity";
 import DigitalIdButton from "@/components/digitalid/DigitalIdButton";
 import { myMembershipStore } from "@/lib/membership";
+import { dobKey, dobOk } from "@/lib/age";
 
 const rs = (n: number) => `Rs. ${n.toLocaleString("en-IN")}`;
 
@@ -156,7 +157,7 @@ function RegisteredProfile() {
   const [lang, setLang] = useLang();
 
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState({ name: "", email: "", location: "", position: "" });
+  const [draft, setDraft] = useState({ name: "", email: "", location: "", position: "", dob: "" });
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
@@ -193,7 +194,7 @@ function RegisteredProfile() {
   const payments: PaymentItem[] = paymentsData ?? [];
   const registeredSince = new Date(profile.registeredAt).toLocaleDateString("en-GB", { month: "short", year: "numeric" });
   const pct = loy ? progressPct(loy) : 0;
-  const canSave = draft.name.trim().length >= 2;
+  const canSave = draft.name.trim().length >= 2 && (!draft.dob || dobOk(draft.dob));
 
   async function choosePhoto(file: File | null) {
     if (!file || photoBusy) return;
@@ -239,7 +240,7 @@ function RegisteredProfile() {
     setSaving(true);
     setSaveError(null);
     try {
-      await saveProfile({ name: draft.name.trim(), email: draft.email.trim(), location: draft.location.trim(), position: draft.position });
+      await saveProfile({ name: draft.name.trim(), email: draft.email.trim(), location: draft.location.trim(), position: draft.position, dateOfBirth: profile?.dateOfBirth ? undefined : draft.dob });
       setEditing(false);
     } catch (err) {
       setSaveError(errorText(err));
@@ -367,7 +368,7 @@ function RegisteredProfile() {
           <div className="min-w-0 flex-1">
             <p className="truncate text-lg font-medium">{profile.name}</p>
             <p className="text-sm text-slate-500">{profile.phone}</p>
-            <p className="text-xs text-slate-400">ID {profile.customerCode} · Since {registeredSince}</p>
+            <p className="text-xs text-slate-400">ID {profile.customerCode} · Since {registeredSince}{profile.age !== null && profile.age !== undefined ? ` · Age ${profile.age}` : ""}</p>
             {profile.avatar && (
               <button type="button" onClick={() => void dropPhoto()} disabled={photoBusy} className="mt-1 text-xs font-medium text-rose-500 disabled:opacity-60">Remove photo</button>
             )}
@@ -375,7 +376,7 @@ function RegisteredProfile() {
           {!editing && (
             <button
               type="button"
-              onClick={() => { setDraft({ name: profile.name, email: profile.email ?? "", location: profile.location ?? "", position: profile.position ?? "" }); setSaveError(null); setEditing(true); }}
+              onClick={() => { setDraft({ name: profile.name, email: profile.email ?? "", location: profile.location ?? "", position: profile.position ?? "", dob: "" }); setSaveError(null); setEditing(true); }}
               aria-label="Edit profile"
               className="flex h-10 w-10 items-center justify-center rounded-full bg-white/60 text-brand"
             >
@@ -393,6 +394,17 @@ function RegisteredProfile() {
             <p className="-mt-1 text-[11px] text-slate-400">To change your mobile number, please contact the venue.</p>
             <input className={input} type="email" value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} placeholder="Email" aria-label="Email" />
             <input className={input} value={draft.location} onChange={(e) => setDraft({ ...draft, location: e.target.value })} placeholder="Location" aria-label="Location" />
+            {profile.dateOfBirth ? (
+              <>
+                <input className={`${input} opacity-60`} value={profile.dateOfBirth} readOnly aria-label="Date of birth (cannot be changed here)" />
+                <p className="-mt-1 text-[11px] text-slate-400">To change your date of birth, please contact the venue.</p>
+              </>
+            ) : (
+              <>
+                <label className="block text-[11px] text-slate-400">Date of birth (needed for age-group games; saved once)</label>
+                <input className={input} type="date" value={draft.dob} min={dobKey(100)} max={dobKey(5)} onChange={(e) => setDraft({ ...draft, dob: e.target.value })} aria-label="Date of birth" />
+              </>
+            )}
             <select className={input} value={draft.position} onChange={(e) => setDraft({ ...draft, position: e.target.value })} aria-label="Preferred position">
               <option value="">Preferred position</option>
               {POSITIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}

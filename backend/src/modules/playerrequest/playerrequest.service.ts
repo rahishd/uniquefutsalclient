@@ -7,9 +7,10 @@ import paymentService, { QR_HOLD_MS } from "../payment/payment.service";
 import notificationService from "../notification/notification.service";
 import pushService from "../push/push.service";
 import { addDaysKey, startsAtMs, todayKey } from "../../utils/dates";
+import { AgeGroup, dobFilter, inAgeGroup, isAgeGroup } from "../../utils/age";
 
 // Find Player: "I need N more players" for a friendly game. Everything is decided here: the number, the window (from tomorrow, 6 days),
-// who may join, that the spots never go below zero (inside a transaction), the equal split of the court price (win
+// who may join (a request is open to anyone or to one age group), that the spots never go below zero (inside a transaction), the equal split of the court price (win
 // or lose), and the advance the host pays once everyone has joined (it books the court).
 //
 // Status: open -> awaiting_advance (everyone joined; the host has ADVANCE_HOLD_MS to pay) -> confirmed (court booked)
@@ -21,6 +22,10 @@ export const NOTE_MAX = 140;
 export const ADVANCE_FEE = 300; // rupees, paid online by the host
 export const ADVANCE_HOLD_MS = 2 * 60 * 60 * 1000;
 
+// "open" = anyone can join; otherwise only players in that age group are told about it and may join (age comes from the date of birth)
+export const ageLabel = (g: string) => (g === "open" ? "Open" : g === "40+" ? "40+ years" : `${g} years`);
+const viewerDobOf = async (userId: string) => (await prisma.user.findUnique({ where: { phoneNumber: userId }, select: { dateOfBirth: true } }))?.dateOfBirth ?? null;
+
 const hh = (h: number) => `${String(h).padStart(2, "0")}:00`;
 const startsAt = (r: { date: string; startHour: number }) => startsAtMs(r.date, r.startHour);
 const plural = (n: number) => `${n} Player${n === 1 ? "" : "s"}`;
@@ -31,6 +36,7 @@ type Row = {
   date: string;
   startHour: number;
   playersNeeded: number;
+  ageGroup: string;
   note: string | null;
   status: string;
   courtPrice: number;
@@ -54,7 +60,7 @@ export function splitOf(courtPrice: number, playersNeeded: number) {
 }
 
 export class PlayerRequestService {
-  private view(r: Row, viewer: string, names: Map<string, string>) {
+  private view(r: Row, viewer: string, names: Map<string, string>, viewerDob: string | null) {
     const joined = r.joins.length;
     const started = startsAt(r) <= Date.now();
     const live = r.status === "open" || r.status === "awaiting_advance";
@@ -67,6 +73,10 @@ export class PlayerRequestService {
       date: r.date,
       hour: r.startHour,
       playersNeeded: r.playersNeeded,
+      ageGroup: r.ageGroup,
+      // false when the game is for another age group (or the viewer has not given a date of birth yet)
+      eligible: inAgeGroup(viewerDob, r.ageGroup as AgeGroup, todayKey()),
+      needsDob: r.ageGroup !== "open" && !viewerDob,
       joined,
       spotsLeft: Math.max(r.playersNeeded - joined, 0),
       note: r.note,
@@ -163,7 +173,8 @@ export class PlayerRequestService {
     }
   }
 
-  async create(userId: string, input: { date?: unknown; hour?: unknown; players?: unknown; note?: unknown }) {
+  async create(userId: string, input: { date?: unknown; hour?: unknown; players?: unknown; note?: unknown; ageGroup?: unknown }) {
+    const ageGroup: AgeGroup = input.ageGroup === undefined || input.ageGroup === null || input.ageGroup === "" ? "open" : isAgeGroup(input.ageGroup) ? input.ageGroup : (() => { throw new AppError(400, "Choose Open or one of the age groups."); })();
     const date = typeof input.date === "string" ? input.date : "";
     const hour = Number(input.hour);
     const players = Number(input.players);
@@ -185,23 +196,24 @@ export class PlayerRequestService {
     if (dup) throw new AppError(409, "You already have a request for that time.");
 
     const courtPrice = (await BookingService.quote(date, hh(hour), 1)).basePrice;
-    const row = await prisma.playerRequest.create({ data: { userId, date, startHour: hour, playersNeeded: players, note: note || null, courtPrice } });
-    void this.broadcast(row.id, userId, players);
+    const row = await prisma.playerRequest.create({ data: { userId, date, startHour: hour, playersNeeded: players, ageGroup, note: note || null, courtPrice } });
+    void this.broadcast(row.id, userId, players, ageGroup);
     return { id: row.id };
   }
 
   /** One in-app notice (and a push to devices) to every other registered customer. Runs after the answer is sent. */
-  private async broadcast(requestId: string, posterId: string, players: number) {
+  private async broadcast(requestId: string, posterId: string, players: number, ageGroup: AgeGroup) {
     try {
       const names = await namesOf([posterId]);
       const title = "Players needed";
-      const message = `${names.get(posterId) ?? "A player"} needs ${plural(players)} for Upcoming Game. View the deal`;
+      const message = `${names.get(posterId) ?? "A player"} needs ${plural(players)}${ageGroup === "open" ? "" : ` aged ${ageLabel(ageGroup)}`} for Upcoming Game. View the deal`;
+      const ageWhere = dobFilter(ageGroup, todayKey()); // Open: everyone; a group: only people whose date of birth puts them in it
       const href = `/find-player/${requestId}`;
       const CHUNK = 500;
       let cursor: string | undefined;
       for (;;) {
         const users = await prisma.user.findMany({
-          where: { role: "user", isActive: true, NOT: { phoneNumber: posterId } },
+          where: { role: "user", isActive: true, NOT: { phoneNumber: posterId }, ...ageWhere },
           select: { phoneNumber: true },
           orderBy: { phoneNumber: "asc" },
           take: CHUNK,
@@ -235,16 +247,17 @@ export class PlayerRequestService {
     });
     const settled: Row[] = [];
     for (const r of rows) settled.push(await this.reconcile(r));
+    const dob = await viewerDobOf(userId);
     const involved = (r: Row) => r.userId === userId || r.joins.some((j) => j.userId === userId);
-    const live = settled.filter((r) => startsAt(r) > Date.now() && r.status !== "cancelled" && (r.status === "open" || involved(r)));
+    const live = settled.filter((r) => startsAt(r) > Date.now() && r.status !== "cancelled" && (involved(r) || (r.status === "open" && inAgeGroup(dob, r.ageGroup as AgeGroup, todayKey()))));
     const names = await namesOf([...new Set(live.flatMap((r) => [r.userId, ...r.joins.map((j) => j.userId)]))]);
-    return live.map((r) => this.view(r, userId, names));
+    return live.map((r) => this.view(r, userId, names, dob));
   }
 
   async detail(userId: string, id: string) {
     const r = await this.load(id);
     const names = await namesOf([r.userId, ...r.joins.map((j) => j.userId)]);
-    return this.view(r, userId, names);
+    return this.view(r, userId, names, await viewerDobOf(userId));
   }
 
   async join(userId: string, id: string) {
@@ -253,6 +266,10 @@ export class PlayerRequestService {
     if (r.status === "cancelled") throw new AppError(400, "The host cancelled this request.");
     if (startsAt(r) <= Date.now()) throw new AppError(400, "This game has already started.");
     if (r.joins.some((j) => j.userId === userId)) throw new AppError(409, "You have already joined.");
+    const dob = await viewerDobOf(userId);
+    if (!inAgeGroup(dob, r.ageGroup as AgeGroup, todayKey())) {
+      throw new AppError(403, dob ? `This game is for players aged ${ageLabel(r.ageGroup)}.` : "Add your date of birth in your Profile to join age-group games.");
+    }
 
     // the spots can never go below zero, even when two people tap at once
     const left = await prisma.$transaction(async (tx) => {
