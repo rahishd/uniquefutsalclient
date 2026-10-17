@@ -9,6 +9,7 @@ import { useT } from "@/lib/i18n";
 import { useNepaliToday, useWeather } from "@/lib/today";
 import { WeatherIcon } from "@/components/HeaderInfo";
 import NotificationBell from "@/components/NotificationBell";
+import ComingSoonBanner from "@/components/ComingSoonBanner";
 
 // Phone, every page except Home: a slim bar pinned at the top with a greeting, today's Nepali date, the temperature,
 // the loyalty points the customer can spend, and the bell. (Home has the full company header, the greeting and the date card instead.)
@@ -30,7 +31,7 @@ export default function PageInfoBar() {
           </p>
           <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-slate-500">
             <CalendarDays size={13} className="shrink-0 text-brand" aria-hidden />
-            <span className="truncate">{today.npShort || " "}</span>
+            <span className="truncate">{today.npDay || " "}</span>
             <span aria-hidden className="text-slate-300">·</span>
             <WeatherIcon code={weather ? weather.code : 3} size={14} />
             <span className="shrink-0">{weather ? `${weather.temp}°C` : "--"}</span>
@@ -44,6 +45,7 @@ export default function PageInfoBar() {
             <span className="text-[11px] font-medium">{t("pts")}</span>
           </Link>
         )}
+        <div className="shrink-0 pb-1.5"><ComingSoonBanner size={38} /></div>
         <div className="shrink-0"><NotificationBell /></div>
       </div>
     </div>

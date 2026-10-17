@@ -148,7 +148,13 @@ export default function ScrollBackdrop() {
   }, []);
 
   return (
-    <div ref={rootRef} aria-hidden className="scroll-backdrop pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-white">
+    <div ref={rootRef} aria-hidden className="scroll-backdrop pointer-events-none fixed inset-0 -z-10 overflow-hidden" style={{ background: "linear-gradient(180deg, #cfe6ff 0%, #e3f1ff 28%, #f3f9ff 60%, #ffffff 100%)" }}>
+      {/* soft clouds in the sky, drifting slowly (they stop with "reduce motion") */}
+      {[{ top: "9%", left: "-8%", w: 150, d: "0s" }, { top: "4%", left: "58%", w: 110, d: "-14s" }, { top: "22%", left: "70%", w: 90, d: "-30s" }, { top: "30%", left: "6%", w: 70, d: "-8s" }].map((c, i) => (
+        <svg key={i} viewBox="0 0 120 50" className="uf-cloud absolute opacity-80" style={{ top: c.top, left: c.left, width: c.w, animationDelay: c.d }}>
+          <path d="M14 46 a12 12 0 0 1 2 -24 a18 18 0 0 1 34 -8 a16 16 0 0 1 28 6 a14 14 0 0 1 26 10 a12 12 0 0 1 2 16 z" fill="#ffffff" />
+        </svg>
+      ))}
       {/* one group opacity for the whole stack, so the crossfade inside it stays exact */}
       <div className="absolute inset-0" style={{ opacity: STRENGTH }}>
         {Array.from({ length: COUNT }, (_, i) => (

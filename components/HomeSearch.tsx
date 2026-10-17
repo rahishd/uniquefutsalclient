@@ -110,17 +110,18 @@ export default function HomeSearch() {
   return (
     <div ref={box} className="relative mt-4" onBlur={(e) => { if (!box.current?.contains(e.relatedTarget as Node)) setTimeout(() => setOpen(false), 100); }}>
       <div className="flex gap-3">
-        <label className="glass flex flex-1 items-center gap-2 rounded-2xl px-4 py-3.5">
+        <label className="flex flex-1 items-center gap-2 rounded-2xl bg-white px-4 py-3.5 shadow-[0_8px_20px_-12px_rgba(59,130,246,0.45)] ring-1 ring-[#bfd7ff]">
           <input
             type="search" value={q} placeholder="Search a slot, offer or team…" aria-label="Search" autoComplete="off" enterKeyHint="search"
             onChange={(e) => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)}
             onKeyDown={(e) => { if (e.key === "Escape") { setOpen(false); (e.target as HTMLInputElement).blur(); } }}
             className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400 [&::-webkit-search-cancel-button]:hidden"
+            style={{ border: "none" }}
           />
           {q ? <button type="button" aria-label="Clear search" onClick={() => setQ("")} className="text-slate-500"><X size={20} /></button> : <Search size={20} className="text-slate-500" />}
         </label>
         <button type="button" aria-label="Filters" aria-pressed={filters} onClick={() => { setFilters((f) => !f); setOpen(true); }}
-          className={`glass flex h-[52px] w-[52px] items-center justify-center rounded-2xl ${filters || kind !== "all" ? "text-brand" : "text-slate-600"}`}>
+          className={`flex h-[52px] w-[52px] items-center justify-center rounded-2xl bg-white shadow-[0_8px_20px_-12px_rgba(59,130,246,0.45)] ring-1 ring-[#bfd7ff] ${filters || kind !== "all" ? "text-blue-600" : "text-[#0c0b5d]"}`}>
           <SlidersHorizontal size={20} />
         </button>
       </div>

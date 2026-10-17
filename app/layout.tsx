@@ -13,6 +13,7 @@ import VisitTracker from "@/components/VisitTracker";
 import { LangSync } from "@/components/HeaderToggles";
 import PageTranslator from "@/components/PageTranslator";
 import ConfirmHost from "@/components/ConfirmHost";
+import Splash from "@/components/Splash";
 
 const poppins = Poppins({ variable: "--font-poppins", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem("uf-theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}` }} />
       </head>
       <body className="min-h-full">
+        <Splash />
         <LangSync />
         <PageTranslator />
         <ConfirmHost />

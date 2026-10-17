@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
-import HeaderInfo from "@/components/HeaderInfo";
-import HomeSearch from "@/components/HomeSearch";
+import HomeHero from "@/components/HomeHero";
 import UserBadge from "@/components/UserBadge";
+import ComingSoonBanner from "@/components/ComingSoonBanner";
 import QuickRebook from "@/components/QuickRebook";
 import PopularGrid from "@/components/PopularGrid";
 import GoalRushCard from "@/components/goalrush/GoalRushCard";
@@ -15,8 +15,8 @@ import GallerySection from "@/components/ads/GallerySection";
 import ScrollBackdrop from "@/components/ScrollBackdrop";
 
 // Phone and portrait tablet: one column, in the `order-N` order below.
-// Desktop mode (`desk:`, see globals.css): main content on the left, a sticky sidebar on the right (date and
-// weather, search, book again, ad, promo codes, tournament). The two wrappers are `display: contents` on mobile so every block stays in
+// Desktop mode (`desk:`, see globals.css): main content on the left, a sticky sidebar on the right (the light blue hero card with
+// weather, date, search and shortcuts, book again, ad, promo codes, tournament). The two wrappers are `display: contents` on mobile so every block stays in
 // the one column; each block carries its own mobile order.
 export default function HomeScreen() {
   return (
@@ -50,8 +50,9 @@ export default function HomeScreen() {
       </div>
 
       <aside className="contents desk:sticky desk:top-28 desk:col-span-4 desk:flex desk:flex-col desk:gap-5">
-        <div className="order-2 desk:[&>*]:mt-0"><HeaderInfo /></div>
-        <div className="order-3 desk:[&>*]:mt-0"><HomeSearch /></div>
+        {/* Coming Soon card: between the greeting and the weather card (same order, comes first) */}
+        <div className="order-2 desk:[&>*]:mt-0"><ComingSoonBanner variant="card" /></div>
+        <div className="order-2 desk:[&>*]:mt-0"><HomeHero /></div>
         <div className="order-[6] empty:hidden desk:[&>*]:mt-0"><QuickRebook /></div>
         <div className="order-[8] mt-5 empty:hidden desk:mt-0"><AdStrip placement="inline" /></div>
         <div className="order-[9] empty:hidden desk:[&>*]:mt-0"><PromoCodes /></div>

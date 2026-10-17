@@ -341,6 +341,20 @@ export const helpTopics: HelpTopic[] = [
     href: { label: "Gift Card", to: "/gift-card" },
   },
   {
+    id: "evcharging",
+    icon: "points",
+    title: "EV Charging",
+    summary: "Paid AC charging for your electric car at the venue.",
+    points: [
+      "Open EV Charging in Quick Access and tap Scan the QR. Point the camera at the QR on the charging port. If the camera does not work, type the port code printed under the QR.",
+      "Charging is Rs. 50 an hour, counted in 15-minute steps, so a short top up costs less than a full hour.",
+      "While you charge you see the time and the bill so far. Tap Stop charging when you finish.",
+      "Pay at the venue after you stop. Your charging and payments are kept in the history on the same page.",
+      "One port can serve one car at a time. If a port says it is in use, please wait or ask the staff.",
+    ],
+    href: { label: "EV Charging", to: "/ev" },
+  },
+  {
     id: "digitalid",
     icon: "profile",
     title: "Digital ID card",

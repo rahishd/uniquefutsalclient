@@ -21,13 +21,13 @@ function dayKey() {
 }
 const noopSubscribe = () => () => {};
 
-/** Today in B.S.: { np: "30 आश्विन 2083, शुक्र", npShort: "30 आश्विन, शुक्र", en: "30 Aswin 2083" } (empty on the server). */
+/** Today in B.S.: { np: "30 आश्विन 2083, शुक्र", npShort: "30 आश्विन, शुक्र", npDay: "30 आश्विन", en: "30 Aswin 2083" } (empty on the server). */
 export function useNepaliToday() {
   const key = useSyncExternalStore(noopSubscribe, dayKey, () => "");
-  if (!key) return { np: "", npShort: "", en: "" };
+  if (!key) return { np: "", npShort: "", npDay: "", en: "" };
   const [y, m, d] = key.split("-").map(Number);
   const bs = new NepaliDate(new Date(y, m, d));
-  return { np: bs.format("DD MMMM YYYY, ddd", "np"), npShort: bs.format("DD MMMM, ddd", "np"), en: bs.format("DD MMMM YYYY") };
+  return { np: bs.format("DD MMMM YYYY, ddd", "np"), npShort: bs.format("DD MMMM, ddd", "np"), npDay: bs.format("DD MMMM", "np"), en: bs.format("DD MMMM YYYY") };
 }
 
 let cached: { at: number; w: Weather } | null = null;

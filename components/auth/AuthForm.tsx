@@ -8,12 +8,12 @@ import { signIn, signUp, useSession } from "@/lib/session";
 import { site } from "@/lib/site";
 import { googleConfig, requestPasswordReset, resetPasswordWithGoogle, type GoogleConfig } from "@/lib/google";
 import GoogleButton from "@/components/auth/GoogleButton";
-import KidSkills from "@/components/KidSkills";
 import { useT } from "@/lib/i18n";
 
-// A pill-shaped field with its icon on the left; a bad value turns the ring red and shows the message under it.
-const field = "flex items-center gap-3 rounded-full bg-white/80 px-5 py-4 shadow-sm ring-1 transition focus-within:ring-2";
+// A soft grey field with its icon on the left; focus shows a blue ring, a bad value turns it red with the message under it.
+const field = "flex items-center gap-3 rounded-2xl bg-slate-100 px-4 py-3.5 ring-1 transition focus-within:bg-white focus-within:ring-2";
 const inputCls = "w-full bg-transparent text-[15px] font-medium text-slate-800 outline-none placeholder:font-normal placeholder:text-slate-400";
+const noBorder = { border: "none" }; // the site-wide input border is not wanted inside these boxes
 
 // Only same-site paths are accepted as the page to return to.
 function nextPath() {
@@ -98,7 +98,7 @@ export default function AuthForm() {
 
   if (session?.registered) {
     return (
-      <div className="glass space-y-4 rounded-3xl p-6 text-center">
+      <div className="mx-auto max-w-md space-y-4 rounded-[32px] bg-white p-6 text-center shadow-[0_20px_50px_-24px_rgba(12,11,93,0.35)] ring-1 ring-slate-100">
         <p className="text-lg font-medium">You&apos;re signed in as {session.name}</p>
         <Link href="/" className="glass-btn block rounded-full py-3.5 text-sm font-semibold text-white">Go to Home</Link>
       </div>
@@ -109,38 +109,59 @@ export default function AuthForm() {
   const sub =
     mode === "in" ? t("Sign in to book your next game.") : mode === "up" ? "Book faster, earn points and play with your team." : "We'll ask the venue to set a new password for you.";
   const primary =
-    "flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#0c0b5d] to-[#3f3fd1] py-4 text-base font-semibold text-white shadow-[0_12px_28px_-10px_rgba(12,11,93,0.7)] transition disabled:opacity-50";
+    "flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0c0b5d] py-4 text-base font-semibold text-white shadow-[0_12px_24px_-12px_rgba(12,11,93,0.8)] transition active:scale-[0.99] disabled:opacity-40";
+  const formTitle = mode === "in" ? t("Sign in to continue") : mode === "up" ? t("Your details") : t("Your mobile number");
+  const formSub =
+    mode === "in" ? "Book courts, Gamezone and EV charging, and see your points." : mode === "up" ? "It takes a minute. You can book straight away." : "Enter the mobile number on your account.";
 
   return (
-    <div className="space-y-6 desk:mx-auto desk:max-w-md">
-      {/* brand banner */}
-      <div className="relative min-h-[170px] overflow-hidden rounded-[28px] bg-gradient-to-br from-[#0c0b5d] via-[#1a1a8f] to-[#3f3fd1] p-6 text-white shadow-[0_18px_40px_-18px_rgba(12,11,93,0.8)]">
-        <div className="relative z-10 max-w-[58%]">
-          <p className="text-3xl font-extrabold leading-none tracking-tight">Unique<span className="text-white">.</span></p>
-          <p className="mt-0.5 text-3xl font-extrabold leading-none tracking-tight text-white">Futsal</p>
-          <p className="mt-3 text-sm text-white/85">Book your court,<br />right from your phone.</p>
-          <span className="mt-3 inline-block rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#0c0b5d]">Live slots · Instant booking</span>
-        </div>
-        <KidSkills className="pointer-events-none absolute -bottom-2 right-2 h-[175px] w-auto" />
+    <div className="mx-auto max-w-md rounded-[32px] bg-white px-5 pb-7 pt-8 shadow-[0_20px_50px_-24px_rgba(12,11,93,0.35)] ring-1 ring-slate-100 desk:px-8">
+      {/* brand mark */}
+      <div className="flex flex-col items-center gap-2">
+        <span
+          aria-hidden
+          className="h-12 w-12 rounded-2xl bg-[#0c0b5d] bg-no-repeat shadow-md"
+          style={{ backgroundImage: "url(/logo.jpg)", backgroundSize: "82px 82px", backgroundPosition: "-15px -5px", backgroundBlendMode: "lighten" }}
+        />
+        <span className="text-[11px] font-bold tracking-[0.3em] text-slate-500">UNIQUE FUTSAL</span>
       </div>
 
-      <header className="text-center">
+      <header className="mt-6 text-center">
         <h1 className="text-[28px] font-extrabold tracking-tight text-slate-900">{title}</h1>
         <p className="mt-1 text-sm text-slate-500">{sub}</p>
       </header>
 
+      {/* Sign In / Create Account switch (the reset screen has its own way back, below) */}
+      {mode !== "reset" && (
+        <div role="tablist" aria-label="Sign in or create an account" className="mt-6 grid grid-cols-2 rounded-2xl bg-slate-100 p-1">
+          {(["in", "up"] as const).map((m) => (
+            <button key={m} type="button" role="tab" aria-selected={mode === m} onClick={() => mode !== m && go(m)}
+              className={`rounded-xl py-2.5 text-sm font-semibold transition ${mode === m ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}>
+              {m === "in" ? t("Sign In") : t("Create Account")}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-6">
+        <h2 className="text-base font-bold text-slate-900">{formTitle}</h2>
+        <p className="mt-0.5 text-sm text-slate-500">{formSub}</p>
+      </div>
+
+      <div className="mt-4">
       <form onSubmit={submit} className="space-y-4" noValidate>
         {mode === "up" && (
-          <div className={`${field} ring-white/80 focus-within:ring-brand`}>
+          <div className={`${field} ring-transparent focus-within:ring-sky-300`}>
             <User size={18} className="shrink-0 text-slate-400" />
-            <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("Full name")} aria-label="Full name" autoComplete="name" />
+            <input style={noBorder} className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("Full name")} aria-label="Full name" autoComplete="name" />
           </div>
         )}
 
         <div>
-          <div className={`${field} ${phoneBad ? "ring-2 ring-rose-400" : "ring-white/80 focus-within:ring-brand"}`}>
+          <div className={`${field} ${phoneBad ? "ring-2 ring-rose-400" : "ring-transparent focus-within:ring-sky-300"}`}>
             <Phone size={18} className={`shrink-0 ${phoneBad ? "text-rose-400" : "text-slate-400"}`} />
             <input
+              style={noBorder}
               className={inputCls}
               value={phone}
               inputMode="numeric"
@@ -155,9 +176,10 @@ export default function AuthForm() {
         </div>
 
         {mode !== "reset" && (
-          <div className={`${field} ring-white/80 focus-within:ring-brand`}>
+          <div className={`${field} ring-transparent focus-within:ring-sky-300`}>
             <Lock size={18} className="shrink-0 text-slate-400" />
             <input
+              style={noBorder}
               className={inputCls}
               type={show ? "text" : "password"}
               value={password}
@@ -174,7 +196,7 @@ export default function AuthForm() {
 
         {mode === "in" && (
           <div className="flex justify-end px-1">
-            <button type="button" onClick={() => go("reset")} className="text-sm font-semibold text-accent">{t("Forgot Password?")}</button>
+            <button type="button" onClick={() => go("reset")} className="text-sm font-semibold text-[#0c0b5d]">{t("Forgot Password?")}</button>
           </div>
         )}
 
@@ -200,9 +222,9 @@ export default function AuthForm() {
             {google?.configured && google.clientId && (
               <div className="space-y-3 rounded-3xl bg-white/60 p-4">
                 <p className="text-center text-xs font-medium text-slate-500">Or reset instantly with the Google account linked in Profile</p>
-                <div className={`${field} ring-white/80 focus-within:ring-brand`}>
+                <div className={`${field} ring-transparent focus-within:ring-sky-300`}>
                   <Lock size={18} className="shrink-0 text-slate-400" />
-                  <input className={inputCls} type={show ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="New password (6+ characters)" aria-label="New password" autoComplete="new-password" />
+                  <input style={noBorder} className={inputCls} type={show ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="New password (6+ characters)" aria-label="New password" autoComplete="new-password" />
                 </div>
                 {phoneOk && password.length >= 6 ? (
                   <GoogleButton clientId={google.clientId} onToken={resetGoogle} />
@@ -219,20 +241,22 @@ export default function AuthForm() {
         )}
       </form>
 
-      <div className="flex items-center gap-3 text-xs text-slate-400" aria-hidden>
-        <span className="h-px flex-1 bg-slate-300/70" /> or <span className="h-px flex-1 bg-slate-300/70" />
       </div>
-      <Link href="/book" className="flex w-full items-center justify-center rounded-full bg-white/80 py-3.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-white">
-        {t("Continue as a guest")}
-      </Link>
 
-      <p className="text-center text-sm text-slate-500">
+      <p className="mt-5 text-center text-sm text-slate-500">
         {mode === "in" ? (
-          <>{t("Don't have an account?")} <button type="button" onClick={() => go("up")} className="font-bold text-accent">{t("Sign Up")}</button></>
+          <>{t("No account yet?")} <button type="button" onClick={() => go("up")} className="font-bold text-[#0c0b5d]">{t("Create one")}</button></>
         ) : (
-          <>{t(mode === "up" ? "Already have an account?" : "Remembered it?")} <button type="button" onClick={() => go("in")} className="font-bold text-accent">{t("Sign In")}</button></>
+          <>{t(mode === "up" ? "Already have an account?" : "Remembered it?")} <button type="button" onClick={() => go("in")} className="font-bold text-[#0c0b5d]">{t("Sign In")}</button></>
         )}
       </p>
+
+      <div className="mt-5 flex items-center gap-3 text-xs text-slate-400" aria-hidden>
+        <span className="h-px flex-1 bg-slate-200" /> or <span className="h-px flex-1 bg-slate-200" />
+      </div>
+      <Link href="/book" className="mt-4 flex w-full items-center justify-center rounded-2xl py-3 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50">
+        {t("Continue as a guest")}
+      </Link>
     </div>
   );
 }

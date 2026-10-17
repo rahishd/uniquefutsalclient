@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { BarChart3, CalendarDays, ChevronRight, CircleHelp, Crown, Gamepad2, Gift, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, UserSearch, Zap, BadgeCheck, Lock } from "lucide-react";
+import EvCarIcon from "@/components/ev/EvCarIcon";
 import { markReadByTypes, noticesStore, type NoticeType } from "@/lib/notifications";
 import { openSignIn, useSession } from "@/lib/session";
 import { pendingActions, useTeams } from "@/lib/teams";
@@ -10,7 +11,7 @@ import { useT } from "@/lib/i18n";
 interface Tile {
   label: string;
   href: string;
-  icon: typeof Star;
+  icon: React.ElementType;
   tone: string;
   // Unread messages of these types show as the tile's badge. Opening the tile marks them read.
   types?: NoticeType[];
@@ -26,6 +27,7 @@ const TILES: Tile[] = [
   { label: "Unique Club", href: "/club", icon: BadgeCheck, tone: "text-brand" },
   { label: "Membership", href: "/member", icon: Crown, tone: "text-brand", types: ["membership"] },
   { label: "Gift Card", href: "/gift-card", icon: Gift, tone: "text-brand" },
+  { label: "EV Charging", href: "/ev", icon: EvCarIcon, tone: "text-brand" },
   { label: "Points", href: "/points", icon: Star, tone: "text-brand", types: ["points"] },
   { label: "My stats", href: "/profile", icon: BarChart3, tone: "text-brand" },
   { label: "Tournaments", href: "/tournaments", icon: Trophy, tone: "text-brand", types: ["tournament"] },
@@ -60,7 +62,7 @@ export default function PopularGrid() {
   return (
     <section className="mt-8 desk:mt-10">
       <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-1.5 text-lg font-medium desk:text-xl">
+        <h2 className="flex items-center gap-1.5 text-lg font-semibold text-[#0c0b5d] desk:text-xl">
           <Zap size={16} strokeWidth={2.2} className="text-brand" aria-hidden />
           {tr("Quick Access")}
         </h2>
@@ -81,7 +83,7 @@ export default function PopularGrid() {
           const locked = guest && !GUEST_OK.has(t.href);
           const face = (
             <>
-              <span className={`glass relative flex h-[70px] w-[70px] items-center justify-center rounded-3xl transition-transform desk:h-24 desk:w-24 desk:group-hover:-translate-y-1 ${locked ? "opacity-60" : ""}`}>
+              <span className={`relative flex h-[70px] w-[70px] items-center justify-center rounded-[22px] bg-gradient-to-br from-white to-sky-50 shadow-[0_12px_22px_-14px_rgba(59,130,246,0.7)] ring-1 ring-sky-100 transition-transform group-active:scale-95 desk:h-24 desk:w-24 desk:group-hover:-translate-y-1 ${locked ? "opacity-60" : ""}`}>
                 <Icon className={`${t.tone} h-[30px] w-[30px] desk:h-10 desk:w-10`} />
                 {locked && (
                   <span aria-hidden className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-slate-700 text-white shadow ring-2 ring-white">
@@ -94,7 +96,7 @@ export default function PopularGrid() {
                   </span>
                 )}
               </span>
-              <span className="text-center text-xs text-slate-600 desk:text-sm">{tr(t.label)}</span>
+              <span className="text-center text-xs font-medium text-slate-700 desk:text-sm">{tr(t.label)}</span>
             </>
           );
           return (

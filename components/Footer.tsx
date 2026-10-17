@@ -123,6 +123,8 @@ export default function Footer() {
           </div>
         </div>
       </div>
+
+      <p className="mt-6 text-center text-xs text-slate-500">{t("Designed & Developed by")}: <span className="font-semibold text-[#0c0b5d]">Rahish Dumre</span></p>
     </footer>
   );
 }

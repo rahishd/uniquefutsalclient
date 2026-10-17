@@ -167,6 +167,18 @@ html.dark :is(.bg-brand:not(.text-white), .uf-keep, [class*="bg-[#0c0b5d]"], [cl
   animation: uf-partners-run var(--uf-partners-seconds, 40s) linear infinite;
   will-change: transform;
 }
+/* the second row runs the other way: right to left */
+.uf-partners-reverse {
+  animation-direction: reverse;
+}
+/* each logo floats gently up and down */
+@keyframes uf-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -5px, 0); }
+}
+.uf-float {
+  animation: uf-float 3.4s ease-in-out infinite;
+}
 .uf-partners:hover .uf-partners-track,
 .uf-partners:focus-within .uf-partners-track,
 .uf-partners:active .uf-partners-track {
@@ -175,6 +187,7 @@ html.dark :is(.bg-brand:not(.text-white), .uf-keep, [class*="bg-[#0c0b5d]"], [cl
 @media (prefers-reduced-motion: reduce) {
   .uf-partners { overflow-x: auto; }
   .uf-partners-track { animation: none; }
+  .uf-float { animation: none; }
 }
 
 /* Notification bell (components/NotificationBell.tsx): while there are unread notices the bell rings every few seconds,
@@ -209,4 +222,184 @@ html.dark :is(.bg-brand:not(.text-white), .uf-keep, [class*="bg-[#0c0b5d]"], [cl
 @media (prefers-reduced-motion: reduce) {
   .uf-bell-ring, .uf-badge-blink, .uf-badge-ping { animation: none; }
   .uf-badge-ping { display: none; }
+}
+
+/* "Soon" ribbon on the Coming Soon banner (components/ComingSoonBanner.tsx): a soft glow that breathes. */
+@keyframes uf-soon-glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.28); }
+}
+.uf-soon {
+  animation: uf-soon-glow 2.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .uf-soon { animation: none; }
+}
+
+/* Home sky: soft clouds drift slowly across (components/ScrollBackdrop.tsx). */
+@keyframes uf-cloud-drift {
+  from { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(40px, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+.uf-cloud {
+  animation: uf-cloud-drift 46s ease-in-out infinite;
+  filter: drop-shadow(0 6px 10px rgba(59, 130, 246, 0.12));
+}
+@media (prefers-reduced-motion: reduce) {
+  .uf-cloud { animation: none; }
+}
+
+/* Splash screen (components/Splash.tsx): logo, name and motto in motion for about 2.6 s, then it fades out on its own.
+   It plays on every full page load (opening the site or refreshing). */
+.uf-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 35%, #f4f9ff 0%, #e3efff 45%, #c9ddff 100%);
+  animation: uf-splash-out 0.55s ease-in 2.6s forwards;
+}
+.uf-splash-center {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 24px;
+  text-align: center;
+}
+/* soft light blobs drifting behind */
+.uf-splash-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(40px);
+  opacity: 0.55;
+}
+.uf-splash-blob-a { width: 320px; height: 320px; left: -80px; top: 8%; background: #bfdbfe; animation: uf-splash-drift 6s ease-in-out infinite; }
+.uf-splash-blob-b { width: 280px; height: 280px; right: -70px; bottom: 6%; background: #ffffff; animation: uf-splash-drift 7s ease-in-out infinite reverse; }
+
+.uf-splash-logo-wrap {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  display: grid;
+  place-items: center;
+}
+.uf-splash-logo {
+  width: 104px;
+  height: 104px;
+  border-radius: 30px;
+  background-color: #0c0b5d;
+  background-image: url(/logo.jpg);
+  background-repeat: no-repeat;
+  background-size: 176px 176px;
+  background-position: -32px -10px;
+  background-blend-mode: lighten;
+  box-shadow: 0 22px 40px -16px rgba(12, 11, 93, 0.7), 0 0 0 4px #ffffff;
+  animation: uf-splash-pop 0.75s cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+}
+.uf-splash-glow {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  border-radius: 40px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.45), transparent 70%);
+  animation: uf-splash-glow 1.6s ease-in-out 0.4s infinite;
+}
+.uf-splash-ring {
+  position: absolute;
+  width: 146px;
+  height: 146px;
+  border-radius: 9999px;
+  border: 2px dashed rgba(12, 11, 93, 0.22);
+  animation: uf-splash-spin 6s linear infinite, uf-splash-fade-in 0.6s ease 0.3s both;
+}
+/* the football runs round the logo */
+.uf-splash-orbit {
+  position: absolute;
+  inset: 0;
+  animation: uf-splash-spin 1.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) 0.35s infinite, uf-splash-fade-in 0.4s ease 0.35s both;
+}
+.uf-splash-ball {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 26px;
+  height: 26px;
+  margin-left: -13px;
+  filter: drop-shadow(0 4px 6px rgba(12, 11, 93, 0.35));
+  animation: uf-splash-spin 0.8s linear infinite reverse;
+}
+
+.uf-splash-name {
+  margin-top: 26px;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #0c0b5d;
+  white-space: nowrap;
+}
+.uf-splash-name span {
+  display: inline-block;
+  min-width: 0.3em;
+  animation: uf-splash-rise 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
+}
+.uf-splash-motto {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e3a8a;
+  background: linear-gradient(90deg, #1e3a8a 0%, #1e3a8a 40%, #60a5fa 50%, #1e3a8a 60%, #1e3a8a 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: uf-splash-fade-up 0.6s ease 1.2s both, uf-splash-shine 1.6s linear 1.6s infinite;
+}
+.uf-splash-bar {
+  margin-top: 28px;
+  width: 140px;
+  height: 5px;
+  border-radius: 9999px;
+  background: rgba(12, 11, 93, 0.12);
+  overflow: hidden;
+  animation: uf-splash-fade-in 0.4s ease 0.6s both;
+}
+.uf-splash-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #60a5fa, #0c0b5d);
+  animation: uf-splash-load 2s cubic-bezier(0.4, 0, 0.2, 1) 0.6s both;
+}
+
+@keyframes uf-splash-out { to { opacity: 0; visibility: hidden; } }
+@keyframes uf-splash-pop { 0% { opacity: 0; transform: scale(0.5) rotate(-12deg); } 100% { opacity: 1; transform: scale(1) rotate(0); } }
+@keyframes uf-splash-glow { 0%, 100% { transform: scale(0.9); opacity: 0.5; } 50% { transform: scale(1.25); opacity: 1; } }
+@keyframes uf-splash-spin { to { transform: rotate(360deg); } }
+@keyframes uf-splash-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes uf-splash-rise { 0% { opacity: 0; transform: translateY(18px) scale(0.8); } 100% { opacity: 1; transform: none; } }
+@keyframes uf-splash-fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes uf-splash-shine { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+@keyframes uf-splash-load { from { width: 0; } to { width: 100%; } }
+@keyframes uf-splash-drift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(30px, -20px); } }
+
+@media (min-width: 1024px) {
+  .uf-splash-logo-wrap { width: 190px; height: 190px; }
+  .uf-splash-logo { width: 132px; height: 132px; border-radius: 38px; background-size: 224px 224px; background-position: -40px -12px; }
+  .uf-splash-ring { width: 186px; height: 186px; }
+  .uf-splash-glow { width: 170px; height: 170px; }
+  .uf-splash-name { font-size: 44px; }
+  .uf-splash-motto { font-size: 18px; }
+}
+
+/* reduce motion: everything still, shown briefly */
+@media (prefers-reduced-motion: reduce) {
+  .uf-splash { animation: uf-splash-out 0.4s ease 0.9s forwards; }
+  .uf-splash *, .uf-splash-name span { animation: none !important; }
+  .uf-splash-motto { -webkit-text-fill-color: #1e3a8a; }
+  .uf-splash-bar span { width: 100%; }
+  .uf-splash-orbit { display: none; }
 }

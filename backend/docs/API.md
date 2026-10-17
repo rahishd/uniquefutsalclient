@@ -237,6 +237,18 @@ Staff (admin portal > Customers) give one customer a VIP code such as `ADMINVIP`
 - Only the customer it was given to can use it. Anyone else (another customer, a guest) typing the same text gets "This promo code is invalid."
 - The booking stores the code in `promoCode` and the amount in `discountAmount`, so staff can see how much it has saved.
 
+## EV charging
+
+Paid AC EV charging at the venue (Rs. 50 an hour, Settings key `evChargeRate`), billed by started quarter hours. Every route needs a signed-in customer. The QR at a port holds a link `/ev?port=<token>` (or `UFEV1.<token>`); staff make ports and QR codes in the admin portal.
+
+| Method | Path | Who | What |
+| --- | --- | --- | --- |
+| GET | `/ev/me` | User | `{rate, blockMinutes, active, history[], owed}`; a session is `{id, status: charging|unpaid|paid|cancelled, port, startedAt, endedAt, minutes, rate, amount, paidAt, source}` |
+| POST | `/ev/start` | User | `{code}` (scanned link, `UFEV1.token` or the bare token) -> the new session. 404 unknown or switched-off port, 409 if the port is in use or you are already charging (the database allows one charging session per port and per person) |
+| POST | `/ev/:id/stop` | Owner | stops it and makes the bill (`unpaid`, amount worked out on the server); 404 for anyone else, 409 if already finished. Payment is taken at the venue by staff (admin `/ev-charging/:id/pay`). If the plug does not switch off the bill is still made and the answer carries a `warning` |
+
+**Port controllers.** The QR only names the port, so it never changes. What switches the plug is the port's `provider` (`EvPort.provider` and `providerConfig`, set in the admin portal): `manual` records only; `webhook` POSTs JSON `{event: "ev.charging", action: "on"|"off", at, port: {id, name, deviceId}, sessionId, customerName}` to the configured address with an `X-UF-Signature` header (hex HMAC SHA-256 of the body with the secret) and expects a 2xx answer within 8 seconds. If switching on fails the session is cancelled (502, nothing billed). To add a vendor SDK such as Tuya Cloud, add a `PortController` in `src/modules/ev/ev.provider.ts` (and the same file in the admin server, `src/lib/ev-controller.ts`) and register it in `CONTROLLERS`.
+
 ## Chat
 
 Registered customers can chat one to one or in groups (text only). Every route needs a signed-in customer. A chat is visible only to its members; anyone else gets 404.

@@ -15,10 +15,13 @@ import PageInfoBar from "@/components/PageInfoBar";
 // temperature and the bell: components/PageInfoBar.tsx). In desktop mode (see `desk:` in globals.css) the bar is on every page, because it
 // carries the main navigation there (the bottom bar is hidden).
 export default function CompanyHeader() {
-  const home = usePathname() === "/";
+  const path = usePathname();
+  const home = path === "/";
+  // the sign-in page needs no greeting bar: the person is not signed in yet
+  const signIn = path === "/login" || path.startsWith("/login/");
   return (
     <>
-      {!home && <PageInfoBar />}
+      {!home && !signIn && <PageInfoBar />}
       <div className={`${home ? "" : "hidden desk:block "}sticky top-0 z-30 bg-gradient-to-b from-white to-slate-50/80 shadow-[0_8px_24px_-14px_rgba(12,11,93,0.45)] backdrop-blur`} style={{ paddingTop: "env(safe-area-inset-top)" }}>
       <div className="mx-auto w-full max-w-md px-5 desk:max-w-none desk:px-10">
         <div className="flex min-h-16 items-center gap-3 py-2 pr-1 desk:gap-3 2xl:gap-6">

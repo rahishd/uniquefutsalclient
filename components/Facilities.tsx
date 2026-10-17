@@ -1,6 +1,9 @@
-import { Accessibility, Armchair, Crown, Gamepad2, HandHeart, Leaf, PiggyBank, ShieldPlus, Users, type LucideIcon } from "lucide-react";
+import { Accessibility, Armchair, Crown, Gamepad2, HandHeart, Leaf, PawPrint, PiggyBank, ShieldPlus, Users } from "lucide-react";
+import EvCarIcon from "@/components/ev/EvCarIcon";
 
-const FACILITIES: { title: string; note?: string; icon: LucideIcon }[] = [
+const FACILITIES: { title: string; note?: string; icon: React.ElementType }[] = [
+  { title: "Pet Friendly", note: "Your four-legged teammates are welcome to cheer, play and relax.", icon: PawPrint },
+  { title: "AC EV Charging", note: "Paid AC EV charging at the venue. Rs. 50 per hour.", icon: EvCarIcon },
   { title: "5A Side", note: "Spacious 5A side futsal in town.", icon: Users },
   { title: "3% Charity", note: "You are not just playing, you are educating poor children beyond the field.", icon: HandHeart },
   { title: "Health Insurance", note: "We've got you covered, but play with safety.", icon: ShieldPlus },
