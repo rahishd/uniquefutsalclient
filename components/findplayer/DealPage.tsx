@@ -45,7 +45,7 @@ export default function DealPage({ id }: { id: string }) {
 
   if (order) {
     return (
-      <main className="mx-auto w-full max-w-md px-5 pb-32 pt-8 desk:max-w-2xl desk:pb-16">
+      <main className="mx-auto w-full max-w-md px-5 pb-32 pt-8 tab:max-w-2xl desk:max-w-2xl desk:pb-16">
         <PaymentQr
           method={order.method}
           orderId={order.orderCode}
@@ -69,7 +69,7 @@ export default function DealPage({ id }: { id: string }) {
   }
 
   return (
-    <main className="mx-auto w-full max-w-md space-y-5 px-5 pb-32 pt-8 desk:max-w-2xl desk:pb-16">
+    <main className="mx-auto w-full max-w-md space-y-5 px-5 pb-32 pt-8 tab:max-w-2xl desk:max-w-2xl desk:pb-16">
       <Link href="/find-player" className="inline-flex items-center gap-1.5 text-sm font-medium text-brand"><ArrowLeft size={16} /> Find Player</Link>
       <h1 className="text-2xl font-semibold">{r?.mine ? "Your request" : "Players needed"}</h1>
 

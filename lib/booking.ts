@@ -150,7 +150,7 @@ export function startsAtMs(b: { date: string; startTime: string }) {
 /* ---------- Quick Rebook ---------- */
 
 export interface Rebook {
-  usual: { weekday: number; hour: number; count: number; total: number };
+  usual: { weekday: number; hour: number; date: string }; // the last game played
   target: { date?: string; hour?: number; available: boolean; price?: number };
 }
 

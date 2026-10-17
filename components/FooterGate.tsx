@@ -10,7 +10,7 @@ export default function FooterGate() {
   const pathname = usePathname();
   return (
     <>
-      <div className="mx-auto w-full max-w-md px-5 desk:max-w-none desk:px-10"><AdStrip placement="footer" /></div>
+      <div className="mx-auto w-full max-w-md px-5 tab:max-w-3xl tab:px-8 desk:max-w-none desk:px-10"><AdStrip placement="footer" /></div>
       {pathname === "/" ? <Footer /> : <div className="h-24 desk:h-8" aria-hidden />}
     </>
   );

@@ -73,7 +73,7 @@ export default function FindPlayerPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-md space-y-6 px-5 pb-32 pt-8 desk:max-w-2xl desk:pb-16">
+    <main className="mx-auto w-full max-w-md space-y-6 px-5 pb-32 pt-8 tab:max-w-2xl desk:max-w-2xl desk:pb-16">
       <header>
         <h1 className="flex items-center gap-2 text-2xl font-semibold"><UserSearch size={24} className="text-brand" /> Find Player</h1>
         <p className="mt-1 text-sm text-slate-500">Need more players for your game? Say how many. Every registered player is notified and can join.</p>

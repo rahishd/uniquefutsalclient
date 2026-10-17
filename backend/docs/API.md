@@ -57,7 +57,7 @@ Times use Nepal time. Dates are `YYYY-MM-DD`. Money is whole rupees.
 | POST | `/bookings/quote` | Guest | `{date,startTime,duration?,promoCode?,voucherId?}` -> `{basePrice,discount,total,promo,vip,water,usesVoucher,earnPoints}`; `water` is `{bottles, excluded}`: the 2 complimentary mineral water bottles, or 0 with `excluded: "vip"` (a VIP discount applies) or `"promo"` (a promo code applies and staff did not switch `includesWater` on for it). The booking stores the same number in `waterBottles` |
 | POST | `/bookings/checkout` | Guest or User | `{date,startTime,duration?,method: fonepay|venue,promoCode?,voucherId?,guest?:{name,phone}}`. Guest: details required, `venue` refused (403), no voucher. User: no guest details. Window today..+10. Online -> `{booking, payment:{orderCode,amount,remarks,qrPayload,expiresAt}}` and the slot is held 10 minutes |
 | GET | `/bookings/me` | User | my bookings (membership ledger rows hidden) |
-| GET | `/bookings/me/rebook` | User | usual weekday+hour and the next open date, or `null` |
+| GET | `/bookings/me/rebook` | User | weekday+hour of the last game played and the next such weekday (same hour, else the nearest open hour), or `null` |
 | GET | `/bookings/:id` | Owner/Staff | |
 | POST | `/bookings/:id/cancel` | Owner | keeps the record; frees the slot; returns a used voucher |
 | POST | `/bookings/:id/arrival` | Owner | "I'm coming": from 1 hour before to 30 minutes after the start |

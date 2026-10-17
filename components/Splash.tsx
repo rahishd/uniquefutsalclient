@@ -1,38 +1,51 @@
 // Splash screen shown when the site is opened (typing the address, a new tab, the installed app), on phones and desktops.
 // Pure HTML and CSS (see .uf-splash in globals.css): it is in the first HTML the server sends, so it shows before any script
-// runs, plays for about 2.6 seconds and fades out by itself. It plays on every full page load (opening the site, refreshing);
+// runs, plays for about 5 seconds and fades out by itself. It plays on every full page load (opening the site, refreshing);
 // moving between pages inside the app does not reload the page, so it does not replay then. "Reduce motion" gets a short, still version.
+// Dark blue screen: the white player lights up from the feet to the head, then kicks the ball. The ball flies up and fills
+// as the progress to opening the home screen, comes back to the player's foot and spins with a loading ring until the splash ends.
 const NAME = "UNIQUE FUTSAL";
+
+function Ball({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className}>
+      <circle cx="12" cy="12" r="11.5" fill="#ffffff" />
+      <path d="M12 7.2 l4 2.9 -1.5 4.7 h-5 L8 10.1 z" fill="#121264" />
+      <path d="M12 0.5 v6.7 M16 10.1 l7 -2.3 M14.5 14.8 l4 5.6 M9.5 14.8 l-4 5.6 M8 10.1 l-7 -2.3" stroke="#121264" strokeWidth="1.3" />
+    </svg>
+  );
+}
 
 export default function Splash() {
   return (
-    <div className="uf-splash" aria-hidden="true">
-      <span className="uf-splash-blob uf-splash-blob-a" />
-      <span className="uf-splash-blob uf-splash-blob-b" />
-
+    // uf-keep: dark mode must not invert the splash colours
+    <div className="uf-splash uf-keep" aria-hidden="true">
       <div className="uf-splash-center">
-        {/* the logo: pops in, a glow pulses behind it and a football runs round it */}
-        <div className="uf-splash-logo-wrap">
-          <span className="uf-splash-glow" />
-          <span className="uf-splash-ring" />
-          <span className="uf-splash-orbit">
-            <svg viewBox="0 0 24 24" className="uf-splash-ball">
-              <circle cx="12" cy="12" r="11" fill="#ffffff" stroke="#0c0b5d" strokeWidth="1.5" />
-              <path d="M12 7.2 l4 2.9 -1.5 4.7 h-5 L8 10.1 z" fill="#0c0b5d" />
-              <path d="M12 1.5 v5.7 M16 10.1 l5.4 -1.8 M14.5 14.8 l3.3 4.6 M9.5 14.8 l-3.3 4.6 M8 10.1 l-5.4 -1.8" stroke="#0c0b5d" strokeWidth="1.2" />
-            </svg>
+        <div className="uf-splash-logo">
+          <span className="uf-splash-fig uf-splash-fig-dim" />
+          <span className="uf-splash-fig uf-splash-fig-fill" />
+
+          {/* the ball drawn in the picture is covered, so this one can take its place and fly */}
+          <span className="uf-splash-ballcover" />
+          <span className="uf-ball-pos">
+            <span className="uf-ball-x">
+              <span className="uf-ball-y">
+                <svg viewBox="0 0 40 40" className="uf-ball-ring">
+                  <circle cx="20" cy="20" r="18" fill="none" stroke="#ffffff" strokeWidth="2.4" strokeLinecap="round" strokeDasharray="28 90" />
+                </svg>
+                <Ball className="uf-ball-svg uf-ball-dim" />
+                <Ball className="uf-ball-svg uf-ball-fill" />
+              </span>
+            </span>
           </span>
-          <span className="uf-splash-logo uf-keep" />
         </div>
 
         <p className="uf-splash-name">
           {NAME.split("").map((ch, i) => (
-            <span key={i} style={{ animationDelay: `${0.55 + i * 0.045}s` }}>{ch === " " ? " " : ch}</span>
+            <span key={i} style={{ animationDelay: `${1.4 + i * 0.045}s` }}>{ch === " " ? " " : ch}</span>
           ))}
         </p>
-        <p className="uf-splash-motto">1st Fully Tech Driven Futsal In Nepal</p>
-
-        <span className="uf-splash-bar"><span /></span>
+        <p className="uf-splash-motto">Connecting Players. Contributing Fitness</p>
       </div>
     </div>
   );

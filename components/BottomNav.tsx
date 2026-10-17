@@ -26,8 +26,8 @@ export default function BottomNav() {
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/"));
 
   return (
-    <nav aria-label="Primary" className="pointer-events-none fixed inset-x-0 bottom-0 z-50 px-3 desk:hidden" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 10px)" }}>
-      <div className="pointer-events-auto mx-auto flex max-w-md items-center justify-between gap-1 rounded-[28px] bg-[rgba(255,255,255,0.86)] p-2 shadow-[0_14px_34px_-12px_rgba(15,23,42,0.28)] ring-1 ring-sky-100 backdrop-blur-xl">
+    <nav aria-label="Primary" className="pointer-events-none fixed inset-x-0 bottom-0 z-50 px-3 pb-[calc(env(safe-area-inset-bottom)+10px)] short:pb-[calc(env(safe-area-inset-bottom)+4px)] desk:hidden">
+      <div className="pointer-events-auto mx-auto flex max-w-md items-center justify-between gap-1 rounded-[28px] bg-[rgba(255,255,255,0.86)] p-2 tab:max-w-xl short:max-w-lg short:rounded-[22px] short:p-1 shadow-[0_14px_34px_-12px_rgba(15,23,42,0.28)] ring-1 ring-sky-100 backdrop-blur-xl">
         {TABS.map(({ label, href, icon: Icon }) => {
           const active = isActive(href);
           return (
@@ -37,7 +37,7 @@ export default function BottomNav() {
               aria-current={active ? "page" : undefined}
               aria-label={t(label)}
               title={t(label)}
-              className={`relative flex h-12 items-center justify-center gap-2 rounded-[20px] transition-all duration-300 ${
+              className={`relative flex h-12 short:h-10 items-center justify-center gap-2 rounded-[20px] transition-all duration-300 ${
                 active
                   ? "glass-active flex-[1.9] px-4 text-[#0c0b5d]"
                   : "flex-1 text-slate-400 hover:text-[#0c0b5d]"

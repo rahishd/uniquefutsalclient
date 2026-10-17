@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 //   settling   he walks to a stool next to the car and sits down to wait
 //   charging   he waits and dozes off (Zzz) while power flows along the cable and the battery fills
 //   unplugging (Stop charging) he wakes up with a start, stretches, pulls the gun out, hangs it back on the post and gives a thumbs up
-//   leaving    he walks to the driver door, opens it, gets in, the lights blink and the car drives away
+//   leaving    "Thank you!" shows while he walks to the driver door, then he opens it, gets in, the lights blink and the car drives away
 //   arriving   the next car rolls in and parks
 // He smiles all the time. Pure SVG animation (SMIL), no video or image files, drawn in a 900 x 320 box that matches the card.
 // With "reduce motion" on, the charging state is shown still.
@@ -346,6 +346,20 @@ function Unplugging() {
   );
 }
 
+// "Thank you!" for the customer, shown once charging is complete or cancelled and before the car door opens (the door opens
+// 2.0 s into "leaving"): fades in at 0.25 s and out as the door starts to swing. Still (no fade) when "reduce motion" is on.
+function ThankYou({ animated }: { animated: boolean }) {
+  const T = LEAVE_SECONDS;
+  const k = (s: number) => (s / T).toFixed(4);
+  return (
+    <g opacity={animated ? 0 : 1}>
+      <rect x="95" y="4" width="250" height="52" rx="26" fill="#ffffff" stroke="#fbbf24" strokeWidth="3" />
+      <text x="220" y="39" textAnchor="middle" fontSize="27" fontWeight="700" fill="#0c0b5d">Thank you! 🙏</text>
+      {animated && <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes={`0;${k(0.2)};${k(0.55)};${k(1.85)};${k(2.05)};1`} dur={`${T}s`} fill="freeze" />}
+    </g>
+  );
+}
+
 function Leaving() {
   const T = LEAVE_SECONDS;
   // the boy: post -> driver door (0.3-2.0 s), steps in (2.5-3.0 s) and is gone
@@ -357,6 +371,7 @@ function Leaving() {
   const car: KF[] = [[0, "0 0"], [4.0, "0 0"], [4.12, "5 -1.5"], [4.3, "0 0"], [6.0, "640 0"], [T, "640 0"]];
   return (
     <g>
+      <ThankYou animated />
       <Post gunOnPost />
       <path d={cableD(HOLSTER.x, HOLSTER.y)} fill="none" stroke="#111827" strokeWidth="5" strokeLinecap="round" />
       <Stool />
@@ -464,6 +479,7 @@ export default function ChargeScene({ mode }: { mode: SceneMode }) {
   return (
     <svg aria-hidden viewBox="0 0 900 320" className="pointer-events-none absolute inset-0 h-full w-full">
       {m === "idle" && <Idle />}
+      {still && mode === "leaving" && <ThankYou animated={false} />}
       {m === "plugging" && <Plugging />}
       {(m === "settling" || m === "charging") && <Charging arrive={m === "settling"} still={still} />}
       {m === "unplugging" && <Unplugging />}

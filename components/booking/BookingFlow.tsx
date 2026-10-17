@@ -455,7 +455,7 @@ export default function BookingFlow({ initialDate, initialHour }: { initialDate?
         <h1 className="text-2xl font-semibold">Book a court</h1>
         <p className="text-sm text-slate-500">Pick a date and a one-hour slot. Bookings open up to {MAX_ADVANCE_DAYS} days in advance.</p>
         {initialHour !== undefined && selHour === initialHour && slots && !slot && (
-          <p role="status" className="mt-2 rounded-xl bg-amber-400/15 px-3 py-2 text-xs text-amber-700">Your usual slot isn&apos;t available on this date. Please pick another time.</p>
+          <p role="status" className="mt-2 rounded-xl bg-amber-400/15 px-3 py-2 text-xs text-amber-700">That time isn&apos;t available on this date. Please pick another time.</p>
         )}
       </header>
 

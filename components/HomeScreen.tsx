@@ -2,7 +2,6 @@ import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import HomeHero from "@/components/HomeHero";
 import UserBadge from "@/components/UserBadge";
-import ComingSoonBanner from "@/components/ComingSoonBanner";
 import QuickRebook from "@/components/QuickRebook";
 import PopularGrid from "@/components/PopularGrid";
 import GoalRushCard from "@/components/goalrush/GoalRushCard";
@@ -15,15 +14,15 @@ import GallerySection from "@/components/ads/GallerySection";
 import ScrollBackdrop from "@/components/ScrollBackdrop";
 
 // Phone and portrait tablet: one column, in the `order-N` order below.
-// Desktop mode (`desk:`, see globals.css): main content on the left, a sticky sidebar on the right (the light blue hero card with
+// Tablet and wide phone (`tab:`, 640px and up): the same two columns, 50/50. Desktop mode (`desk:`, see globals.css): main content on the left, a sticky sidebar on the right (the light blue hero card with
 // weather, date, search and shortcuts, book again, ad, promo codes, tournament). The two wrappers are `display: contents` on mobile so every block stays in
 // the one column; each block carries its own mobile order.
 export default function HomeScreen() {
   return (
-    <div className="flex flex-col desk:grid desk:grid-cols-12 desk:items-start desk:gap-x-10">
+    <div className="flex flex-col tab:grid tab:grid-cols-12 tab:items-start tab:gap-x-6 desk:gap-x-10">
       {/* photo background that changes as the page scrolls (fixed, behind everything, ignores clicks) */}
       <ScrollBackdrop />
-      <div className="contents desk:col-span-8 desk:block">
+      <div className="contents tab:col-span-6 tab:block desk:col-span-8">
         {/* Who is signed in. The bell lives in the page header (components/CompanyHeader.tsx). */}
         <header className="order-1 flex items-center justify-between">
           <UserBadge />
@@ -49,14 +48,12 @@ export default function HomeScreen() {
         <div className="order-[11]"><GallerySection /></div>
       </div>
 
-      <aside className="contents desk:sticky desk:top-28 desk:col-span-4 desk:flex desk:flex-col desk:gap-5">
-        {/* Coming Soon card: between the greeting and the weather card (same order, comes first) */}
-        <div className="order-2 desk:[&>*]:mt-0"><ComingSoonBanner variant="card" /></div>
-        <div className="order-2 desk:[&>*]:mt-0"><HomeHero /></div>
-        <div className="order-[6] empty:hidden desk:[&>*]:mt-0"><QuickRebook /></div>
-        <div className="order-[8] mt-5 empty:hidden desk:mt-0"><AdStrip placement="inline" /></div>
-        <div className="order-[9] empty:hidden desk:[&>*]:mt-0"><PromoCodes /></div>
-        <div className="order-[10] empty:hidden desk:[&>*]:mt-0"><TournamentSection /></div>
+      <aside className="contents tab:col-span-6 tab:flex tab:flex-col tab:gap-4 desk:sticky desk:top-28 desk:col-span-4 desk:gap-5">
+        <div className="order-2 tab:[&>*]:mt-0 desk:[&>*]:mt-0"><HomeHero /></div>
+        <div className="order-[6] empty:hidden tab:[&>*]:mt-0 desk:[&>*]:mt-0"><QuickRebook /></div>
+        <div className="order-[8] mt-5 empty:hidden tab:mt-0 desk:mt-0"><AdStrip placement="inline" /></div>
+        <div className="order-[9] empty:hidden tab:[&>*]:mt-0 desk:[&>*]:mt-0"><PromoCodes /></div>
+        <div className="order-[10] empty:hidden tab:[&>*]:mt-0 desk:[&>*]:mt-0"><TournamentSection /></div>
       </aside>
 
     </div>

@@ -51,7 +51,7 @@ export default function ChatHome() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-md space-y-6 px-5 pb-32 pt-6 desk:max-w-2xl desk:pb-16">
+    <main className="mx-auto w-full max-w-md space-y-6 px-5 pb-32 pt-6 tab:max-w-2xl desk:max-w-2xl desk:pb-16">
       <header className="rounded-3xl bg-gradient-to-br from-[#0c0b5d] via-[#1d1c8f] to-[#3b3bd6] p-5 text-white shadow-[0_18px_36px_-18px_rgba(12,11,93,0.8)]">
         <h1 className="text-2xl font-semibold">Unique Community</h1>
         <p className="mt-0.5 text-sm font-medium text-white/80">Unique Connections</p>

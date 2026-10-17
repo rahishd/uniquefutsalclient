@@ -87,7 +87,7 @@ export default function ThreadView({ id }: { id: string }) {
 
   if (!registered) {
     return (
-      <main className="mx-auto w-full max-w-md px-5 pt-8">
+      <main className="mx-auto w-full max-w-md px-5 pt-8 tab:max-w-2xl">
         <section className="glass rounded-3xl p-5 text-center">
           <p className="font-semibold">Sign in to chat</p>
           <button type="button" onClick={openSignIn} className="glass-btn mt-4 rounded-full px-6 py-3 text-sm font-semibold">Sign in</button>
@@ -98,7 +98,7 @@ export default function ThreadView({ id }: { id: string }) {
 
   if (missing) {
     return (
-      <main className="mx-auto w-full max-w-md px-5 pt-8 text-center">
+      <main className="mx-auto w-full max-w-md px-5 pt-8 tab:max-w-2xl text-center">
         <p className="font-semibold">This chat is not available</p>
         <p className="mt-1 text-sm text-slate-500">You may have left the group, or it was closed.</p>
         <Link href="/chat" className="glass-btn mt-4 inline-block rounded-full px-6 py-3 text-sm font-semibold">Back to chats</Link>
@@ -109,7 +109,7 @@ export default function ThreadView({ id }: { id: string }) {
   const isGroup = info?.kind === "group";
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-col px-5 desk:max-w-2xl" style={{ minHeight: "calc(100dvh - 9rem)" }}>
+    <main className="mx-auto flex w-full max-w-md flex-col px-5 tab:max-w-2xl desk:max-w-2xl" style={{ minHeight: "calc(100dvh - 9rem)" }}>
       <header className="sticky top-16 z-10 -mx-5 flex items-center gap-3 border-b border-slate-100 bg-white px-5 py-3">
         <Link href="/chat" aria-label="Back to chats" className="rounded-full p-1.5 text-brand"><ArrowLeft size={20} /></Link>
         {isGroup ? (

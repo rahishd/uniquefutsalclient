@@ -8,7 +8,7 @@ import { prisma } from "../../config/db";
 import BookingService from "./booking.service";
 import { addDaysKey, currentTime as nowTime, isValidKey, startsAtMs, todayKey, weekdayOfKey } from "../../utils/dates";
 import SettingsService from "../settings/settings.service";
-import { detectUsualSlot } from "../../utils/rebook";
+import { lastPlayedSlot, nearestHour } from "../../utils/rebook";
 import { MAX_ADVANCE_DAYS } from "./booking.checkout";
 
 // Customer-app extras mounted under /api/bookings (declared before the "/:id" routes).
@@ -46,33 +46,35 @@ router.get(
   }),
 );
 
-// Quick Rebook: the customer's usual weekday + hour from their last games, and the next date it is open.
+// Quick Rebook: the weekday + hour of the customer's LAST game, offered again on the next such weekday. When that hour is
+// taken the open hour nearest to it that day is offered instead (target.hour differs from usual.hour). A weekday with
+// nothing open is skipped for the following one inside the booking window.
 router.get(
   "/me/rebook",
   authMiddleware,
   asyncHandler(async (req: AuthRequest, res: Response) => {
-    const past = await prisma.booking.findMany({
-      where: { userId: req.user!.id, status: { in: ["confirmed", "completed"] }, source: "regular", AND: [{ OR: [{ notes: null }, { NOT: { notes: { contains: "MEMBERSHIP_" } } }] }] },
-      orderBy: { date: "desc" },
-      take: 12,
+    const today = todayKey();
+    const rows = await prisma.booking.findMany({
+      where: { userId: req.user!.id, date: { lte: today }, status: { in: ["confirmed", "completed"] }, source: "regular", AND: [{ OR: [{ notes: null }, { NOT: { notes: { contains: "MEMBERSHIP_" } } }] }] },
+      orderBy: [{ date: "desc" }, { startTime: "desc" }],
+      take: 6,
       select: { date: true, startTime: true },
     });
-    const usual = detectUsualSlot(past.map((b) => ({ date: b.date, hour: parseInt(b.startTime.split(":")[0], 10) })));
-    if (!usual) return res.json(ApiResponseUtil.success(200, "No usual slot yet", null));
+    // only games that have already started count as played
+    const played = rows.map((b) => ({ date: b.date, hour: parseInt(b.startTime.split(":")[0], 10) })).filter((b) => startsAtMs(b.date, b.hour) <= Date.now());
+    const usual = lastPlayedSlot(played);
+    if (!usual) return res.json(ApiResponseUtil.success(200, "No game played yet", null));
 
-    const today = todayKey();
-    const startTime = `${String(usual.hour).padStart(2, "0")}:00`;
-    // Quick Rebook is only offered when the slot is actually open, so a customer is never sent to a taken time.
     for (let i = 0; i <= MAX_ADVANCE_DAYS; i++) {
       const date = addDaysKey(today, i);
-      if (weekdayOfKey(date) !== usual.weekday) continue;
-      if (date === today && startsAtMs(date, usual.hour) <= Date.now()) continue;
-      if (await BookingService.isSlotAvailable(date, startTime, 1)) {
-        const q = await BookingService.quote(date, startTime, 1);
-        return res.json(ApiResponseUtil.success(200, "Usual slot", { usual, target: { date, hour: usual.hour, available: true, price: q.basePrice } }));
-      }
+      if (weekdayOfKey(date) !== usual.weekday || date <= usual.date) continue; // the next such day, after the one played
+      const free = (await BookingService.getAvailableSlots(date, 1)).map((s: string) => parseInt(s.split(":")[0], 10));
+      const hour = nearestHour(free, usual.hour);
+      if (hour === null) continue;
+      const q = await BookingService.quote(date, `${String(hour).padStart(2, "0")}:00`, 1);
+      return res.json(ApiResponseUtil.success(200, "Usual slot", { usual, target: { date, hour, available: true, price: q.basePrice } }));
     }
-    return res.json(ApiResponseUtil.success(200, "Usual slot is taken", { usual, target: { available: false } }));
+    return res.json(ApiResponseUtil.success(200, "Nothing open on your usual day", { usual, target: { available: false } }));
   }),
 );
 

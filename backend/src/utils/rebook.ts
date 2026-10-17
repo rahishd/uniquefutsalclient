@@ -1,4 +1,4 @@
-// Quick Rebook: detect a customer's usual weekday + hour from their past bookings (pure function).
+// Quick Rebook: the weekday + hour of a customer's last game, and the open hour closest to it (pure functions).
 
 import { weekdayOfKey } from "./dates";
 
@@ -7,28 +7,20 @@ export interface PastBooking {
   hour: number; // start hour, 0-23
 }
 
-export interface UsualSlot {
+export interface LastSlot {
   weekday: number; // 0 = Sunday
   hour: number;
-  count: number; // times played at this weekday + hour
-  total: number; // bookings considered
+  date: string; // the day it was played
 }
 
-export const MIN_REPEATS = 2; // two games in the same weekday + hour make a habit
-export const RECENT_LIMIT = 12; // only the latest bookings reflect current habits
+// The most recent game; two games on one day: the later hour.
+export function lastPlayedSlot(history: PastBooking[]): LastSlot | null {
+  const last = [...history].sort((a, b) => b.date.localeCompare(a.date) || b.hour - a.hour)[0];
+  return last ? { weekday: weekdayOfKey(last.date), hour: last.hour, date: last.date } : null;
+}
 
-export function detectUsualSlot(history: PastBooking[]): UsualSlot | null {
-  const recent = [...history].sort((a, b) => b.date.localeCompare(a.date)).slice(0, RECENT_LIMIT);
-  const tally = new Map<string, { weekday: number; hour: number; count: number; latest: string }>();
-  for (const b of recent) {
-    const weekday = weekdayOfKey(b.date);
-    const k = `${weekday}|${b.hour}`;
-    const cur = tally.get(k);
-    if (cur) cur.count++;
-    else tally.set(k, { weekday, hour: b.hour, count: 1, latest: b.date });
-  }
-  // the most frequent wins; ties go to the one played most recently
-  const best = [...tally.values()].sort((a, b) => b.count - a.count || b.latest.localeCompare(a.latest))[0];
-  if (!best || best.count < MIN_REPEATS) return null;
-  return { weekday: best.weekday, hour: best.hour, count: best.count, total: recent.length };
+// The free hour nearest to the wanted one (the same hour when it is free); a tie goes to the later hour.
+export function nearestHour(free: number[], want: number): number | null {
+  const best = [...free].sort((a, b) => Math.abs(a - want) - Math.abs(b - want) || b - a)[0];
+  return best ?? null;
 }

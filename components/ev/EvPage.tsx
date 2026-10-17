@@ -116,7 +116,9 @@ export default function EvPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-md space-y-5 px-5 pb-32 pt-6 desk:max-w-2xl desk:pb-16">
+    <main className="mx-auto w-full max-w-md space-y-5 px-5 pb-32 pt-6 tab:max-w-2xl desk:max-w-2xl desk:pb-16">
+      {/* read out for screen readers; the picture shows the same message just before the car door opens */}
+      <p role="status" className="sr-only">{phase === "leaving" ? "Thank you!" : ""}</p>
       <header>
         <h1 className="flex items-center gap-2 text-2xl font-semibold"><BatteryCharging className="text-brand" /> EV Charging</h1>
         <p className="mt-1 text-sm text-slate-500">Scan the QR on a charging port to start. AC charging, {formatRs(me?.rate ?? 50)} an hour.</p>

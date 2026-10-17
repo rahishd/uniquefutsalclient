@@ -37,7 +37,7 @@ export default function ClubPage() {
 
   if (order) {
     return (
-      <main className="mx-auto w-full max-w-md px-5 pb-32 pt-8 desk:max-w-2xl desk:pb-16">
+      <main className="mx-auto w-full max-w-md px-5 pb-32 pt-8 tab:max-w-2xl desk:max-w-2xl desk:pb-16">
         <PaymentQr
           method={order.method}
           orderId={order.orderCode}
@@ -60,7 +60,7 @@ export default function ClubPage() {
   const pct = club.member ? Math.min(100, Math.round((club.daysLeft / club.days) * 100)) : 0;
 
   return (
-    <main className="mx-auto w-full max-w-md space-y-5 px-5 pb-32 pt-8 desk:max-w-2xl desk:pb-16">
+    <main className="mx-auto w-full max-w-md space-y-5 px-5 pb-32 pt-8 tab:max-w-2xl desk:max-w-2xl desk:pb-16">
       <header>
         <h1 className="flex items-center gap-2 text-2xl font-semibold"><BadgeCheck size={26} className="text-brand" /> Unique Club</h1>
         <p className="mt-1 text-sm text-slate-500">Join the club and get {club.percent}% off every game, every time.</p>

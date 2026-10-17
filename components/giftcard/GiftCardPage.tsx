@@ -126,7 +126,7 @@ export default function GiftCardPage() {
 
   if (order) {
     return (
-      <div className="mx-auto w-full max-w-md desk:max-w-2xl">
+      <div className="mx-auto w-full max-w-md tab:max-w-2xl desk:max-w-2xl">
         <PaymentQr
           method={order.payment.method}
           orderId={order.payment.orderCode}

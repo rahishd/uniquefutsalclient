@@ -39,7 +39,7 @@ export default function JoinGroup({ code }: { code: string }) {
   }
 
   return (
-    <main className="mx-auto w-full max-w-md px-5 pb-32 pt-10">
+    <main className="mx-auto w-full max-w-md px-5 pb-32 pt-10 tab:max-w-2xl">
       <section className="glass rounded-3xl p-6 text-center">
         <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-brand"><Users size={26} /></span>
         {!registered ? (

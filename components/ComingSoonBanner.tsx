@@ -7,6 +7,11 @@ import { useT } from "@/lib/i18n";
 // A banner for what is coming next (Unique Cricket, indoor cricket pitch). Two looks: "card" (Home, a light-blue card like
 // the weather card, between the greeting and the weather) and "tile" (a small square with a "Soon" ribbon, in the slim top
 // bar on other pages). Tapping either opens a card that says the features are coming soon. Picture: public/unique-cricket.jpg.
+//
+// NOT SHOWN ANYWHERE FOR NOW (removed from Home and the top bar until the Unique Cricket business is ready). To bring it back:
+//   Home      components/HomeScreen.tsx, first item inside <aside>:  <div className="order-2 desk:[&>*]:mt-0"><ComingSoonBanner variant="card" /></div>
+//   Top bar   components/PageInfoBar.tsx, just before the bell:       <div className="shrink-0 pb-1.5"><ComingSoonBanner size={38} /></div>
+// and import this component in each file.
 export const DESIGNER = "Rahish Dumre";
 
 export default function ComingSoonBanner({ size = 44, variant = "tile" }: { size?: number; variant?: "tile" | "card" }) {

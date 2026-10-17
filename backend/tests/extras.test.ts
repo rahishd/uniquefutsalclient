@@ -1,8 +1,8 @@
 import { api, adminToken, bearer, futureDate, makeUser, prisma, tokenFor } from "./helpers";
-import { currentHour, todayKey } from "../src/utils/dates";
+import { addDaysKey, currentHour, todayKey, weekdayOfKey } from "../src/utils/dates";
 import { expireChallenges, sendAppReminders } from "../src/jobs/app.jobs";
 import membershipService from "../src/modules/membership/membership.service";
-import { detectUsualSlot } from "../src/utils/rebook";
+import { lastPlayedSlot, nearestHour } from "../src/utils/rebook";
 
 const P = "98000006";
 const ph = (n: number) => `${P}${String(n).padStart(2, "0")}`;
@@ -189,22 +189,38 @@ describe("I'm coming check-in", () => {
 });
 
 describe("Quick Rebook", () => {
-  it("detects the usual weekday + hour (pure rule)", () => {
-    expect(detectUsualSlot([{ date: "2026-10-02", hour: 19 }, { date: "2026-09-25", hour: 19 }, { date: "2026-09-12", hour: 16 }])).toMatchObject({ weekday: 5, hour: 19, count: 2 });
-    expect(detectUsualSlot([{ date: "2026-10-02", hour: 19 }, { date: "2026-09-12", hour: 16 }])).toBeNull();
+  it("takes the weekday + hour of the last game (pure rule)", () => {
+    // 2026-10-04 is a Sunday
+    expect(lastPlayedSlot([{ date: "2026-09-27", hour: 18 }, { date: "2026-10-04", hour: 17 }, { date: "2026-09-12", hour: 16 }])).toEqual({ weekday: 0, hour: 17, date: "2026-10-04" });
+    expect(lastPlayedSlot([])).toBeNull();
   });
-  it("offers the next open date, only for a signed-in customer with a habit", async () => {
+  it("picks the open hour nearest to the wanted one (pure rule)", () => {
+    expect(nearestHour([16, 17, 19], 17)).toBe(17);
+    expect(nearestHour([15, 19, 20], 17)).toBe(19); // 15 and 19 are 2 away from 17: the later hour
+    expect(nearestHour([10, 20], 17)).toBe(20);
+    expect(nearestHour([], 17)).toBeNull();
+  });
+  it("offers the next same weekday, at the same hour or else the nearest open one", async () => {
     expect((await call("get", "/api/bookings/me/rebook")).status).toBe(401);
-    const none = await call("get", "/api/bookings/me/rebook", U2);
-    expect(none.body.data).toBeNull();
-    // three past Friday-evening games for U1
-    for (const d of ["2026-09-25", "2026-09-18", "2026-09-11"]) {
-      await prisma.booking.create({ data: { userId: U1, date: d, startTime: "19:00", endTime: "20:00", duration: 1, customerName: "x", customerPhone: U1, basePrice: 1500, subtotal: 1500, totalPrice: 1500, paymentMethod: "venue", status: "completed", paymentStatus: "completed" } as any });
-    }
-    const res = await call("get", "/api/bookings/me/rebook", U1);
-    expect(res.body.data.usual).toMatchObject({ weekday: 5, hour: 19 });
-    expect(res.body.data.target.available).toBe(true);
-    expect(res.body.data.target.price).toBeGreaterThan(0);
+    await makeUser(ph(9), "No Games Nina");
+    expect((await call("get", "/api/bookings/me/rebook", ph(9))).body.data).toBeNull(); // no game played yet
+    const RICK = ph(8);
+    await makeUser(RICK, "Rebook Rick");
+    const played = addDaysKey(todayKey(), -3); // a game three days ago at 19:00
+    await prisma.booking.create({ data: { userId: RICK, date: played, startTime: "19:00", endTime: "20:00", duration: 1, customerName: "x", customerPhone: RICK, basePrice: 1500, subtotal: 1500, totalPrice: 1500, paymentMethod: "venue", status: "completed", paymentStatus: "completed" } as any });
+    const next = addDaysKey(played, 7);
+
+    const same = (await call("get", "/api/bookings/me/rebook", RICK)).body.data;
+    expect(same.usual).toMatchObject({ weekday: weekdayOfKey(played), hour: 19, date: played });
+    expect(same.target).toMatchObject({ date: next, hour: 19, available: true });
+    expect(same.target.price).toBeGreaterThan(0);
+
+    // someone else takes 19:00 that day: the card moves to the nearest open hour
+    await prisma.booking.create({ data: { userId: U2, date: next, startTime: "19:00", endTime: "20:00", duration: 1, customerName: "x", customerPhone: U2, basePrice: 1500, subtotal: 1500, totalPrice: 1500, paymentMethod: "venue", status: "confirmed" } as any });
+    const moved = (await call("get", "/api/bookings/me/rebook", RICK)).body.data;
+    expect(moved.usual.hour).toBe(19);
+    expect(moved.target).toMatchObject({ date: next, available: true });
+    expect(Math.abs(moved.target.hour - 19)).toBe(1);
   });
 });
 

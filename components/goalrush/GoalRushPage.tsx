@@ -131,7 +131,7 @@ export default function GoalRushPage() {
   const toCome = mode === "idle" ? "" : `Shot ${Math.min(shots.length + 1, RULES.shotsPerGame)} of ${RULES.shotsPerGame}`;
 
   return (
-    <main className="mx-auto w-full max-w-md space-y-5 px-5 pb-32 pt-6 desk:max-w-5xl desk:pb-16">
+    <main className="mx-auto w-full max-w-md space-y-5 px-5 pb-32 pt-6 tab:max-w-2xl desk:max-w-5xl desk:pb-16">
       {/* heading, in the brand's light-blue style */}
       <section className="overflow-hidden rounded-3xl border border-[#d6e4fb] p-5 desk:p-8" style={{ background: "linear-gradient(180deg,#f5f9ff 0%,#e3eeff 100%)" }}>
         <span className="inline-block rounded-full bg-sky-100 px-3 py-1 text-[11px] font-semibold text-[#0c0b5d]">Mini game · Loyalty points</span>

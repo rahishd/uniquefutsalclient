@@ -1,6 +1,7 @@
 "use client";
 
-import { Mail, MapPin, PhoneCall } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, ChevronUp, Mail, MapPin, PhoneCall } from "lucide-react";
 import { FaFacebookF, FaTiktok, FaWhatsapp } from "react-icons/fa6";
 import { site } from "@/lib/site";
 import { useT } from "@/lib/i18n";
@@ -24,9 +25,10 @@ function Social({ href, label, children }: { href: string; label: string; childr
 const heading = "text-xs font-bold uppercase tracking-[0.2em] text-[#0c0b5d]";
 
 export default function Footer() {
+  const [more, setMore] = useState(false); // the founder message: short by default, "Read More" shows the rest
   const t = useT();
   return (
-    <footer className="mx-auto w-full max-w-md px-5 pb-28 pt-6 desk:max-w-none desk:px-10 desk:pb-14 desk:pt-6">
+    <footer className="mx-auto w-full max-w-md px-5 pb-28 pt-6 tab:max-w-3xl tab:px-8 desk:max-w-none desk:px-10 desk:pb-14 desk:pt-6">
       {/* the organisations the venue works with: between the promo codes above and the founder message */}
       <PartnersStrip />
 
@@ -44,11 +46,17 @@ export default function Footer() {
               <h2 className="text-xl font-bold text-slate-900 desk:text-3xl">A Message from the Founder</h2>
               <p className="font-semibold text-slate-900">Greetings to our valued customers, players, and well-wishers,</p>
               <p>My vision began in 2017 with a simple yet meaningful goal: to create a futsal facility that offers more than just a place to play. Established in 2018, Unique Futsal was built on the values of comfort, refreshment, innovation, and a welcoming, family-like environment—The name &quot;Unique&quot; was born since then.</p>
+              {more && (<>
               <p>Our journey has been driven by continuous improvement and a commitment to our community. In 2019, we introduced health insurance to support players against unexpected injuries. In 2021, we launched dedicated membership plans for men, women, and corporate groups. In 2023, we established our Children&apos;s Academy for ages 10–15, promoting football skills, physical fitness, and discipline. In 2024, we introduced GameZone, extending the experience beyond the court.</p>
               <p>In 2025, we launched our 3% Charity Initiative, transforming my childhood dream of helping those in need into meaningful action. A portion of the profit generated through games contributes to supporting underprivileged children with food, shelter, and education. We believe every game can create an opportunity to make a difference. Every Game you play contributes 3% to them.</p>
               <p>Looking ahead, I envision Unique Futsal becoming a technology-driven sports destination, offering seamless online booking and integrated digital services. As a Computing graduate from London Metropolitan University, I am personally developing our booking system, combining my passion for technology with my commitment to improving the customer experience.</p>
               <p>To me, futsal is more than a sport. It builds teamwork, encourages a healthy lifestyle, develops discipline, and brings people together. Our ambition is to continue creating experiences that inspire players while contributing positively to society.</p>
               <p>Thank you for your continued trust, support, and loyalty. Unique Futsal is more than a venue—it is a community built on shared passion, meaningful connections, and a vision for a better future.</p>
+              </>)}
+              <button type="button" onClick={() => setMore((v) => !v)} aria-expanded={more} className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-[#0c0b5d] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_-10px_rgba(12,11,93,0.8)] transition active:scale-95">
+                {more ? t("Show less") : t("Read More")}
+                {more ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
             </div>
 
             {/* a cut-out photo (transparent background), standing on the bottom edge of the card */}

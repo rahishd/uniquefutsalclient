@@ -100,11 +100,11 @@ export const helpTopics: HelpTopic[] = [
   {
     id: "rebook",
     icon: "rebook",
-    title: "Book again (your usual slot)",
+    title: "Book again (same day and time)",
     summary: "One tap to book your usual time again.",
     points: [
-      "We notice the day and hour you play most often and show a Book again card on Home, just above Quick Access.",
-      "It appears only when that slot is still free. Tap it and the booking page opens with the time filled in.",
+      "We remember the day and hour of your last game. A few days later a Book again card on Home offers the next same weekday at that hour.",
+      "If that hour is taken, the card shows the nearest open time that day. Tap it and the booking page opens with the time filled in.",
     ],
   },
   {
