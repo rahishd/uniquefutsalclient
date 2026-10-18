@@ -22,7 +22,7 @@ function WeatherArt({ code }: { code: number }) {
   const rain = code >= 51 && code < 95;
   const storm = code >= 95;
   return (
-    <svg viewBox="0 0 120 90" className="uf-kid h-20 w-28 drop-shadow-[0_10px_14px_rgba(59,130,246,0.25)]" aria-hidden>
+    <svg viewBox="0 0 120 90" className="uf-kid h-14 w-20 drop-shadow-[0_10px_14px_rgba(59,130,246,0.25)]" aria-hidden>
       <defs>
         <radialGradient id="hh-sun" cx="40%" cy="35%" r="70%"><stop offset="0" stopColor="#fff7c2" /><stop offset="0.55" stopColor="#fcd34d" /><stop offset="1" stopColor="#f59e0b" /></radialGradient>
         <linearGradient id="hh-cloud" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#ffffff" /><stop offset="1" stopColor="#dbeafe" /></linearGradient>
@@ -62,22 +62,25 @@ export default function HomeHero() {
       {/* soft light in the corner */}
       <span aria-hidden className="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full bg-white opacity-50 blur-2xl" />
       <div className="relative flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="flex items-baseline gap-1 text-[44px] font-semibold leading-none text-[#0c0b5d]">
-            {weather ? weather.temp : "--"}<span className="text-2xl font-medium">°C</span>
-          </p>
-          <p className="mt-1.5 text-sm font-medium text-[#1e3a8a]">{t(weatherWord(code))}</p>
-          <p className="mt-2 flex items-center gap-1.5 text-xs text-[#1e3a8a]/80"><MapPin size={13} /> {PLACE}</p>
+        <div className="flex items-center">
+          <div>
+            <p className="flex items-baseline gap-1 text-[40px] font-semibold leading-none text-[#0c0b5d]">
+              {weather ? weather.temp : "--"}<span className="text-xl font-medium">°C</span>
+            </p>
+            <p className="mt-1 text-sm font-medium text-[#1e3a8a]">{t(weatherWord(code))}</p>
+          </div>
         </div>
-        <WeatherArt code={code} />
+        <div className="min-w-0 text-right">
+          <p className="flex items-center justify-end gap-1.5 text-sm font-semibold text-[#0c0b5d]">
+            <CalendarDays size={14} className="shrink-0" /><span className="truncate">{today.en || " "}</span>
+          </p>
+          <p className="mt-1.5 flex items-center justify-end gap-1.5 text-xs font-medium text-[#1e3a8a]">
+            <MapPin size={13} className="shrink-0" /><span className="truncate">{PLACE}</span>
+          </p>
+        </div>
       </div>
-      <p className="relative mt-3 flex items-center gap-2 text-xs font-medium text-[#0c0b5d]">
-        <CalendarDays size={14} />
-        <span>{today.np || " "}</span>
-        <span className="text-[#1e3a8a]/70">{today.en ? `· ${today.en} B.S.` : ""}</span>
-      </p>
 
-      <div className="relative">
+      <div className="relative mt-4">
         <HomeSearch />
       </div>
     </section>
