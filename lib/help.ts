@@ -150,6 +150,20 @@ export const helpTopics: HelpTopic[] = [
     href: { label: "Play Goal Rush", to: "/goal-rush" },
   },
   {
+    id: "watch-earn",
+    icon: "points",
+    title: "Watch & Earn: ads for loyalty points",
+    summary: "Watch ads and earn loyalty points: 40 ads (10 minutes) = 1 point.",
+    points: [
+      "Open Quick Access > Watch & Earn and tap View Ads. You need to be signed in.",
+      "Ads play one after another, 15 seconds each, and the next one starts by itself. Tap Stop when you are done.",
+      "Every 40 ads you watch (10 minutes) earns 1 loyalty point. The bar shows how many ads are left for the next point.",
+      "An ad only counts once its full 15 seconds are done and while the screen is open. If you leave the screen, it pauses.",
+      "The points go into your Unique Futsal loyalty balance and last 3 months.",
+    ],
+    href: { label: "Watch & Earn", to: "/watch-earn" },
+  },
+  {
     id: "points",
     icon: "points",
     title: "Loyalty points and free games",

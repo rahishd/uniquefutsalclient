@@ -487,7 +487,7 @@ model PaymentEvent {
 model LoyaltyEntry {
   id         String   @id @default(cuid())
   userId     String
-  kind       String // game | captain_win | goods | membership | free_game | referral | goal_rush
+  kind       String // game | captain_win | goods | membership | free_game | referral | goal_rush | gift | watch_earn
   points     Decimal  @db.Decimal(8, 1) // positive = earned, negative = spent on a free game
   earnedOn   String // YYYY-MM-DD
   expiresOn  String? // last valid day; null = never expires
@@ -1250,4 +1250,27 @@ model DocVerification {
 
   @@unique([sourceType, sourceId])
   @@index([kind, createdAt])
+}
+
+// Watch & Earn: a customer watches ads one after another. Each ad must run its full 15 seconds (the server times it);
+// every 40 counted ads (10 minutes) write 1 loyalty point (a LoyaltyEntry of kind watch_earn, one per block of 40).
+model WatchEarnView {
+  id        String    @id @default(cuid())
+  userId    String // User.phoneNumber
+  adId      String? // the ad that was shown, for the record
+  day       String // YYYY-MM-DD (Nepal time)
+  status    String    @default("active") // active | counted | abandoned
+  startedAt DateTime  @default(now())
+  countedAt DateTime?
+
+  @@index([userId, status])
+  @@index([userId, day])
+  @@index([status, startedAt])
+}
+
+model WatchEarnStat {
+  userId    String   @id
+  views     Int      @default(0) // ads counted, all time
+  points    Int      @default(0) // points written so far (views / 40, rounded down)
+  updatedAt DateTime @default(now()) @updatedAt
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Accessibility, BarChart3, CalendarDays, ChevronRight, CircleHelp, Crown, Gamepad2, Gift, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, UserSearch, Zap, BadgeCheck, Lock, ShieldCheck, ShieldPlus } from "lucide-react";
+import { Accessibility, BarChart3, CalendarDays, Clapperboard, ChevronRight, CircleHelp, Crown, Gamepad2, Gift, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, UserSearch, Zap, BadgeCheck, Lock, ShieldCheck, ShieldPlus } from "lucide-react";
 import EvCarIcon from "@/components/ev/EvCarIcon";
 import { markReadByTypes, noticesStore, type NoticeType } from "@/lib/notifications";
 import { openSignIn, useSession } from "@/lib/session";
@@ -41,6 +41,7 @@ const TILES: Tile[] = [
   { label: "Claim Insurance", href: "/insurance", icon: ShieldPlus, tone: "text-brand", types: ["insurance"] },
   { label: "Children's Academy", href: "/academy", icon: GraduationCap, tone: "text-brand", types: ["academy"] },
   { label: "Refer & Earn", href: "/refer", icon: HeartHandshake, tone: "text-brand", types: ["referral"] },
+  { label: "Watch & Earn", href: "/watch-earn", icon: Clapperboard, tone: "text-brand" },
   { label: "Verify Documents", href: "/verify", icon: ShieldCheck, tone: "text-brand" },
   { label: "Help", href: "/help", icon: CircleHelp, tone: "text-brand" },
 ];

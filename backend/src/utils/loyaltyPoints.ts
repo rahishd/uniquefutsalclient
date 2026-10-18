@@ -8,6 +8,7 @@
 // - Membership purchase or renewal: 3 months = 30 points, 6 months = 70, monthly = 0.
 // - Challenge game: only the winning captain earns 5 points.
 // - Unique Goal Rush (penalty game): a finished game with 3+ goals out of 5 earns 1 point per 3 goals (1 a game), 3 games a day.
+// - Watch & Earn: 40 ads of 15 seconds (10 minutes) = 1 point.
 // - Expiry: game and challenge points 3 months after the game, goods points 1 year,
 //   membership points never. A claim spends the points that expire soonest first.
 
@@ -33,7 +34,7 @@ export function periodOfHour(hour: number): Period {
   return hour < 10 ? "Morning" : hour < 17 ? "Day" : "Evening";
 }
 
-export type LoyaltyKind = "game" | "captain_win" | "goods" | "membership" | "free_game" | "referral" | "goal_rush" | "gift";
+export type LoyaltyKind = "game" | "captain_win" | "goods" | "membership" | "free_game" | "referral" | "goal_rush" | "gift" | "watch_earn";
 
 export const r1 = (n: number) => Math.round(n * 10) / 10;
 
@@ -50,7 +51,7 @@ export function pointsForGoods(amountRs: number): number {
 }
 
 export function expiryFor(kind: LoyaltyKind, earnedOn: string): string | null | undefined {
-  if (kind === "game" || kind === "captain_win" || kind === "goal_rush") return addMonthsKey(earnedOn, GAME_POINTS_MONTHS);
+  if (kind === "game" || kind === "captain_win" || kind === "goal_rush" || kind === "watch_earn") return addMonthsKey(earnedOn, GAME_POINTS_MONTHS);
   if (kind === "goods") return addMonthsKey(earnedOn, GOODS_POINTS_MONTHS);
   if (kind === "referral") return addMonthsKey(earnedOn, REFERRAL_POINTS_MONTHS);
   if (kind === "gift") return addMonthsKey(earnedOn, GIFT_POINTS_MONTHS);

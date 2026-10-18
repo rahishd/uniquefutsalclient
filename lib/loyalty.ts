@@ -8,7 +8,7 @@ export type Period = "Morning" | "Day" | "Evening";
 
 export interface LoyaltyRow {
   id: string;
-  kind: "game" | "captain_win" | "goods" | "membership" | "free_game" | "referral" | "goal_rush" | "gift";
+  kind: "game" | "captain_win" | "goods" | "membership" | "free_game" | "referral" | "goal_rush" | "gift" | "watch_earn";
   points: number;
   earnedOn: string;
   expiresOn: string | null;

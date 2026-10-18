@@ -30,6 +30,7 @@ import { chatRouter } from "../modules/chat";
 import { playerRequestRouter } from "../modules/playerrequest";
 import { clubRouter } from "../modules/club";
 import { goalRushRouter } from "../modules/goalrush";
+import { watchEarnRouter } from "../modules/watchearn";
 import { academyRouter } from "../modules/academy";
 import { referRouter } from "../modules/refer";
 import { verifyRouter } from "../modules/verify";
@@ -76,6 +77,7 @@ router.use("/chat", chatRouter);
 router.use("/player-requests", playerRequestRouter);
 router.use("/club", clubRouter);
 router.use("/goal-rush", goalRushRouter);
+router.use("/watch-earn", watchEarnRouter);
 router.use("/academy", academyRouter);
 router.use("/refer", referRouter);
 router.use("/verify", verifyRouter); // public: is this bill or document genuine?

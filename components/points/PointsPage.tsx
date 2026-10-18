@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useHighlight } from "@/lib/highlight";
 import Link from "next/link";
-import { Gift, Star, Trophy, ShoppingBag, Gamepad2, UserRound, ChevronDown, Crown, HeartHandshake, Check, Clock, TriangleAlert, Loader2, Goal } from "lucide-react";
+import { Gift, Star, Trophy, ShoppingBag, Gamepad2, UserRound, ChevronDown, Crown, HeartHandshake, Check, Clock, TriangleAlert, Loader2, Goal, Clapperboard } from "lucide-react";
 import { useSession, openSignIn } from "@/lib/session";
 import { errorText } from "@/lib/api";
 import { GZ_POINTS_PER_HOUR, GAME_POINTS_MONTHS, MEMBERSHIP_POINTS, POINTS_CAPTAIN_WIN, RS_PER_POINT, SHIFT_HOURS, fmtPts } from "@/lib/points";
@@ -20,6 +20,7 @@ const KIND: Record<LoyaltyRow["kind"], { icon: typeof Star; tone: string }> = {
   referral: { icon: HeartHandshake, tone: "bg-pink-400/20 text-pink-600" },
   goal_rush: { icon: Goal, tone: "bg-emerald-400/20 text-emerald-700" },
   gift: { icon: Gift, tone: "bg-rose-400/20 text-rose-600" },
+  watch_earn: { icon: Clapperboard, tone: "bg-sky-400/20 text-sky-700" },
 };
 
 const SHOWN = 4;

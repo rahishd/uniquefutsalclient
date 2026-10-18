@@ -339,3 +339,14 @@ Rules (enforced here): up to **3 games a calendar day** (Nepal time) for a signe
 | GET | `/goal-rush/history` | User | finished and abandoned games, newest first |
 
 Admin portal: `GET /admin/goal-rush` (totals for today, this month and all time, games per day for 14 days, players worth a look, the games list) and `GET /admin/goal-rush/:id` (one game shot by shot with its reward reference); permission `goalrush.view`. Nothing can be edited there; a reward is corrected with Loyalty Points > Adjust, which is logged.
+
+## Watch & Earn (ads for loyalty points)
+
+The customer taps **View Ads** and keeps watching ads one after another. **1 ad = 15 seconds; 40 ads (10 minutes) = 1 loyalty point.** The **server** times every ad: `POST /watch-earn/views` opens a view and `POST /watch-earn/views/:id/complete` only counts it when at least 15 seconds (less a 1 second allowance for the network) have passed since the start, so the app cannot count an ad early. Only one view is open per customer (starting the next closes the old one; advisory lock per customer), so the fastest possible rate is one counted ad every 15 seconds. A view not completed within 5 minutes is abandoned (also swept by the ten-minute job). Completing twice counts once (row lock). The point is written **in the same transaction as the 40th, 80th, ... counted ad**: a `LoyaltyEntry` of kind `watch_earn` (sourceType `watch_earn`, sourceId `<phone>:<block>`, unique), valid 3 months like game points, with a "Points earned" notice and an audit row (`WATCH_EARN_POINT`). Tables: `WatchEarnView`, `WatchEarnStat`. The ads shown are the live ads of Site Content (the app picks them from `GET /content/active`); the server records only the ad id. There is no daily cap in the rules given.
+
+| Method | Path | Who | What |
+| --- | --- | --- | --- |
+| GET | `/watch-earn/rules` | Public | `{adSeconds: 15, adsPerPoint: 40, pointsPerBlock: 1, minutesPerPoint: 10}` |
+| GET | `/watch-earn/me` | User | `{rules, totalViews, pointsEarned, adsTowardNext, adsLeftForNext, todayViews, balance}` |
+| POST | `/watch-earn/views` | User | `{adId?}` -> 201 `{viewId, seconds: 15, startedAt}`; closes any view still open |
+| POST | `/watch-earn/views/:id/complete` | Owner | counts the ad -> `{counted, earnedNow (0 or 1), ...me}`. 409 too early / closed / timed out, 404 not yours |
