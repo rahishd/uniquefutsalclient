@@ -145,7 +145,14 @@ export default function Footer() {
         </div>
       </div>
 
-      <p className="mt-6 text-center text-xs text-slate-500">{t("Designed & Developed by")}: <span className="font-semibold text-[#0c0b5d]">Rahish Dumre</span></p>
+      <div className="mt-8 flex items-center justify-between gap-4 border-t border-slate-200 pt-5">
+        <div className="flex items-center gap-2.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-mark-navy.png" alt="" aria-hidden className="h-9 w-auto" />
+          <span className="text-base font-extrabold uppercase leading-tight tracking-wide text-brand">{site.name}</span>
+        </div>
+        <p className="text-right text-xs text-slate-500">{t("Designed & Developed by")}:<br /><span className="font-semibold text-[#0c0b5d]">Rahish Dumre</span></p>
+      </div>
     </footer>
   );
 }

@@ -51,6 +51,18 @@ describe("loyalty awards", () => {
     expect(await loyaltyService.pointsHref(U, "booking", "no-such-source")).toBe("/points"); // nothing to point at: plain page
   });
 
+  it("older points notices that only say /points still open the exact row", async () => {
+    const entry = (await prisma.loyaltyEntry.findFirst({ where: { userId: U, sourceType: "booking" } }))!;
+    // as notices were made before they carried a row link: plain /points, with and without their key
+    await prisma.notification.updateMany({ where: { userId: U, type: "points" }, data: { href: "/points" } });
+    const keyless = await prisma.notification.create({ data: { userId: U, type: "points", title: "Points earned", message: "+12.5 loyalty points", href: "/points", createdAt: new Date(entry.createdAt.getTime() + 2000) } });
+    const n = await api().get("/api/notifications").set(bearer(tokenFor(U)));
+    const points = n.body.data.items.filter((i: { type: string }) => i.type === "points");
+    expect(points.length).toBeGreaterThanOrEqual(2);
+    for (const i of points) expect(i.href).toBe(`/points?hl=${entry.id}`);
+    await prisma.notification.delete({ where: { id: keyless.id } });
+  });
+
   it("free-game bookings, unpaid games, guests and challenge games earn nothing", async () => {
     expect(await loyaltyService.awardForCompletedBooking((await booking({ notes: "FREE_MATCH" })) as any)).toBe(false);
     expect(await loyaltyService.awardForCompletedBooking((await booking({ paymentStatus: "pending" })) as any)).toBe(false);

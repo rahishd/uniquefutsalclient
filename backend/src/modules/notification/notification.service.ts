@@ -75,11 +75,43 @@ export class NotificationService {
     const unread = items.filter((i) => !i.isRead);
     const unreadByType: Record<string, number> = {};
     for (const i of unread) unreadByType[i.type] = (unreadByType[i.type] ?? 0) + 1;
+    const pointsLinks = await this.pointsLinks(userId, items);
     return {
-      items: items.map((i) => ({ id: i.id, type: i.type, title: i.title, body: i.message, at: i.createdAt, read: i.isRead, href: i.href })),
+      items: items.map((i) => ({ id: i.id, type: i.type, title: i.title, body: i.message, at: i.createdAt, read: i.isRead, href: pointsLinks.get(i.id) ?? i.href })),
       unread: unread.length,
       unreadByType,
     };
+  }
+
+  /**
+   * Points notices made before they carried a row link only say "/points". Work out the exact ledger row for them
+   * (from the key the notice was made with, or failing that the row written at the same moment) so tapping one
+   * still highlights the right line on the Points page. Notices that already link to a row are left alone.
+   */
+  private async pointsLinks(userId: string, items: { id: string; type: string; href: string | null; dedupeKey: string | null; createdAt: Date }[]): Promise<Map<string, string>> {
+    const out = new Map<string, string>();
+    const open = items.filter((i) => i.type === "points" && i.href === "/points");
+    if (open.length === 0) return out;
+    const entries = await prisma.loyaltyEntry.findMany({ where: { userId }, select: { id: true, kind: true, sourceType: true, sourceId: true, createdAt: true } });
+    const byKey = new Map<string, string>();
+    for (const e of entries) {
+      byKey.set(`points-${e.kind}-${e.sourceType}-${e.sourceId}`, e.id);
+      if (e.sourceType === "gift") byKey.set(`gift-in-${e.sourceId}`, e.id);
+      if (e.sourceType === "gift_refund") byKey.set(`gift-cancel-in-${e.sourceId}`, e.id);
+    }
+    for (const n of open) {
+      let id = n.dedupeKey ? byKey.get(n.dedupeKey) : undefined;
+      if (!id) {
+        // no key to go by (or nothing matches): the row written within two minutes of the notice, nearest first
+        let best = Infinity;
+        for (const e of entries) {
+          const gap = Math.abs(e.createdAt.getTime() - n.createdAt.getTime());
+          if (gap < best && gap <= 120_000) { best = gap; id = e.id; }
+        }
+      }
+      if (id) out.set(n.id, `/points?hl=${id}`);
+    }
+    return out;
   }
 
   async markRead(userId: string, id: string): Promise<number> {

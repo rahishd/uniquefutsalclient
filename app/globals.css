@@ -446,3 +446,33 @@ html.dark img.uf-hdr-logo { filter: none; }
 }
 .uf-hl { border-radius: 1rem; animation: uf-hl-blink 1s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .uf-hl { animation: none; box-shadow: 0 0 0 3px #f5822a; background-color: rgba(245, 130, 42, 0.15); } }
+
+/* The customer header is a navy bar with white logo and icons (components/CompanyHeader.tsx). */
+.uf-navy-header {
+  background-color: #0c0b5d;
+}
+.uf-navy-header button,
+.uf-navy-header a {
+  color: #ffffff;
+  box-shadow: none !important;
+}
+/* the icon buttons and links get a soft tile; the logo link does not */
+.uf-navy-header button,
+.uf-navy-header a:not(:has(img)) {
+  background-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* The Home profile card is navy with white text and icons (components/HomeScreen.tsx). */
+.uf-navy-card .text-slate-400 {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+.uf-navy-card button,
+.uf-navy-card a:not([aria-label*="loyalty"]):not([href="/profile"]) {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: none !important;
+}
+.uf-navy-card a[aria-label*="loyalty"] {
+  background-color: #ffffff !important;
+  color: #0c0b5d !important;
+}

@@ -2,6 +2,10 @@ import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import HomeHero from "@/components/HomeHero";
 import UserBadge from "@/components/UserBadge";
+import HeaderPoints from "@/components/HeaderPoints";
+import NotificationBell from "@/components/NotificationBell";
+import StickyHomeBar from "@/components/StickyHomeBar";
+import { site } from "@/lib/site";
 import QuickRebook from "@/components/QuickRebook";
 import PopularGrid from "@/components/PopularGrid";
 import GoalRushCard from "@/components/goalrush/GoalRushCard";
@@ -19,14 +23,31 @@ import ScrollBackdrop from "@/components/ScrollBackdrop";
 // the one column; each block carries its own mobile order.
 export default function HomeScreen() {
   return (
+    <>
+      <StickyHomeBar />
     <div className="flex flex-col tab:grid tab:grid-cols-12 tab:items-start tab:gap-x-6 desk:gap-x-10">
       {/* photo background that changes as the page scrolls (fixed, behind everything, ignores clicks) */}
       <ScrollBackdrop />
       <div className="contents tab:col-span-6 tab:block desk:col-span-8">
         {/* Who is signed in. The bell lives in the page header (components/CompanyHeader.tsx). */}
-        <header className="glass order-1 flex items-center justify-between rounded-3xl p-3">
+        <header className="uf-navy-card order-1 -mx-5 -mt-5 overflow-hidden rounded-b-[2rem] bg-[#0c0b5d] tab:mx-0 tab:mt-0 tab:rounded-3xl text-white shadow-[0_10px_30px_rgba(12,11,93,0.35)]">
+          {/* phone: the logo, points and bell sit on the top row of this one card (on desktop the bar above does this) */}
+          <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+3.5rem)] desk:hidden">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <img src="/logo-mark-white.png" alt="" aria-hidden className="h-9 w-auto shrink-0" />
+              <span className="whitespace-nowrap text-sm font-extrabold uppercase tracking-wide">{site.name}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <HeaderPoints />
+              <NotificationBell />
+            </div>
+          </div>
+</header>
+
+        {/* the captain card: its own grey box under the header */}
+        <div className="order-1 mx-3 mt-3 flex items-center justify-between rounded-3xl bg-white p-3 text-[#0c0b5d] shadow-[0_10px_24px_-14px_rgba(15,23,42,0.5)] desk:mx-0 desk:mt-4 desk:p-4">
           <UserBadge />
-        </header>
+        </div>
 
         {/* Promo banner */}
         <section className="relative order-5 mt-5 min-h-[230px] overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c0b5d] via-[#16167f] to-[#2a2aa8] p-5 text-white shadow-[0_10px_30px_rgba(12,11,93,0.35)] desk:mt-6 desk:min-h-[300px] desk:p-10">
@@ -57,5 +78,6 @@ export default function HomeScreen() {
       </aside>
 
     </div>
+    </>
   );
 }
