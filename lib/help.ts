@@ -175,7 +175,7 @@ export const helpTopics: HelpTopic[] = [
       `Game points last ${GAME_POINTS_MONTHS} months, goods points 1 year, membership points never expire. We warn you before points expire.`,
       "To use them: open Points, pick a shift and tap Claim. Then book that shift and tap \"Use a free game voucher\".",
       "Free games work for regular bookings only, not for hosting a challenge.",
-      "To share points: open Points, tap Share points with a friend, enter their mobile number (they need an account), choose how many whole points and send. Their points keep the same expiry date. Sent points can't be taken back, and you can share up to 5 times a day.",
+      "To share points: you need at least 300 points. Open Points, tap Share points with a friend, enter their mobile number (they need an account), choose how many whole points (up to 100 at a time) and send. Their points keep the same expiry date. Sent points can't be taken back, and you can share up to 5 times a day.",
     ],
     href: { label: "My points", to: "/points" },
   },
@@ -461,7 +461,9 @@ export const helpTopics: HelpTopic[] = [
       "Tap New group to make a group: give it a name and add players by mobile number.",
       "A group admin can share an invite link, for example on WhatsApp. Anyone signed in who opens it can join.",
       "Only registered Unique Futsal players can chat. A red number on the Chat tab means new messages. Leave a group any time from its info button.",
+      "A single tick means sent and a blue double tick means seen. To delete one of your messages, press and hold it, then tap Delete message; it disappears for everyone. See Chat menu > About Chat.",
     ],
+    href: { label: "About Chat", to: "/chat/about" },
   },
   {
     id: "urgent",
