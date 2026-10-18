@@ -8,6 +8,7 @@ export const GZ_POINTS_PER_HOUR = 5; // every Gamezone hour played earns 5 point
 export const POINTS_CAPTAIN_WIN = 5; // only the winning captain of a challenge game
 export const GAME_POINTS_MONTHS = 3; // game points last 3 months
 export const GOODS_POINTS_MONTHS = 12; // extra-goods points last 1 year
+export const WATCH_POINTS_MONTHS = 12; // Watch & Earn points last 1 year
 export const MEMBERSHIP_POINTS: Record<string, number> = { quarterly: 30, half: 70 }; // never expire
 
 export const SHIFT_HOURS: Record<string, string> = { Morning: "6 AM – 10 AM", Day: "10 AM – 5 PM", Evening: "5 PM – 10 PM" };

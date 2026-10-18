@@ -34,7 +34,7 @@ export interface Loyalty {
   expired: number;
   remaining: number;
   expiringSoon: { points: number; date: string } | null;
-  byType: { games: Bucket; goods: Bucket; membership: Bucket };
+  byType: { games: Bucket; goods: Bucket; membership: Bucket; watch?: Bucket };
   rows: LoyaltyRow[];
   cheapestCost: number;
   toNext: number;

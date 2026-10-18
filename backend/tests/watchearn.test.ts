@@ -86,7 +86,7 @@ describe("Watch & Earn", () => {
     expect(await pointsOf(P)).toBe(1);
 
     const entry = await prisma.loyaltyEntry.findFirstOrThrow({ where: { userId: P, kind: "watch_earn" } });
-    expect(entry.expiresOn).not.toBeNull();
+    expect(entry.expiresOn).toBe(`${Number(entry.earnedOn.slice(0, 4)) + 1}${entry.earnedOn.slice(4)}`);
     expect((await prisma.notification.count({ where: { userId: P, type: "points" } }))).toBe(1);
 
     const r41 = await watch(P);

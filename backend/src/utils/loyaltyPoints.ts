@@ -8,7 +8,7 @@
 // - Membership purchase or renewal: 3 months = 30 points, 6 months = 70, monthly = 0.
 // - Challenge game: only the winning captain earns 5 points.
 // - Unique Goal Rush (penalty game): a finished game with 3+ goals out of 5 earns 1 point per 3 goals (1 a game), 3 games a day.
-// - Watch & Earn: 40 ads of 15 seconds (10 minutes) = 1 point.
+// - Watch & Earn: 40 ads of 15 seconds (10 minutes) = 1 point, valid 1 year.
 // - Expiry: game and challenge points 3 months after the game, goods points 1 year,
 //   membership points never. A claim spends the points that expire soonest first.
 
@@ -20,6 +20,7 @@ export const GZ_POINTS_PER_HOUR = 5;
 export const POINTS_CAPTAIN_WIN = 5;
 export const GAME_POINTS_MONTHS = 3;
 export const GOODS_POINTS_MONTHS = 12;
+export const WATCH_POINTS_MONTHS = 12; // Watch & Earn points last 1 year
 export const REFERRAL_POINTS_MONTHS = 12;
 export const GIFT_POINTS_MONTHS = 12; // points a friend bought for you
 export const EXPIRY_WARN_DAYS = 30;
@@ -51,7 +52,8 @@ export function pointsForGoods(amountRs: number): number {
 }
 
 export function expiryFor(kind: LoyaltyKind, earnedOn: string): string | null | undefined {
-  if (kind === "game" || kind === "captain_win" || kind === "goal_rush" || kind === "watch_earn") return addMonthsKey(earnedOn, GAME_POINTS_MONTHS);
+  if (kind === "game" || kind === "captain_win" || kind === "goal_rush") return addMonthsKey(earnedOn, GAME_POINTS_MONTHS);
+  if (kind === "watch_earn") return addMonthsKey(earnedOn, WATCH_POINTS_MONTHS);
   if (kind === "goods") return addMonthsKey(earnedOn, GOODS_POINTS_MONTHS);
   if (kind === "referral") return addMonthsKey(earnedOn, REFERRAL_POINTS_MONTHS);
   if (kind === "gift") return addMonthsKey(earnedOn, GIFT_POINTS_MONTHS);
@@ -111,7 +113,7 @@ export interface LoyaltySummary {
   expired: number;
   remaining: number;
   expiringSoon: { points: number; date: string } | null;
-  byType: { games: Bucket; goods: Bucket; membership: Bucket };
+  byType: { games: Bucket; goods: Bucket; membership: Bucket; watch: Bucket };
   rows: { id: string; kind: LoyaltyKind; points: number; earnedOn: string; expiresOn: string | null; detail: string; status: "valid" | "used" | "expired" | "never" | "spent" }[];
 }
 
@@ -154,7 +156,8 @@ export function summarize(ledger: LedgerRow[], today: string): LoyaltySummary {
     remaining: r1(valid.reduce((n, l) => n + l.left, 0)),
     expiringSoon,
     byType: {
-      games: bucket((l) => l.row.kind === "game" || l.row.kind === "captain_win"),
+      games: bucket((l) => l.row.kind === "game" || l.row.kind === "captain_win" || l.row.kind === "goal_rush"),
+      watch: bucket((l) => l.row.kind === "watch_earn"),
       goods: bucket((l) => l.row.kind === "goods"),
       membership: bucket((l) => l.row.kind === "membership"),
     },
