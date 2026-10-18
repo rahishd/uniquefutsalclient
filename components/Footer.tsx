@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Mail, MapPin, PhoneCall } from "lucide-react";
+import { ChevronDown, ChevronUp, Mail, MapPin, PhoneCall, Leaf, Smartphone } from "lucide-react";
 import { FaFacebookF, FaTiktok, FaWhatsapp } from "react-icons/fa6";
 import { site } from "@/lib/site";
 import { useT } from "@/lib/i18n";
@@ -144,6 +144,31 @@ export default function Footer() {
           </div>
         </div>
       </div>
+
+      {/* Go Digital Go Paperless section */}
+      <section aria-label="Environmental commitment" className="mb-8 rounded-3xl bg-gradient-to-br from-emerald-50 to-teal-50 p-6 shadow-sm ring-1 ring-emerald-200/50 desk:p-8">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-100">
+              <Smartphone size={28} className="text-emerald-700" />
+            </div>
+            <div className="flex flex-col justify-center">
+              <h3 className="font-bold uppercase tracking-wide text-emerald-900">Go Digital</h3>
+              <p className="text-sm text-emerald-700">Go Paperless</p>
+            </div>
+          </div>
+          <div className="flex gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-teal-100">
+              <Leaf size={28} className="text-teal-700" />
+            </div>
+            <div className="flex flex-col justify-center">
+              <h3 className="font-bold uppercase tracking-wide text-teal-900">Save</h3>
+              <p className="text-sm text-teal-700">Environment</p>
+            </div>
+          </div>
+        </div>
+        <p className="mt-4 text-center text-sm font-semibold text-slate-700">We Aim for almost No Paper Consumption.</p>
+      </section>
 
       <div className="mt-8 flex items-center justify-between gap-4 border-t border-slate-200 pt-5">
         <div className="flex items-center gap-2.5">
