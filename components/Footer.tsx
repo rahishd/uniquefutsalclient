@@ -146,26 +146,26 @@ export default function Footer() {
       </div>
 
       {/* Go Digital Go Paperless section */}
-      <section aria-label="Environmental commitment" className="mb-8 rounded-3xl bg-white p-8 shadow-md ring-1 ring-slate-200">
-        <div className="space-y-6">
+      <section aria-label="Environmental commitment" className="mb-8 mt-10 rounded-3xl bg-white p-5 shadow-md ring-1 ring-slate-200">
+        <div className="space-y-4">
           <div className="grid grid-cols-2 items-center gap-4">
             <div className="flex items-center justify-start gap-3">
-              <Smartphone size={32} className="text-[#0c0b5d]" />
+              <Smartphone size={22} className="text-[#0c0b5d]" />
               <div>
-                <h3 className="font-bold uppercase tracking-wide text-[#0c0b5d]">Go Digital</h3>
-                <p className="text-sm text-[#0c0b5d] font-semibold">Go Paperless</p>
+                <h3 className="text-sm font-bold uppercase tracking-wide text-[#0c0b5d]">Go Digital</h3>
+                <p className="text-xs text-[#0c0b5d] font-semibold">Go Paperless</p>
               </div>
             </div>
             <div className="flex items-center justify-end gap-3">
-              <Leaf size={32} className="text-[#0c0b5d]" />
+              <Leaf size={22} className="text-[#0c0b5d]" />
               <div>
-                <h3 className="font-bold uppercase tracking-wide text-[#0c0b5d]">Save</h3>
-                <p className="text-sm text-[#0c0b5d] font-semibold">Environment</p>
+                <h3 className="text-sm font-bold uppercase tracking-wide text-[#0c0b5d]">Save</h3>
+                <p className="text-xs text-[#0c0b5d] font-semibold">Environment</p>
               </div>
             </div>
           </div>
-          <div className="border-t border-slate-200 pt-6">
-            <p className="text-center text-sm leading-relaxed text-[#0c0b5d]">At Unique Futsal, we believe in making everyday operations smarter and easier through digital technology. From bookings and payments to records and daily management, we handle almost everything digitally, reducing the need for paper and printed documents while creating a more efficient, eco-friendly, and sustainable environment.</p>
+          <div className="border-t border-slate-200 pt-4">
+            <p className="text-center text-xs leading-relaxed text-[#0c0b5d]">At Unique Futsal, we believe in making everyday operations smarter and easier through digital technology. From bookings and payments to records and daily management, we handle almost everything digitally, reducing the need for paper and printed documents while creating a more efficient, eco-friendly, and sustainable environment.</p>
           </div>
         </div>
       </section>
