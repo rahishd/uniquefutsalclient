@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useHighlight } from "@/lib/highlight";
 import Link from "next/link";
 import { Gift, Star, Trophy, ShoppingBag, Gamepad2, UserRound, ChevronDown, Crown, HeartHandshake, Check, Clock, TriangleAlert, Loader2, Goal } from "lucide-react";
 import { useSession, openSignIn } from "@/lib/session";
@@ -35,6 +36,12 @@ export default function PointsPage() {
   const session = useSession();
   const store = loyaltyStore.use();
   const [all, setAll] = useState(false);
+  // a notice opens its own row; the history shows only the latest few, so open the whole list if the row is further down
+  const [target, setTarget] = useState<string | null>(null);
+  useHighlight(setTarget);
+  useEffect(() => {
+    if (target && (store.data?.rows.findIndex((r) => r.id === target) ?? -1) >= SHOWN) setAll(true);
+  }, [target, store.data]);
   const [confirming, setConfirming] = useState<Period | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -206,7 +213,7 @@ export default function PointsPage() {
               const k = KIND[e.kind] ?? KIND.game;
               const Icon = k.icon;
               return (
-                <li key={e.id} className="flex items-center gap-3">
+                <li key={e.id} data-hl={e.id} className="flex items-center gap-3 p-1">
                   <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${k.tone}`}><Icon size={18} /></span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{e.detail}</p>

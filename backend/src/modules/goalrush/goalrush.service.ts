@@ -208,7 +208,7 @@ export class GoalRushService {
         await notificationService.notify({
           userId, type: "points", title: "Points earned",
           message: `+${g.points} loyalty point${g.points === 1 ? "" : "s"}: Unique Goal Rush (${g.goals} goals)`,
-          href: "/points", dedupeKey: `points-goal_rush-goal_rush-${g.id}`,
+          href: await loyaltyService.pointsHref(userId, "goal_rush", g.id), dedupeKey: `points-goal_rush-goal_rush-${g.id}`,
         });
       }
     }

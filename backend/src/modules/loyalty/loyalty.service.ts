@@ -34,6 +34,12 @@ export class LoyaltyService {
     return out;
   }
 
+  /** Where a points notice opens: the Points page with this ledger row highlighted (?hl=<row id>). */
+  async pointsHref(userId: string, sourceType: string, sourceId: string): Promise<string> {
+    const e = await prisma.loyaltyEntry.findFirst({ where: { userId, sourceType, sourceId }, select: { id: true } });
+    return e ? `/points?hl=${e.id}` : "/points";
+  }
+
   async ledger(userId: string, db: Tx | typeof prisma = prisma): Promise<LedgerRow[]> {
     const rows = await db.loyaltyEntry.findMany({ where: { userId }, orderBy: { createdAt: "asc" } });
     return rows.map((r) => ({
@@ -85,7 +91,7 @@ export class LoyaltyService {
         type: "points",
         title: "Points earned",
         message: `+${p.points} loyalty points: ${p.detail}`,
-        href: "/points",
+        href: await this.pointsHref(p.userId, p.sourceType, p.sourceId),
         dedupeKey: `points-${p.kind}-${p.sourceType}-${p.sourceId}`,
       });
       return true;

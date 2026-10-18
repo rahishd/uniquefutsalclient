@@ -41,6 +41,7 @@ export interface MeResponse {
   avatar?: string;
   freeMatchesAvailable?: number;
   isVerified?: boolean;
+  loginCount?: number;
 }
 
 export interface UpdateMeDTO {

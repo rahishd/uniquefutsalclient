@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
+import { HIGHLIGHT_EVENT, hlOf } from "@/lib/highlight";
 import { AlarmClock, Bell, BellRing, CalendarCheck, CreditCard, Crown, Gamepad2, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, UserSearch, X } from "lucide-react";
 import {
   clearAll,
@@ -95,6 +96,9 @@ export default function NotificationBell() {
   function openNotice(n: Notice) {
     markRead(n.id);
     setOpen(false);
+    // already on that page: the address change alone does not reload it, so ask it to highlight the record
+    const hl = hlOf(n.href);
+    if (hl) setTimeout(() => window.dispatchEvent(new CustomEvent(HIGHLIGHT_EVENT, { detail: hl })), 150);
   }
 
   async function enableAlerts() {

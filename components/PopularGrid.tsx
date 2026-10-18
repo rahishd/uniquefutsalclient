@@ -19,6 +19,10 @@ interface Tile {
   actions?: boolean;
 }
 
+// Every tile wears a "New" tag except the long-standing ones, and nobody who has signed in more than this many times sees it.
+const NEW_TAG_LOGINS = 5;
+const NO_NEW_TAG = new Set(["Book", "Gamezone", "Points", "Tournaments"]);
+
 const TILES: Tile[] = [
   { label: "Book", href: "/book", icon: CalendarDays, tone: "text-brand", types: ["booking", "reminder", "payment"] },
   { label: "Gamezone", href: "/gamezone", icon: Gamepad2, tone: "text-brand", types: ["gamezone"] },
@@ -49,6 +53,8 @@ export default function PopularGrid() {
   const teams = useTeams();
   const session = useSession();
   const guest = session?.registered !== true;
+  // someone who has signed in more than 5 times knows their way around: no "New" tags for them
+  const showNew = !(session?.registered && (session.logins ?? 0) > NEW_TAG_LOGINS);
   const tr = useT();
 
   function countFor(t: Tile) {
@@ -89,6 +95,11 @@ export default function PopularGrid() {
                 {locked && (
                   <span aria-hidden className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-slate-700 text-white shadow ring-2 ring-white">
                     <Lock size={12} />
+                  </span>
+                )}
+                {showNew && !NO_NEW_TAG.has(t.label) && (
+                  <span aria-hidden className="absolute -left-2 -top-2 rounded-full bg-gradient-to-r from-[#f5822a] to-[#ff9a4d] px-1.5 py-px text-[8px] font-extrabold uppercase leading-[14px] tracking-wider text-white shadow-md ring-2 ring-white">
+                    {tr("New")}
                   </span>
                 )}
                 {!locked && count > 0 && (

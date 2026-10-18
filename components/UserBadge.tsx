@@ -22,34 +22,34 @@ export default function UserBadge() {
   const points = loyaltyStore.use().data?.remaining ?? null;
 
   return (
-    <div className="flex min-w-0 flex-col gap-3">
     <div className="flex min-w-0 items-center gap-3">
-    <Link href="/profile" className="flex items-center gap-3">
-      {session ? <ProfileAvatar name={name} captain={captain} size={56} src={session.registered ? session.avatar : null} /> : <span className="h-14 w-14 rounded-full bg-white/60" />}
-      <span>
-        <span className="block text-sm text-slate-400">
-          {captain ? t("Captain") : t("Hello")} <span aria-hidden>👋</span>
-        </span>
-        <span className="block min-h-8 text-2xl font-medium leading-tight">{session ? name : ""}</span>
-      </span>
-    </Link>
-    <DigitalIdButton />
-    <WifiButton />
-    <WhatsAppChat />
-    </div>
-    {session?.registered && (
-      <Link
-        href="/points"
-        aria-label={points === null ? "Loyalty points" : `${fmtPts(points)} loyalty points available`}
-        className="flex w-full items-center justify-between gap-3 rounded-2xl bg-[#0c0b5d] px-4 py-2.5 font-bold text-white shadow-sm"
-      >
-        <span className="flex items-center gap-2 text-sm font-semibold"><Star size={16} className="fill-current" /> Available points</span>
-        <span className="flex items-baseline gap-1">
-          <span className="text-2xl font-extrabold leading-none tabular-nums">{points === null ? "--" : fmtPts(points)}</span>
-          <span className="text-xs font-bold text-white">pts</span>
+      <Link href="/profile" className="flex min-w-0 flex-1 items-center gap-3">
+        {session ? <ProfileAvatar name={name} captain={captain} size={56} src={session.registered ? session.avatar : null} /> : <span className="block h-14 w-14 shrink-0 rounded-full bg-white/60" />}
+        <span className="min-w-0">
+          <span className="block text-sm text-slate-400">
+            {captain ? t("Captain") : t("Hello")} <span aria-hidden>👋</span>
+          </span>
+          <span className="block min-h-8 text-2xl font-medium leading-tight">{session ? name : ""}</span>
         </span>
       </Link>
-    )}
+      <div className="flex shrink-0 flex-col items-end gap-2">
+        <div className="flex items-center gap-2">
+          <DigitalIdButton />
+          <WifiButton />
+          <WhatsAppChat />
+        </div>
+        {session?.registered && (
+          <Link
+            href="/points"
+            aria-label={points === null ? "Loyalty points" : `${fmtPts(points)} loyalty points available`}
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#0c0b5d] px-3 py-1 font-bold text-white shadow-sm"
+          >
+            <Star size={14} className="fill-current" />
+            <span className="text-base font-extrabold leading-none tabular-nums">{points === null ? "--" : fmtPts(points)}</span>
+            <span className="text-xs font-semibold">pts</span>
+          </Link>
+        )}
+      </div>
     </div>
   );
 }

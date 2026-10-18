@@ -40,6 +40,17 @@ describe("loyalty awards", () => {
     expect(o.byType.games.nextExpiry).toBe("2026-12-01");
   });
 
+  it("the points notice opens the Points page on the exact ledger row it is about", async () => {
+    const mine = await api().get("/api/loyalty/me").set(bearer(tokenFor(U)));
+    expect(mine.status).toBe(200);
+    const entry = (await prisma.loyaltyEntry.findFirst({ where: { userId: U, sourceType: "booking" } }))!;
+    expect(mine.body.data.rows.some((r: { id: string }) => r.id === entry.id)).toBe(true); // the page can mark this row
+    const n = await api().get("/api/notifications").set(bearer(tokenFor(U)));
+    const notice = n.body.data.items.find((i: { type: string }) => i.type === "points");
+    expect(notice.href).toBe(`/points?hl=${entry.id}`);
+    expect(await loyaltyService.pointsHref(U, "booking", "no-such-source")).toBe("/points"); // nothing to point at: plain page
+  });
+
   it("free-game bookings, unpaid games, guests and challenge games earn nothing", async () => {
     expect(await loyaltyService.awardForCompletedBooking((await booking({ notes: "FREE_MATCH" })) as any)).toBe(false);
     expect(await loyaltyService.awardForCompletedBooking((await booking({ paymentStatus: "pending" })) as any)).toBe(false);

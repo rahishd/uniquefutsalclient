@@ -42,6 +42,15 @@ const isRetryableDbError = (error: unknown): boolean => {
 };
 
 export class AuthService {
+  /** Counts a sign-in (the app stops showing "New" tags after a few). Never blocks signing in. */
+  private async recordLogin(phoneNumber: string): Promise<void> {
+    try {
+      await prisma.user.update({ where: { phoneNumber }, data: { loginCount: { increment: 1 } } });
+    } catch (e) {
+      logger.warn(`Could not count the sign-in of ${phoneNumber}: ${(e as Error).message}`);
+    }
+  }
+
   async login(dto: LoginDTO): Promise<AuthResponse> {
     const user = await prisma.user.findFirst({
       where: {
@@ -69,6 +78,8 @@ export class AuthService {
     if (!user.phoneNumber) {
       throw new AppError(500, "User phone number is not configured");
     }
+
+    await this.recordLogin(user.phoneNumber);
 
     const token = JwtUtil.sign({
       id: user.phoneNumber,
@@ -188,6 +199,7 @@ export class AuthService {
         },
       });
       logger.info(`User ${created.phoneNumber} registered (OTP off).`);
+      await this.recordLogin(created.phoneNumber);
       const token = JwtUtil.sign({ id: created.phoneNumber, email: created.email || undefined, role: "user" });
       const refreshToken = JwtUtil.signRefresh({ id: created.phoneNumber, email: created.email || undefined, role: "user" });
       return {
@@ -293,6 +305,8 @@ export class AuthService {
       await prisma.pendingSignup.delete({ where: { phoneNumber } });
 
       // Generate tokens
+      await this.recordLogin(user.phoneNumber);
+
       const token = JwtUtil.sign({
         id: user.phoneNumber,
         email: user.email || undefined,
@@ -345,6 +359,8 @@ export class AuthService {
     await prisma.userOTP.delete({ where: { phoneNumber } });
 
     // Generate tokens now that user is verified
+    await this.recordLogin(user.phoneNumber);
+
     const token = JwtUtil.sign({
       id: user.phoneNumber,
       email: user.email || undefined,
@@ -490,6 +506,7 @@ export class AuthService {
         role: true,
         avatar: true,
         freeMatchesAvailable: true,
+        loginCount: true,
       },
     });
 
@@ -509,6 +526,7 @@ export class AuthService {
       role: user.role,
       avatar: user.avatar || undefined,
       freeMatchesAvailable: user.freeMatchesAvailable,
+      loginCount: user.loginCount,
     };
   }
 

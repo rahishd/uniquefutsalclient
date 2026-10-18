@@ -30,7 +30,7 @@ Times use Nepal time. Dates are `YYYY-MM-DD`. Money is whole rupees.
 | POST | `/auth/signup` | Guest | `{name, phoneNumber (9XXXXXXXXX), password>=6, dateOfBirth (YYYY-MM-DD, required: a real date, age 5 to 100), email?}` -> `{token, refreshToken, user}`. 400 without a real date of birth. 409 if the number already exists (an existing account is never taken over) |
 | POST | `/auth/login` | Guest | `{identifier: phone, password}`. Limited to 5 tries / 15 min / IP |
 | POST | `/auth/refresh` | Guest | `{refreshToken}` |
-| GET | `/auth/me` | User | account basics |
+| GET | `/auth/me` | User | account basics and `loginCount` (sign-ins so far; counted on password sign-in, OTP sign-in and registration, not on token refresh) |
 | POST | `/auth/check-phone` | Guest | `{exists, isVerified}` only |
 | POST | `/auth/verify-otp`, `/resend-otp`, `/forgot-password`, `/reset-password` | - | 503 while `OTP_ENABLED=false` |
 | GET/PATCH | `/me/profile` | User | `customerCode, name, phone, email, dateOfBirth, age, location, position, status, mode`. Phone cannot change. PATCH may send `dateOfBirth` only while none is saved (accounts from before it was asked); a saved one is changed by venue staff (409) |

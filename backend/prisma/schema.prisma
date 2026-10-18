@@ -24,6 +24,7 @@ model User {
   dateOfBirth          String? // YYYY-MM-DD, asked at sign-up; set once (staff change it)
   googleSub            String?                  @unique
   googleEmail          String?
+  loginCount           Int                      @default(0) // sign-ins so far; the app hides "New" tags after a few
   bookings             Booking[]
   subscriptions        MembershipSubscription[]
   notifications        Notification[]

@@ -121,11 +121,9 @@ export default function AuthForm() {
     <div className="mx-auto max-w-md rounded-[32px] bg-white px-5 pb-7 pt-8 shadow-[0_20px_50px_-24px_rgba(12,11,93,0.35)] ring-1 ring-slate-100 desk:px-8">
       {/* brand mark */}
       <div className="flex flex-col items-center gap-2">
-        <span
-          aria-hidden
-          className="h-12 w-12 rounded-2xl bg-[#0c0b5d] bg-no-repeat shadow-md"
-          style={{ backgroundImage: "url(/logo.jpg)", backgroundSize: "82px 82px", backgroundPosition: "-15px -5px", backgroundBlendMode: "lighten" }}
-        />
+        {/* the kicking player alone, in the brand navy, with no tile behind it */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-mark.png" alt="" aria-hidden className="h-16 w-auto" />
         <span className="text-[11px] font-bold tracking-[0.3em] text-slate-500">UNIQUE FUTSAL</span>
       </div>
 

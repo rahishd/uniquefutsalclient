@@ -129,7 +129,7 @@ export class GiftService {
     await notificationService.notify({
       userId: g.friendId, type: "points", title: "You got a gift",
       message: `${from} sent you ${g.points} loyalty points.${g.message ? ` "${g.message}"` : ""}`,
-      href: "/points", dedupeKey: `gift-in-${g.id}`,
+      href: await loyaltyService.pointsHref(g.friendId, "gift", g.id), dedupeKey: `gift-in-${g.id}`,
     });
     await notificationService.notify({
       userId: g.buyerId, type: "payment", title: "Gift sent",
