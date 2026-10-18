@@ -148,16 +148,15 @@ export default function Footer() {
       {/* Go Digital Go Paperless section */}
       <section aria-label="Environmental commitment" className="mb-8 rounded-3xl bg-white p-8 shadow-md ring-1 ring-slate-200">
         <div className="space-y-6">
-          <div className="flex items-center justify-center gap-8 desk:flex-row flex-col">
-            <div className="flex items-center gap-4">
+          <div className="grid grid-cols-2 items-center gap-4">
+            <div className="flex items-center justify-start gap-3">
               <Smartphone size={32} className="text-[#0c0b5d]" />
               <div>
                 <h3 className="font-bold uppercase tracking-wide text-[#0c0b5d]">Go Digital</h3>
                 <p className="text-sm text-[#0c0b5d] font-semibold">Go Paperless</p>
               </div>
             </div>
-            <div className="h-12 w-px bg-slate-300 hidden desk:block" />
-            <div className="flex items-center gap-4">
+            <div className="flex items-center justify-end gap-3">
               <Leaf size={32} className="text-[#0c0b5d]" />
               <div>
                 <h3 className="font-bold uppercase tracking-wide text-[#0c0b5d]">Save</h3>
@@ -166,7 +165,7 @@ export default function Footer() {
             </div>
           </div>
           <div className="border-t border-slate-200 pt-6">
-            <p className="text-center font-semibold text-[#0c0b5d]">We Aim for almost No Paper Consumption.</p>
+            <p className="text-center text-sm leading-relaxed text-[#0c0b5d]">At Unique Futsal, we believe in making everyday operations smarter and easier through digital technology. From bookings and payments to records and daily management, we handle almost everything digitally, reducing the need for paper and printed documents while creating a more efficient, eco-friendly, and sustainable environment.</p>
           </div>
         </div>
       </section>
