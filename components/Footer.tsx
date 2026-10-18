@@ -148,15 +148,16 @@ export default function Footer() {
       {/* Go Digital Go Paperless section */}
       <section aria-label="Environmental commitment" className="mb-8 mt-16 rounded-3xl bg-white p-4 shadow-md ring-1 ring-slate-200">
         <div className="space-y-4">
-          <div className="grid grid-cols-2 items-center gap-4">
-            <div className="flex items-center justify-start gap-3">
+          <div className="flex items-center justify-center gap-5">
+            <div className="flex items-center gap-2.5">
               <Smartphone size={18} className="text-[#0c0b5d]" />
               <div>
                 <h3 className="text-xs font-bold uppercase tracking-wide text-[#0c0b5d]">Go Digital</h3>
                 <p className="text-[11px] text-[#0c0b5d] font-semibold">Go Paperless</p>
               </div>
             </div>
-            <div className="flex items-center justify-end gap-3">
+            <div className="h-9 w-px bg-slate-300" />
+            <div className="flex items-center gap-2.5">
               <Leaf size={18} className="text-[#0c0b5d]" />
               <div>
                 <h3 className="text-xs font-bold uppercase tracking-wide text-[#0c0b5d]">Save</h3>
