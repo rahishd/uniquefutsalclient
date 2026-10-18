@@ -81,6 +81,7 @@ export const NE_DICTIONARY: Record<string, string> = {
  "Close advertisement": "विज्ञापन बन्द गर्नुहोस्",
  "Ad": "विज्ञापन",
  "Gallery": "ग्यालरी",
+ "Read More": "थप पढ्नुहोस्",
  "Show less": "कम देखाउनुहोस्",
  "See all {0}": "सबै {0} हेर्नुहोस्",
  "Open photo: {0}": "फोटो खोल्नुहोस्: {0}",

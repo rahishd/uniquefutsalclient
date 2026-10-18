@@ -23,28 +23,28 @@ export default function QuickRebook() {
   const href = `/book?date=${target.date}&hour=${hour}`;
 
   return (
-    <section aria-label="Quick rebook" className="mt-6 rounded-3xl bg-[#0c0b5d] p-5 text-white shadow-[0_14px_34px_-14px_rgba(12,11,93,0.7)]">
-      <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-white">
+    <section aria-label="Quick rebook" className="mt-6 rounded-3xl bg-white p-5 text-[#0c0b5d] shadow-[0_14px_34px_-14px_rgba(12,11,93,0.25)] ring-1 ring-slate-200">
+      <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#0c0b5d]">
         <Zap size={14} className="fill-current" /> Book again
       </p>
 
       <div className="mt-3 flex items-end justify-between gap-3">
         <div>
-          <p className="text-xl font-semibold leading-tight text-white">{weekday}</p>
-          <p className="text-sm text-white/80">
+          <p className="text-xl font-semibold leading-tight text-[#0c0b5d]">{weekday}</p>
+          <p className="text-sm text-[#0c0b5d]/75">
             {formatHour(hour)} – {formatHour(hour + 1)}
           </p>
         </div>
-        <p className="text-xl font-semibold text-white">{formatRs(target.price ?? 0)}</p>
+        <p className="text-xl font-semibold text-[#0c0b5d]">{formatRs(target.price ?? 0)}</p>
       </div>
 
-      <p className="mt-2 text-xs text-white/75">
+      <p className="mt-2 text-xs text-[#0c0b5d]/70">
         {moved ? `${formatHour(usual.hour)} is taken · nearest open time` : "Same time as your last game"} · next {nextDate}
       </p>
 
       <Link
         href={href}
-        className="mt-4 flex items-center justify-center gap-2 rounded-full bg-sky-100 py-3.5 text-sm font-semibold tracking-wide text-[#0c0b5d] shadow-sm transition hover:bg-sky-50"
+        className="mt-4 flex items-center justify-center gap-2 rounded-full bg-[#0c0b5d] py-3.5 text-sm font-semibold tracking-wide text-white shadow-sm transition hover:bg-[#090851]"
       >
         BOOK AGAIN <ArrowRight size={16} />
       </Link>
