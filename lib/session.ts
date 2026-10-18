@@ -9,7 +9,7 @@ import { api, ApiError } from "@/lib/api";
 import { getTokens, setTokens, subscribeTokens } from "@/lib/auth-token";
 
 export type Session =
-  | { registered: true; id: string; name: string; phone: string; avatar?: string | null; logins?: number }
+  | { registered: true; id: string; name: string; phone: string; avatar?: string | null; logins?: number; emergency?: boolean }
   | { registered: false };
 
 const USER_KEY = "uf-user-v1"; // last known account, so the screen does not flash while /auth/me loads
@@ -27,9 +27,10 @@ interface ApiUser {
   role: string;
   avatar?: string | null;
   loginCount?: number;
+  hasEmergencyContact?: boolean;
 }
 
-const toSession = (u: ApiUser): Session => ({ registered: true, id: u.phoneNumber, name: u.name || "Player", phone: u.phoneNumber, avatar: u.avatar ?? null, logins: u.loginCount });
+const toSession = (u: ApiUser): Session => ({ registered: true, id: u.phoneNumber, name: u.name || "Player", phone: u.phoneNumber, avatar: u.avatar ?? null, logins: u.loginCount, emergency: u.hasEmergencyContact });
 
 function emit() {
   listeners.forEach((l) => l());
@@ -122,9 +123,13 @@ export async function signIn(phone: string, password: string) {
   emit();
 }
 
-export async function signUp(input: { name: string; phone: string; password: string; dateOfBirth: string }) {
-  const r = await api<AuthResult>("/auth/signup", { method: "POST", body: { name: input.name, phoneNumber: input.phone, password: input.password, dateOfBirth: input.dateOfBirth }, auth: "none" });
-  cached = toSession(r.user);
+export async function signUp(input: { name: string; phone: string; password: string; dateOfBirth: string; emergencyName: string; emergencyPhone: string; emergencyRelation?: string }) {
+  const r = await api<AuthResult>("/auth/signup", {
+    method: "POST",
+    body: { name: input.name, phoneNumber: input.phone, password: input.password, dateOfBirth: input.dateOfBirth, emergencyName: input.emergencyName, emergencyPhone: input.emergencyPhone, emergencyRelation: input.emergencyRelation || undefined },
+    auth: "none",
+  });
+  cached = { ...toSession(r.user), registered: true, emergency: true } as Session;
   saveUser(cached);
   setTokens({ token: r.token, refreshToken: r.refreshToken });
   cachedFor = r.token;
@@ -135,6 +140,15 @@ export async function signUp(input: { name: string; phone: string; password: str
 export function updateSessionName(name: string) {
   if (cached && cached.registered) {
     cached = { ...cached, name };
+    saveUser(cached);
+    emit();
+  }
+}
+
+// After the customer saves an emergency contact, stop the reminder straight away.
+export function markEmergencySaved() {
+  if (cached && cached.registered) {
+    cached = { ...cached, emergency: true };
     saveUser(cached);
     emit();
   }

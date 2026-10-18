@@ -75,7 +75,7 @@ describe("age rules (pure)", () => {
 
 describe("date of birth at sign-up and in the profile", () => {
   it("a customer cannot sign up without a real date of birth", async () => {
-    const base = { name: "Sign Up Sam", phoneNumber: SIGNUP, password: "secret1" };
+    const base = { name: "Sign Up Sam", phoneNumber: SIGNUP, password: "secret1", emergencyName: "Dad", emergencyPhone: "9811111112" };
     expect((await api().post("/api/auth/signup").send(base)).status).toBe(400);
     expect((await api().post("/api/auth/signup").send({ ...base, dateOfBirth: "2001-02-30" })).status).toBe(400);
     expect((await api().post("/api/auth/signup").send({ ...base, dateOfBirth: dobFor(2) })).status).toBe(400);

@@ -47,7 +47,7 @@ afterAll(async () => {
 
 describe("signup and login with OTP switched off", () => {
   it("signs up with phone + password and gets tokens; SMS is never needed", async () => {
-    const res = await call("post", "/api/auth/signup", undefined, { name: "New Player", phoneNumber: NEW, password: "secret1", dateOfBirth: "2001-04-12" });
+    const res = await call("post", "/api/auth/signup", undefined, { name: "New Player", phoneNumber: NEW, password: "secret1", dateOfBirth: "2001-04-12", emergencyName: "Mum", emergencyPhone: "9811111111" });
     expect(res.status).toBe(201);
     expect(res.body.data.token).toBeTruthy();
     expect(res.body.data.user.phoneNumber).toBe(NEW);
@@ -58,12 +58,12 @@ describe("signup and login with OTP switched off", () => {
     expect(me.status).toBe(200);
   });
   it("rejects a phone that is already registered and a badly formed one", async () => {
-    expect((await call("post", "/api/auth/signup", undefined, { name: "Copy Cat", phoneNumber: NEW, password: "secret1", dateOfBirth: "2001-04-12" })).status).toBe(409);
+    expect((await call("post", "/api/auth/signup", undefined, { name: "Copy Cat", phoneNumber: NEW, password: "secret1", dateOfBirth: "2001-04-12", emergencyName: "Mum", emergencyPhone: "9811111111" })).status).toBe(409);
     expect((await call("post", "/api/auth/signup", undefined, { name: "Bad Phone", phoneNumber: "12345", password: "secret1" })).status).toBe(400);
   });
   it("never takes over an unverified account that has records", async () => {
     await makeUser(STAFF_MADE, "Made By Staff", { isVerified: false, freeMatchesAvailable: 2 });
-    const res = await call("post", "/api/auth/signup", undefined, { name: "Impostor", phoneNumber: STAFF_MADE, password: "secret1", dateOfBirth: "2001-04-12" });
+    const res = await call("post", "/api/auth/signup", undefined, { name: "Impostor", phoneNumber: STAFF_MADE, password: "secret1", dateOfBirth: "2001-04-12", emergencyName: "Mum", emergencyPhone: "9811111111" });
     expect(res.status).toBe(409);
     const row = await prisma.user.findUnique({ where: { phoneNumber: STAFF_MADE } });
     expect(row?.name).toBe("Made By Staff");
@@ -73,7 +73,7 @@ describe("signup and login with OTP switched off", () => {
     await prisma.booking.create({
       data: { userId: null, date: "2026-09-01", startTime: "18:00", endTime: "19:00", duration: 1, customerName: "Guest Gary", customerPhone: GUEST_PHONE, basePrice: 1000, subtotal: 1000, totalPrice: 1000, paymentMethod: "venue" } as any,
     });
-    await call("post", "/api/auth/signup", undefined, { name: "Guest Gary", phoneNumber: GUEST_PHONE, password: "secret1", dateOfBirth: "2001-04-12" });
+    await call("post", "/api/auth/signup", undefined, { name: "Guest Gary", phoneNumber: GUEST_PHONE, password: "secret1", dateOfBirth: "2001-04-12", emergencyName: "Mum", emergencyPhone: "9811111111" });
     const mine = await call("get", "/api/bookings/me", GUEST_PHONE);
     expect(JSON.stringify(mine.body.data)).not.toContain("Guest Gary");
   });

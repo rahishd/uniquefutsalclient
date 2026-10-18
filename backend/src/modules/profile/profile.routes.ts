@@ -1,4 +1,5 @@
 import { Router, Response } from "express";
+import { cleanEmergency } from "../../utils/emergency";
 import { body } from "express-validator";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { ApiResponseUtil } from "../../utils/apiResponse";
@@ -90,6 +91,9 @@ router.get(
         avatar: user.avatar,
         dateOfBirth: user.dateOfBirth,
         age: user.dateOfBirth ? ageOn(user.dateOfBirth, todayKey()) : null,
+        emergencyName: user.emergencyName,
+        emergencyPhone: user.emergencyPhone,
+        emergencyRelation: user.emergencyRelation,
         location: p.location,
         position: p.position,
         registeredAt: user.createdAt,
@@ -108,11 +112,16 @@ router.patch(
     body("location").optional({ nullable: true }).isString().trim().isLength({ max: 120 }),
     body("position").optional({ nullable: true, checkFalsy: true }).isIn(POSITIONS).withMessage("Position must be GK, DEF, MID or FWD"),
     body("dateOfBirth").optional({ values: "falsy" }).matches(/^\d{4}-\d{2}-\d{2}$/).withMessage("Enter a valid date of birth"),
+    body("emergencyName").optional({ values: "null" }).isString(),
+    body("emergencyPhone").optional({ values: "null" }).isString(),
+    body("emergencyRelation").optional({ values: "null" }).isString(),
   ],
   validateRequest,
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const id = req.user!.id;
     const { name, email, location, position, dateOfBirth } = req.body;
+    // The emergency contact is changed as a whole (name and number together) and can never be removed, only replaced.
+    const emergency = req.body.emergencyPhone !== undefined || req.body.emergencyName !== undefined ? cleanEmergency(req.body, id) : null;
     if (email) {
       const taken = await prisma.user.findFirst({ where: { email, NOT: { phoneNumber: id } }, select: { phoneNumber: true } });
       if (taken) throw new AppError(409, "This email is already used by another account");
@@ -127,7 +136,7 @@ router.patch(
     // The mobile number is the account's identity and is never changed here.
     await prisma.user.update({
       where: { phoneNumber: id },
-      data: { ...(name !== undefined && { name }), ...(email !== undefined && { email: email || null }), ...(dateOfBirth && { dateOfBirth }) },
+      data: { ...(name !== undefined && { name }), ...(email !== undefined && { email: email || null }), ...(dateOfBirth && { dateOfBirth }), ...emergency },
     });
     await prisma.userPrefs.upsert({
       where: { userId: id },

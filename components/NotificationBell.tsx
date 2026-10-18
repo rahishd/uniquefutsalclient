@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { HIGHLIGHT_EVENT, hlOf } from "@/lib/highlight";
-import { Accessibility, AlarmClock, Bell, BellRing, CalendarCheck, CreditCard, Crown, Gamepad2, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, UserSearch, X } from "lucide-react";
+import { Accessibility, AlarmClock, ShieldPlus, Bell, BellRing, CalendarCheck, CreditCard, Crown, Gamepad2, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, UserSearch, X } from "lucide-react";
 import {
   clearAll,
   markAllRead,
@@ -31,6 +31,7 @@ const META: Record<NoticeType, { icon: typeof Bell; tone: string; label: string 
   academy: { icon: GraduationCap, tone: "bg-teal-500/10 text-teal-600", label: "Academy" },
   referral: { icon: HeartHandshake, tone: "bg-pink-500/10 text-pink-600", label: "Refer & Earn" },
   players: { icon: UserSearch, tone: "bg-sky-500/10 text-sky-600", label: "Players needed" },
+  insurance: { icon: ShieldPlus, tone: "bg-red-500/10 text-red-600", label: "Insurance claim" },
 };
 
 // Any type without its own icon (a staff "general" notice, or a type added later) shows as a plain notice, never an error.

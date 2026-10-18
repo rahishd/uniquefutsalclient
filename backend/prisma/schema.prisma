@@ -25,6 +25,9 @@ model User {
   googleSub            String?                  @unique
   googleEmail          String?
   loginCount           Int                      @default(0) // sign-ins so far; the app hides "New" tags after a few
+  emergencyName        String? // who to call if this player is hurt (asked at sign-up; the app reminds those who skipped)
+  emergencyPhone       String? // 10-digit mobile, never the account's own number
+  emergencyRelation    String? // e.g. Father, Wife, Friend (optional)
   bookings             Booking[]
   subscriptions        MembershipSubscription[]
   notifications        Notification[]
@@ -403,6 +406,9 @@ model PendingSignup {
   name        String
   email       String?
   dateOfBirth String?
+  emergencyName     String?
+  emergencyPhone    String?
+  emergencyRelation String?
   password    String
   otp         String
   expiresAt   DateTime
@@ -764,6 +770,46 @@ model WheelchairRequest {
 
   @@index([userId])
   @@index([status, date])
+}
+
+// An insurance claim for an injury at the venue (customer app, Quick Access > Claim Insurance). The patient must have a
+// Unique Futsal account. Staff review, approve or reject it in the admin portal and the filer is told in the app. Code: IC-XXXXXX.
+model InsuranceClaim {
+  id            String    @id @default(cuid())
+  code          String    @unique
+  userId        String // User.phoneNumber of whoever filed it
+  patientName   String
+  patientPhone  String // the patient's registered User.phoneNumber
+  witnessName   String
+  witnessNameNe String // the witness's name in Nepali (Devanagari)
+  witnessPhone  String?
+  severity      String // minor | emergency
+  incidentDate  String // YYYY-MM-DD
+  description   String?
+  photos        String[]  @default([])
+  status        String    @default("submitted") // submitted | in_review | approved | rejected | closed
+  staffReply    String?
+  repliedBy     String?
+  decidedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([patientPhone])
+  @@index([status, createdAt])
+}
+
+// Each time someone slides "Call emergency contact" for a player: who asked, for whom, and whether a contact was found.
+// Kept so a phone number lookup is never silent (and to limit how often one account can look numbers up).
+model EmergencyCall {
+  id           String   @id @default(cuid())
+  callerId     String // User.phoneNumber of the person who slid
+  patientPhone String
+  found        Boolean
+  createdAt    DateTime @default(now())
+
+  @@index([callerId, createdAt])
+  @@index([patientPhone])
 }
 
 // A VIP discount code staff give to ONE customer (admin portal > Customers). type percent | flat. After the customer

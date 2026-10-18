@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import HeaderToggles from "@/components/HeaderToggles";
+import EmergencyContactCard from "@/components/emergency/EmergencyContactCard";
 import Link from "next/link";
 import { Bell, Camera, Check, ChevronDown, ChevronRight, Crown, Download, Loader2, LogOut, Pencil, ShieldCheck, Star, Trophy, UserRound, X } from "lucide-react";
 import { downloadPdf } from "@/lib/pdf";
@@ -393,6 +395,12 @@ function RegisteredProfile() {
 
         {photoError && <p role="alert" className="mt-3 rounded-2xl bg-rose-500/10 px-4 py-3 text-sm text-rose-600">{photoError}</p>}
 
+        {/* language and dark mode (moved here from the top bar) */}
+        <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-200/70 pt-4 [&_button]:h-12 [&_button]:w-12 [&_button]:text-base [&_svg]:h-6 [&_svg]:w-6">
+          <span className="text-base text-slate-500">Dark Mode &amp; Language</span>
+          <HeaderToggles />
+        </div>
+
         {editing && (
           <form className="mt-5 space-y-3" onSubmit={save}>
             <input className={input} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} placeholder="Full name" aria-label="Full name" />
@@ -423,6 +431,8 @@ function RegisteredProfile() {
           </form>
         )}
       </section>
+
+      <EmergencyContactCard />
 
       <div className="desk:col-span-2"><ModeToggle /></div>
       {captainMode && <div className="desk:col-span-2"><CaptainSummary /></div>}

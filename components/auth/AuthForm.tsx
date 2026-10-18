@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Cake, CheckCircle2, Eye, EyeOff, Loader2, Lock, Phone, User } from "lucide-react";
+import { Cake, CheckCircle2, Eye, EyeOff, HeartPulse, Loader2, Lock, Phone, User } from "lucide-react";
 import { errorText } from "@/lib/api";
 import { signIn, signUp, useSession } from "@/lib/session";
 import { site } from "@/lib/site";
@@ -31,6 +31,10 @@ export default function AuthForm() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [dob, setDob] = useState("");
+  // emergency contact: who to call if the player is hurt at the venue (required to create an account)
+  const [emName, setEmName] = useState("");
+  const [emPhone, setEmPhone] = useState("");
+  const [emRelation, setEmRelation] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -45,7 +49,10 @@ export default function AuthForm() {
   const phoneOk = /^9\d{9}$/.test(phone);
   const phoneBad = phone.length > 0 && !phoneOk;
   const dobBad = dob.length > 0 && !dobOk(dob);
-  const ok = phoneOk && password.length >= 6 && (mode === "in" || (name.trim().length >= 2 && dobOk(dob)));
+  const emPhoneOk = /^9\d{9}$/.test(emPhone) && emPhone !== phone;
+  const emPhoneBad = emPhone.length === 10 && !emPhoneOk;
+  const emOk = emName.trim().length >= 2 && emPhoneOk;
+  const ok = phoneOk && password.length >= 6 && (mode === "in" || (name.trim().length >= 2 && dobOk(dob) && emOk));
 
   function go(m: "in" | "up" | "reset") {
     setMode(m);
@@ -91,7 +98,7 @@ export default function AuthForm() {
     setError(null);
     try {
       if (mode === "in") await signIn(phone, password);
-      else await signUp({ name: name.trim(), phone, password, dateOfBirth: dob });
+      else await signUp({ name: name.trim(), phone, password, dateOfBirth: dob, emergencyName: emName.trim(), emergencyPhone: emPhone, emergencyRelation: emRelation.trim() });
       window.location.assign(nextPath());
     } catch (err) {
       setError(errorText(err));
@@ -197,6 +204,30 @@ export default function AuthForm() {
           </div>
           {phoneBad && <p className="mt-1.5 px-5 text-sm font-medium text-rose-500">{t("That mobile number doesn't look right")}</p>}
         </div>
+
+        {mode === "up" && (
+          <fieldset className="space-y-2.5 rounded-3xl bg-rose-50/70 p-3 ring-1 ring-rose-100">
+            <legend className="sr-only">Emergency contact</legend>
+            <p className="flex items-center gap-2 px-1 text-sm font-semibold text-slate-800"><HeartPulse size={17} className="text-rose-500" aria-hidden /> {t("Emergency contact")}</p>
+            <p className="px-1 text-xs text-slate-500">{t("Who should we call if you get hurt at the venue? Required.")}</p>
+            <div className={`${field} bg-white ring-transparent focus-within:ring-sky-300`}>
+              <User size={18} className="shrink-0 text-slate-400" />
+              <input style={noBorder} className={inputCls} value={emName} onChange={(e) => setEmName(e.target.value)} maxLength={80} placeholder={t("Their name")} aria-label="Emergency contact name" autoComplete="off" />
+            </div>
+            <div>
+              <div className={`${field} bg-white ${emPhoneBad ? "ring-2 ring-rose-400" : "ring-transparent focus-within:ring-sky-300"}`}>
+                <Phone size={18} className={`shrink-0 ${emPhoneBad ? "text-rose-400" : "text-slate-400"}`} />
+                <input style={noBorder} className={inputCls} value={emPhone} inputMode="numeric" onChange={(e) => setEmPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  placeholder={t("Their mobile number (98XXXXXXXX)")} aria-label="Emergency contact mobile number" aria-invalid={emPhoneBad} autoComplete="off" />
+              </div>
+              {emPhoneBad && <p className="mt-1.5 px-5 text-sm font-medium text-rose-500">{emPhone === phone ? t("Use someone else's number, not your own") : t("That mobile number doesn't look right")}</p>}
+            </div>
+            <div className={`${field} bg-white ring-transparent focus-within:ring-sky-300`}>
+              <HeartPulse size={18} className="shrink-0 text-slate-400" />
+              <input style={noBorder} className={inputCls} value={emRelation} onChange={(e) => setEmRelation(e.target.value)} maxLength={40} placeholder={t("Relation, e.g. Father (optional)")} aria-label="Relation to you" autoComplete="off" />
+            </div>
+          </fieldset>
+        )}
 
         {mode !== "reset" && (
           <div className={`${field} ring-transparent focus-within:ring-sky-300`}>

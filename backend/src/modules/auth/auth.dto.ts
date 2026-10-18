@@ -11,6 +11,9 @@ export interface SignupDTO {
   name: string;
   phoneNumber: string;
   dateOfBirth?: string; // YYYY-MM-DD; required for a customer signing up (checked in AuthService.signup)
+  emergencyName?: string; // emergency contact: required for a customer signing up (utils/emergency.ts)
+  emergencyPhone?: string;
+  emergencyRelation?: string;
 }
 
 export interface RefreshTokenDTO {
@@ -42,6 +45,7 @@ export interface MeResponse {
   freeMatchesAvailable?: number;
   isVerified?: boolean;
   loginCount?: number;
+  hasEmergencyContact?: boolean; // false: the app reminds the customer to add one
 }
 
 export interface UpdateMeDTO {

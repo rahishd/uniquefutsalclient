@@ -1,4 +1,5 @@
 import { prisma } from "../../config/db";
+import { cleanEmergency } from "../../utils/emergency";
 import { HashUtil } from "../../utils/hash";
 import { JwtUtil } from "../../utils/jwt";
 import { AppError } from "../../middlewares/error.middleware";
@@ -138,6 +139,8 @@ export class AuthService {
       throw new AppError(400, `Enter your date of birth (age ${MIN_AGE} to ${MAX_AGE}).`);
     }
     const dateOfBirth = isValidDob(dto.dateOfBirth, todayKey()) ? dto.dateOfBirth : null;
+    // A customer must also give an emergency contact (who to call if they are hurt at the venue). Staff may add it later.
+    const emergency = !isAdmin || dto.emergencyPhone ? cleanEmergency(dto, dto.phoneNumber) : null;
 
     const hashedPassword = await HashUtil.hash(dto.password);
 
@@ -150,6 +153,7 @@ export class AuthService {
           email: dto.email || null,
           password: hashedPassword,
           dateOfBirth,
+          ...emergency,
           isVerified: true,
           role: "user",
         },
@@ -194,6 +198,7 @@ export class AuthService {
           email: dto.email || null,
           password: hashedPassword,
           dateOfBirth,
+          ...emergency,
           isVerified: true,
           role: "user",
         },
@@ -221,6 +226,7 @@ export class AuthService {
         email: dto.email || null,
         password: hashedPassword,
         dateOfBirth,
+        ...emergency,
         otp,
         expiresAt,
         createdAt: new Date(),
@@ -231,6 +237,7 @@ export class AuthService {
         email: dto.email || null,
         password: hashedPassword,
         dateOfBirth,
+        ...emergency,
         otp,
         expiresAt,
       },
@@ -288,6 +295,7 @@ export class AuthService {
           email: pending.email,
           password: pending.password,
           ...(pending.dateOfBirth ? { dateOfBirth: pending.dateOfBirth } : {}),
+          ...(pending.emergencyPhone ? { emergencyName: pending.emergencyName, emergencyPhone: pending.emergencyPhone, emergencyRelation: pending.emergencyRelation } : {}),
           isVerified: true,
         },
         create: {
@@ -296,6 +304,9 @@ export class AuthService {
           email: pending.email,
           password: pending.password,
           dateOfBirth: pending.dateOfBirth,
+          emergencyName: pending.emergencyName,
+          emergencyPhone: pending.emergencyPhone,
+          emergencyRelation: pending.emergencyRelation,
           isVerified: true,
           role: "user",
         },
@@ -507,6 +518,7 @@ export class AuthService {
         avatar: true,
         freeMatchesAvailable: true,
         loginCount: true,
+        emergencyPhone: true,
       },
     });
 
@@ -527,6 +539,7 @@ export class AuthService {
       avatar: user.avatar || undefined,
       freeMatchesAvailable: user.freeMatchesAvailable,
       loginCount: user.loginCount,
+      hasEmergencyContact: !!user.emergencyPhone,
     };
   }
 

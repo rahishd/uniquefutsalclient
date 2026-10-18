@@ -13,6 +13,9 @@ export interface Profile {
   location: string | null;
   position: string | null; // GK | DEF | MID | FWD
   dateOfBirth: string | null; // YYYY-MM-DD; saved once (a customer who signed up earlier can add it)
+  emergencyName?: string | null; // who to call if this player is hurt (asked at sign-up)
+  emergencyPhone?: string | null;
+  emergencyRelation?: string | null;
   age: number | null;
   registeredAt: string;
   status: "Active" | "Suspended";
@@ -36,6 +39,12 @@ export async function saveProfile(p: { name: string; email: string; location: st
 
 // Profile picture. The photo is cropped to a centred square and shrunk in the browser first (a canvas keeps pixels only, so
 // location data is dropped); the server checks and re-encodes it again.
+// Adds or replaces the emergency contact (name and number together; it cannot be removed, only replaced).
+export async function saveEmergency(c: { emergencyName: string; emergencyPhone: string; emergencyRelation: string }) {
+  await api("/me/profile", { method: "PATCH", body: { emergencyName: c.emergencyName, emergencyPhone: c.emergencyPhone, emergencyRelation: c.emergencyRelation || null } });
+  void profileStore.refresh();
+}
+
 export async function squarePhoto(file: File, side = 480): Promise<string> {
   if (!/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error("Please choose a JPG, PNG or WebP picture.");
   let bitmap: ImageBitmap;

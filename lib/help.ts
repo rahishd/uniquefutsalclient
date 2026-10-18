@@ -311,6 +311,32 @@ export const helpTopics: HelpTopic[] = [
     href: { label: "Wheelchair Request", to: "/wheelchair" },
   },
   {
+    id: "insurance",
+    icon: "bell",
+    title: "Claim insurance for an injury",
+    summary: "Hurt at the venue? File a claim with a photo and a witness, or call for help first.",
+    points: [
+      "On Home, tap Claim Insurance in Quick Access. You need to be signed in, and the injured player must have a Unique Futsal account.",
+      "Add a photo of the incident or injury, the patient's name and their registered mobile number, and a witness's name in English and in Nepali.",
+      "Choose the injury case: Minor or Emergency. For an emergency, slide to call the emergency contact saved on the injured player's account. Your phone switches to a regular call. You can also call the ambulance (102) or the venue.",
+      "You get a reference like IC-7K3QX9. The venue reviews it and replies on the same page and in your notifications. If you file for a teammate, they are told too.",
+      "File within 30 days of the injury. Up to 3 claims a day.",
+    ],
+    href: { label: "Claim Insurance", to: "/insurance" },
+  },
+  {
+    id: "emergency-contact",
+    icon: "profile",
+    title: "Your emergency contact",
+    summary: "Someone we (and your teammates) can call if you get hurt at the venue.",
+    points: [
+      "You add it when you create your account: their name, their mobile number and, if you like, how they are related to you.",
+      "Accounts made before this was asked show a reminder on Home. Add or change it any time in Profile > Emergency contact.",
+      "It must be someone else's number, not your own. It is only shown, partly hidden, when someone slides to call it from Claim Insurance, and every such call is recorded.",
+    ],
+    href: { label: "Profile", to: "/profile#emergency" },
+  },
+  {
     id: "academy",
     icon: "bell",
     title: "Children's Academy",

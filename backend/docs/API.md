@@ -27,13 +27,13 @@ Times use Nepal time. Dates are `YYYY-MM-DD`. Money is whole rupees.
 
 | Method | Path | Who | Notes |
 |---|---|---|---|
-| POST | `/auth/signup` | Guest | `{name, phoneNumber (9XXXXXXXXX), password>=6, dateOfBirth (YYYY-MM-DD, required: a real date, age 5 to 100), email?}` -> `{token, refreshToken, user}`. 400 without a real date of birth. 409 if the number already exists (an existing account is never taken over) |
+| POST | `/auth/signup` | Guest | `{name, phoneNumber (9XXXXXXXXX), password>=6, dateOfBirth (YYYY-MM-DD, required: a real date, age 5 to 100), emergencyName (required), emergencyPhone (required, 9XXXXXXXXX, not the customer's own number), emergencyRelation?, email?}` -> `{token, refreshToken, user}`. 400 without a real date of birth or a valid emergency contact. 409 if the number already exists (an existing account is never taken over) |
 | POST | `/auth/login` | Guest | `{identifier: phone, password}`. Limited to 5 tries / 15 min / IP |
 | POST | `/auth/refresh` | Guest | `{refreshToken}` |
 | GET | `/auth/me` | User | account basics and `loginCount` (sign-ins so far; counted on password sign-in, OTP sign-in and registration, not on token refresh) |
 | POST | `/auth/check-phone` | Guest | `{exists, isVerified}` only |
 | POST | `/auth/verify-otp`, `/resend-otp`, `/forgot-password`, `/reset-password` | - | 503 while `OTP_ENABLED=false` |
-| GET/PATCH | `/me/profile` | User | `customerCode, name, phone, email, dateOfBirth, age, location, position, status, mode`. Phone cannot change. PATCH may send `dateOfBirth` only while none is saved (accounts from before it was asked); a saved one is changed by venue staff (409) |
+| GET/PATCH | `/me/profile` | User | `customerCode, name, phone, email, dateOfBirth, age, emergencyName, emergencyPhone, emergencyRelation, location, position, status, mode`. PATCH may send `emergencyName` + `emergencyPhone` (+ `emergencyRelation`) together to add or replace the emergency contact (it cannot be removed; never the customer's own number). `GET /auth/me` returns `hasEmergencyContact` so the app can remind those who skipped it. Phone cannot change. PATCH may send `dateOfBirth` only while none is saved (accounts from before it was asked); a saved one is changed by venue staff (409) |
 | GET/PUT | `/me/preferences` | User | `smsReminders, promoNotifications, popupReminder, language(en/ne)` |
 | PUT | `/me/mode` | User | `{mode: player|captain}` |
 | GET | `/push/public-key` | Guest | `{enabled, publicKey}` (VAPID) the app needs to subscribe a device |
@@ -168,8 +168,16 @@ can be booked once.
 | POST | `/wheelchair` | User | `{date (YYYY-MM-DD, today to +60 days), time (HH:MM), people? (1-10), note? (max 500), bookingCode?}` -> request with code `WC-XXXXXX`, status `pending`. `bookingCode` must be the caller's own booking. 3 requests per customer per 24 hours (429 after) |
 | GET | `/wheelchair/me` | User | own wheelchair requests, newest first, with `status` (pending, confirmed, completed, declined, cancelled) and `staffReply` |
 | POST | `/wheelchair/:id/cancel` | User | cancels the caller's own request while it is `pending` or `confirmed` (409 otherwise). Staff answer in the admin portal (`/admin/wheelchair`), which notifies the customer with `type: "wheelchair"` |
+| GET | `/insurance/options` | Guest | `{severities: [minor, emergency], maxPhotos, descriptionMax, daysBack, perDay, ambulance: "102"}` for the Claim Insurance form |
+| POST | `/insurance` | User | `{patientName, patientPhone (the injured player's REGISTERED number), witnessName, witnessNameNe (Nepali, must contain Devanagari), witnessPhone?, severity: minor|emergency, incidentDate (YYYY-MM-DD, today back to 30 days), description? (max 1000), photos: [1-3 image data URLs, required]}` -> claim with code `IC-XXXXXX`, status `submitted`. 400 when the patient has no account. 3 claims per customer per 24 hours (429). Photos as for complaints, saved under `/uploads/insurance/...` or R2 `insurance/`. The patient is notified (`type: "insurance"`) when someone else files it. Needs a UTF-8 database for the Nepali name |
+| GET | `/insurance/me` | User | claims the caller filed or that were filed for them (`filedByMe`), newest first, with `status` (submitted, in_review, approved, rejected, closed) and `staffReply` |
+| POST | `/insurance/emergency-contact` | User | `{patientPhone}` -> `{patientName, contact: {name, relation, phone, masked} or null, ambulance}`: the emergency contact saved on that registered player's account, for "slide to call" (the app hands `phone` to the phone's dialer). 404 for an unknown number. Every lookup is logged (`EmergencyCall`, audit `EMERGENCY_CONTACT_LOOKUP`); 10 per caller per 24 hours (429) |
+| GET | `/insurance/admin?status=&page=&limit=` | Staff | all claims with `userId` |
+| PATCH | `/insurance/admin/:id` | Staff | `{status?, reply?}`; notifies the filer and the patient (`type: "insurance"`); audited. The admin portal has its own page (`/admin/insurance`) |
 
 Table `Complaint` (migration `20261007000001_complaints`, additive). Notification type `complaint` added.
+
+Tables `InsuranceClaim` and `EmergencyCall`, and `emergencyName`/`emergencyPhone`/`emergencyRelation` on `User` and `PendingSignup` (migration `20261107000001_insurance_claims`, additive). Notification type `insurance` added.
 
 ## Children's Academy (ages 10 to 14)
 

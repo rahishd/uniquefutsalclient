@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import HomeHero from "@/components/HomeHero";
 import UserBadge from "@/components/UserBadge";
+import EmergencyReminder from "@/components/emergency/EmergencyReminder";
 import HeaderPoints from "@/components/HeaderPoints";
 import NotificationBell from "@/components/NotificationBell";
 import StickyHomeBar from "@/components/StickyHomeBar";
@@ -48,6 +49,9 @@ export default function HomeScreen() {
         <div className="order-1 mx-3 mt-3 flex items-center justify-between rounded-3xl bg-white p-3 text-[#0c0b5d] shadow-[0_10px_24px_-14px_rgba(15,23,42,0.5)] desk:mx-0 desk:mt-4 desk:p-4">
           <UserBadge />
         </div>
+
+        {/* no emergency contact on the account yet (older or Google accounts): a reminder with a link to add it */}
+        <EmergencyReminder className="order-1 mx-3 mt-3 desk:mx-0" />
 
         {/* Promo banner */}
         <section className="relative order-5 mt-5 min-h-[230px] overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c0b5d] via-[#16167f] to-[#2a2aa8] p-5 text-white shadow-[0_10px_30px_rgba(12,11,93,0.35)] desk:mt-6 desk:min-h-[300px] desk:p-10">

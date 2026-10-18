@@ -5,7 +5,7 @@ import sharp from "sharp";
 import { AppError } from "../middlewares/error.middleware";
 import { uploadFileToR2 } from "./r2storage";
 
-// Photos attached to a complaint. They arrive as image data URLs (the app shrinks them first), are checked by
+// Photos attached to a complaint (and to an insurance claim: the same rules, its own folder). They arrive as image data URLs (the app shrinks them first), are checked by
 // really decoding them (the declared type is never trusted), stripped of location data, re-encoded as small JPEGs,
 // and saved under a name WE choose. Storage is Cloudflare R2 when it is configured, otherwise the local uploads folder.
 
@@ -13,6 +13,8 @@ export const MAX_PHOTOS = 3;
 const MAX_BYTES = 8 * 1024 * 1024; // per photo, before compression
 const DATA_URL = /^data:image\/(?:jpeg|jpg|png|webp);base64,([A-Za-z0-9+/=\s]+)$/i;
 const DIR = path.join(process.cwd(), "uploads", "complaints");
+const FOLDERS = ["complaints", "insurance"] as const;
+export type PhotoFolder = (typeof FOLDERS)[number];
 
 async function compress(dataUrl: unknown): Promise<Buffer> {
   const m = typeof dataUrl === "string" ? DATA_URL.exec(dataUrl.trim()) : null;
@@ -32,7 +34,7 @@ async function compress(dataUrl: unknown): Promise<Buffer> {
 }
 
 // Returns the public location of each photo: an absolute URL (R2) or a path under /uploads (local).
-export async function savePhotos(code: string, photos: unknown): Promise<string[]> {
+export async function savePhotos(code: string, photos: unknown, folder: PhotoFolder = "complaints"): Promise<string[]> {
   if (photos === undefined || photos === null) return [];
   if (!Array.isArray(photos)) throw new AppError(400, "Photos must be a list.");
   if (photos.length > MAX_PHOTOS) throw new AppError(400, `You can attach up to ${MAX_PHOTOS} photos.`);
@@ -41,11 +43,12 @@ export async function savePhotos(code: string, photos: unknown): Promise<string[
   for (const [i, buf] of buffers.entries()) {
     const name = `${code}-${i + 1}-${randomBytes(4).toString("hex")}.jpg`;
     if (process.env.R2_ENDPOINT) {
-      out.push(await uploadFileToR2(buf, `complaints/${name}`, "image/jpeg"));
+      out.push(await uploadFileToR2(buf, `${folder}/${name}`, "image/jpeg"));
     } else {
-      fs.mkdirSync(DIR, { recursive: true });
-      fs.writeFileSync(path.join(DIR, name), buf);
-      out.push(`/uploads/complaints/${name}`);
+      const dir = path.join(process.cwd(), "uploads", folder);
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, name), buf);
+      out.push(`/uploads/${folder}/${name}`);
     }
   }
   return out;
