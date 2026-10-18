@@ -5,14 +5,17 @@ import { Check, Loader2, Search, UserPlus, X } from "lucide-react";
 import { errorText } from "@/lib/api";
 import { MIN_SEARCH_DIGITS, acceptFriend, friendsStore, removeFriend, searchPeople, sendFriendRequest, type ChatPerson } from "@/lib/chat";
 import ProfileAvatar from "@/components/captain/ProfileAvatar";
+import FullScreenPanel from "@/components/chat/FullScreenPanel";
 
 type Tab = "add" | "requests" | "friends";
 
-// Bottom sheet for friends: find a player by mobile number and send a request, answer requests sent to you,
-// and see or remove your friends.
+const TITLES: Record<Tab, string> = { add: "Add Friend", requests: "Friend Requests", friends: "Friends" };
+
+// Full-screen friends page, one view per menu entry: find a player by mobile number and send a request (add),
+// answer requests sent to you (requests), or see and remove your friends (friends).
 export default function FriendsSheet({ initialTab = "add", onClose }: { initialTab?: Tab; onClose: () => void }) {
   const { data } = friendsStore.use();
-  const [tab, setTab] = useState<Tab>(initialTab);
+  const tab = initialTab;
   const [q, setQ] = useState("");
   const [found, setFound] = useState<ChatPerson[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -41,12 +44,6 @@ export default function FriendsSheet({ initialTab = "add", onClose }: { initialT
     };
   }, [digits, searching]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   async function run(key: string, fn: () => Promise<unknown>, done?: string) {
     setBusy(key);
     setError(null);
@@ -62,30 +59,9 @@ export default function FriendsSheet({ initialTab = "add", onClose }: { initialT
     }
   }
 
-  const tabs: { id: Tab; label: string; count?: number }[] = [
-    { id: "add", label: "Add friend" },
-    { id: "requests", label: "Requests", count: incoming.length },
-    { id: "friends", label: "Friends", count: friends.length },
-  ];
-
   return (
-    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-900/40 backdrop-blur-sm" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-label="Friends" onClick={(e) => e.stopPropagation()} className="max-h-[88vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-5 pb-8">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Friends</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1.5 text-slate-500"><X size={20} /></button>
-        </div>
-
-        <div className="mt-3 grid grid-cols-3 gap-1 rounded-2xl bg-slate-100 p-1 text-sm font-semibold" role="tablist">
-          {tabs.map((t) => (
-            <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => { setTab(t.id); setError(null); setNote(null); }}
-              className={`rounded-xl py-2 ${tab === t.id ? "bg-white text-brand shadow-sm" : "text-slate-500"}`}>
-              {t.label}
-              {t.count ? <span className={`ml-1.5 rounded-full px-1.5 text-[11px] ${t.id === "requests" ? "bg-rose-500 text-white" : "bg-slate-200 text-slate-600"}`}>{t.count}</span> : null}
-            </button>
-          ))}
-        </div>
-
+    <FullScreenPanel title={TITLES[tab]} onClose={onClose}>
+      <div>
         {error && <p role="alert" className="mt-3 rounded-xl bg-red-500/10 p-2.5 text-sm text-red-600">{error}</p>}
         {note && <p role="status" className="mt-3 rounded-xl bg-emerald-500/10 p-2.5 text-sm text-emerald-700">{note}</p>}
 
@@ -177,10 +153,10 @@ export default function FriendsSheet({ initialTab = "add", onClose }: { initialT
                   className="rounded-full bg-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-600 disabled:opacity-60">Remove</button>
               </li>
             ))}
-            {friends.length === 0 && <li className="py-8 text-center text-sm text-slate-400">No friends yet. Use Add friend to find players.</li>}
+            {friends.length === 0 && <li className="py-8 text-center text-sm text-slate-400">No friends yet. Use Add Friend to find players.</li>}
           </ul>
         )}
       </div>
-    </div>
+    </FullScreenPanel>
   );
 }

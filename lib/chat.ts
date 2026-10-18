@@ -19,6 +19,7 @@ export interface ChatThreadRow {
   lastMessage: string | null;
   lastFrom: string | null;
   lastMessageAt: string;
+  lastSeen: boolean | null; // my last message: seen by everyone else? null when the last message is not mine
   unread: number;
 }
 
@@ -44,6 +45,13 @@ export interface ChatMessage {
   body: string;
   createdAt: string;
   mine: boolean;
+  deleted: boolean; // the sender deleted it: no words, only a note
+}
+
+// What changed in messages already on screen: when each other member last opened the chat, and which messages were deleted.
+export interface ChatStatus {
+  reads: string[];
+  deleted: string[];
 }
 
 export interface InvitePreview {
@@ -66,6 +74,8 @@ export const openDirect = (phone: string) => api<{ id: string }>("/chat/direct",
 export const createGroup = (name: string, members: string[]) => api<{ id: string }>("/chat/groups", { method: "POST", body: { name, members } });
 export const loadThread = (id: string) => api<ChatInfo>(`/chat/threads/${id}`);
 export const loadMessages = (id: string, after?: string) => api<ChatMessage[]>(`/chat/threads/${id}/messages`, { query: { after } });
+export const loadStatus = (id: string) => api<ChatStatus>(`/chat/threads/${id}/status`);
+export const deleteMessage = (id: string, messageId: string) => api<{ id: string; deleted: true }>(`/chat/threads/${id}/messages/${messageId}`, { method: "DELETE" });
 export const sendMessage = (id: string, body: string) => api<ChatMessage>(`/chat/threads/${id}/messages`, { method: "POST", body: { body } });
 export const addMembers = (id: string, phones: string[]) => api<ChatInfo>(`/chat/threads/${id}/members`, { method: "POST", body: { phones } });
 export const removeMember = (id: string, phone: string) => api<{ left: boolean }>(`/chat/threads/${id}/members/${phone}`, { method: "DELETE" });

@@ -1062,6 +1062,7 @@ model ChatMessage {
   senderId  String
   body      String
   createdAt DateTime   @default(now())
+  deletedAt DateTime? // the sender deleted it for everyone: the words are erased and only "deleted" is shown
   thread    ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
 
   @@index([threadId, createdAt])

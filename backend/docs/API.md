@@ -273,12 +273,14 @@ Registered customers can chat one to one or in groups (text only). Every route n
 | --- | --- | --- | --- |
 | GET | `/chat/rules` | User | `{bodyMax: 1000, groupMax: 50, groupNameMin: 2, groupNameMax: 40}` |
 | GET | `/chat/people?q=` | User | customers whose mobile number starts with `q` (at least 5 digits, else `[]`), max 10, never yourself: `[{phone, name, avatar}]` |
-| GET | `/chat/threads` | User | my chats, newest activity first: `{id, kind: direct|group, title, avatar, memberCount, lastMessage, lastFrom, lastMessageAt, unread}` |
+| GET | `/chat/threads` | User | my chats, newest activity first: `{id, kind: direct|group, title, avatar, memberCount, lastMessage, lastFrom, lastMessageAt, lastSeen, unread}`. `lastSeen` is for your own last message: `true` once everyone else has opened the chat since, `false` before, `null` when the last message is not yours |
 | GET | `/chat/unread` | User | `{unread}` total unread messages (for the badge on the Chat tab) |
 | POST | `/chat/direct` | User | `{phone}` -> `{id}`. One chat per pair (opening again returns the same one). 404 if the number is not a registered customer, 400 for yourself |
 | POST | `/chat/groups` | User | `{name (2-40), members?: [phone]}` -> `{id}`. The creator is the admin. 5 groups per 24 hours (429), up to 50 people |
 | GET | `/chat/threads/:id` | Member | `{id, kind, title, avatar, members[{phone,name,avatar,role,you}], isAdmin, inviteCode}`. `inviteCode` only for a group admin |
-| GET | `/chat/threads/:id/messages?after=` | Member | the latest 60 messages, or those after an ISO time. Marks the chat read. `[{id, senderId, senderName, body, createdAt, mine}]` |
+| GET | `/chat/threads/:id/messages?after=` | Member | the latest 60 messages, or those after an ISO time. Marks the chat read. `[{id, senderId, senderName, body, createdAt, mine, deleted}]`; a deleted message has `body: ""` and `deleted: true` |
+| GET | `/chat/threads/:id/status` | Member | `{reads: [ISO time each other member last opened the chat], deleted: [ids of recent deleted messages]}`. Does not mark the chat read. A message of yours is Seen when every time in `reads` is at or after its `createdAt` |
+| DELETE | `/chat/threads/:id/messages/:messageId` | Sender | deletes your own message for everyone: the words are erased and a "deleted" note stays (403 for someone else's message, 404 if it is not in this chat). Deleting twice is harmless. If it was the latest message the chat preview becomes "This message was deleted"; deleted messages are not counted as unread |
 | POST | `/chat/threads/:id/messages` | Member | `{body (1-1000)}`. 20 messages a minute per customer (429) |
 | PATCH | `/chat/threads/:id` | Group admin | `{name}` renames the group |
 | POST | `/chat/threads/:id/members` | Group admin | `{phones: []}` adds registered customers (max 50 in a group) |

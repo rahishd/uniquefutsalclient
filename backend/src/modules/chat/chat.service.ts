@@ -12,6 +12,7 @@ export const GROUP_MAX_MEMBERS = 50;
 export const GROUPS_PER_DAY = 5; // groups one customer can create in 24 hours
 export const SENDS_PER_MINUTE = 20;
 export const PAGE = 60;
+export const DELETED_NOTE = "This message was deleted";
 
 const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 const makeInvite = () => Array.from({ length: 10 }, () => ALPHABET[randomInt(ALPHABET.length)]).join("");
@@ -82,7 +83,7 @@ export class ChatService {
   async threads(userId: string) {
     const mine = await prisma.chatMember.findMany({
       where: { userId },
-      include: { thread: { include: { members: { select: { userId: true } } } } },
+      include: { thread: { include: { members: { select: { userId: true, lastReadAt: true } } } } },
       orderBy: { thread: { lastMessageAt: "desc" } },
       take: 100,
     });
@@ -93,7 +94,10 @@ export class ChatService {
     return Promise.all(
       mine.map(async (m) => {
         const t = m.thread;
-        const unread = await prisma.chatMessage.count({ where: { threadId: t.id, createdAt: { gt: m.lastReadAt }, NOT: { senderId: userId } } });
+        const unread = await prisma.chatMessage.count({ where: { threadId: t.id, createdAt: { gt: m.lastReadAt }, deletedAt: null, NOT: { senderId: userId } } });
+        // my last message: has everyone else opened the chat since it was sent?
+        const rest = t.members.filter((x) => x.userId !== userId);
+        const lastSeen = t.lastSenderId === userId ? rest.length > 0 && rest.every((x) => x.lastReadAt >= t.lastMessageAt) : null;
         const other = t.kind === "direct" ? personOf(people, t.members.map((x) => x.userId).find((p) => p !== userId) ?? "") : null;
         return {
           id: t.id,
@@ -104,6 +108,7 @@ export class ChatService {
           lastMessage: t.lastMessage,
           lastFrom: t.lastSenderId ? (t.lastSenderId === userId ? "You" : personOf(senders, t.lastSenderId).name) : null,
           lastMessageAt: t.lastMessageAt,
+          lastSeen,
           unread,
         };
       }),
@@ -114,7 +119,7 @@ export class ChatService {
     const mine = await prisma.chatMember.findMany({ where: { userId }, select: { threadId: true, lastReadAt: true }, take: 200 });
     let total = 0;
     for (const m of mine) {
-      total += await prisma.chatMessage.count({ where: { threadId: m.threadId, createdAt: { gt: m.lastReadAt }, NOT: { senderId: userId } } });
+      total += await prisma.chatMessage.count({ where: { threadId: m.threadId, createdAt: { gt: m.lastReadAt }, deletedAt: null, NOT: { senderId: userId } } });
     }
     return total;
   }
@@ -202,10 +207,38 @@ export class ChatService {
       id: r.id,
       senderId: r.senderId,
       senderName: r.senderId === userId ? "You" : personOf(people, r.senderId).name,
-      body: r.body,
+      body: r.deletedAt ? "" : r.body,
       createdAt: r.createdAt,
       mine: r.senderId === userId,
+      deleted: !!r.deletedAt,
     }));
+  }
+
+  /**
+   * What changed in messages the reader already has: when each other person last opened the chat (so the app can show
+   * Seen or Sent on my messages) and which recent messages were deleted. Does not mark anything as read.
+   */
+  async status(userId: string, threadId: string) {
+    await membership(userId, threadId);
+    const [others, deleted] = await Promise.all([
+      prisma.chatMember.findMany({ where: { threadId, NOT: { userId } }, select: { lastReadAt: true } }),
+      prisma.chatMessage.findMany({ where: { threadId, deletedAt: { not: null } }, orderBy: { createdAt: "desc" }, take: 200, select: { id: true } }),
+    ]);
+    return { reads: others.map((o) => o.lastReadAt), deleted: deleted.map((d) => d.id) };
+  }
+
+  /** The sender deletes their own message for everyone: the words are erased and a "deleted" note stays in the chat. */
+  async deleteMessage(userId: string, threadId: string, messageId: string) {
+    await membership(userId, threadId);
+    const msg = await prisma.chatMessage.findFirst({ where: { id: messageId, threadId } });
+    if (!msg) throw new AppError(404, "Message not found.");
+    if (msg.senderId !== userId) throw new AppError(403, "You can only delete your own messages.");
+    if (!msg.deletedAt) {
+      await prisma.chatMessage.update({ where: { id: msg.id }, data: { deletedAt: new Date(), body: "" } });
+      const latest = await prisma.chatMessage.findFirst({ where: { threadId }, orderBy: { createdAt: "desc" }, select: { id: true } });
+      if (latest?.id === msg.id) await prisma.chatThread.update({ where: { id: threadId }, data: { lastMessage: DELETED_NOTE } });
+    }
+    return { id: msg.id, deleted: true };
   }
 
   async send(userId: string, threadId: string, bodyInput: unknown) {
@@ -225,7 +258,7 @@ export class ChatService {
       data: { lastMessage: body.slice(0, 120), lastSenderId: userId, lastMessageAt: msg.createdAt },
     });
     await prisma.chatMember.update({ where: { id: m.id }, data: { lastReadAt: msg.createdAt } });
-    return { id: msg.id, senderId: userId, senderName: "You", body: msg.body, createdAt: msg.createdAt, mine: true };
+    return { id: msg.id, senderId: userId, senderName: "You", body: msg.body, createdAt: msg.createdAt, mine: true, deleted: false };
   }
 
   async addMembers(userId: string, threadId: string, phones: unknown) {

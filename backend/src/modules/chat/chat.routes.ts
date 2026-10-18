@@ -72,6 +72,14 @@ chatRouter.get("/threads/:id/messages", asyncHandler(async (req: AuthRequest, re
   ok(res, "Messages", await chatService.messages(req.user!.id, req.params.id, req.query.after));
 }));
 
+chatRouter.get("/threads/:id/status", asyncHandler(async (req: AuthRequest, res: Response) => {
+  ok(res, "Chat status", await chatService.status(req.user!.id, req.params.id));
+}));
+
+chatRouter.delete("/threads/:id/messages/:messageId", asyncHandler(async (req: AuthRequest, res: Response) => {
+  ok(res, "Message deleted", await chatService.deleteMessage(req.user!.id, req.params.id, req.params.messageId));
+}));
+
 chatRouter.post("/threads/:id/messages", [body("body").isString()], validateRequest, asyncHandler(async (req: AuthRequest, res: Response) => {
   ok(res, "Sent", await chatService.send(req.user!.id, req.params.id, req.body.body), 201);
 }));
