@@ -745,6 +745,27 @@ model Complaint {
   @@index([status, createdAt])
 }
 
+// A customer request for wheelchair access or help on a visit (customer app, Quick Access, Wheelchair Request).
+// Staff confirm or decline it in the admin portal and the customer is told in the app. Code: WC-XXXXXX.
+model WheelchairRequest {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  userId      String // User.phoneNumber
+  date        String // YYYY-MM-DD, the day they are coming
+  time        String // HH:MM, about when they arrive
+  people      Int      @default(1) // how many wheelchair users
+  note        String?
+  bookingCode String?
+  status      String   @default("pending") // pending | confirmed | completed | declined | cancelled
+  staffReply  String?
+  repliedBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status, date])
+}
+
 // A VIP discount code staff give to ONE customer (admin portal > Customers). type percent | flat. After the customer
 // types it once (claimedAt is set) it is applied to every booking they make, until staff pause or remove it.
 model VipCode {

@@ -297,6 +297,20 @@ export const helpTopics: HelpTopic[] = [
     href: { label: "Complaints", to: "/complaints" },
   },
   {
+    id: "wheelchair",
+    icon: "bell",
+    title: "Coming with a wheelchair",
+    summary: "Ask the venue to get the ramp, a court-side space and help ready for you.",
+    points: [
+      "On Home, tap Wheelchair Request in Quick Access. You need to be signed in.",
+      "Choose the day and about what time you are coming, and how many wheelchair users are in your group.",
+      "Add a note (for example help from the car park) and your booking code if you have one.",
+      "You get a reference like WC-7K3QX9. The venue confirms on the same page and in your notifications.",
+      "You can cancel a request until it is done. Up to 3 requests a day, up to 60 days ahead.",
+    ],
+    href: { label: "Wheelchair Request", to: "/wheelchair" },
+  },
+  {
     id: "academy",
     icon: "bell",
     title: "Children's Academy",

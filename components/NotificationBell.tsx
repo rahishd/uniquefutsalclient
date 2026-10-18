@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { HIGHLIGHT_EVENT, hlOf } from "@/lib/highlight";
-import { AlarmClock, Bell, BellRing, CalendarCheck, CreditCard, Crown, Gamepad2, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, UserSearch, X } from "lucide-react";
+import { Accessibility, AlarmClock, Bell, BellRing, CalendarCheck, CreditCard, Crown, Gamepad2, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, UserSearch, X } from "lucide-react";
 import {
   clearAll,
   markAllRead,
@@ -27,6 +27,7 @@ const META: Record<NoticeType, { icon: typeof Bell; tone: string; label: string 
   tournament: { icon: Trophy, tone: "bg-orange-500/10 text-orange-600", label: "Tournament" },
   gamezone: { icon: Gamepad2, tone: "bg-violet-500/10 text-violet-600", label: "Gamezone" },
   complaint: { icon: MessageSquareWarning, tone: "bg-rose-500/10 text-rose-600", label: "Complaint" },
+  wheelchair: { icon: Accessibility, tone: "bg-sky-500/10 text-sky-700", label: "Wheelchair" },
   academy: { icon: GraduationCap, tone: "bg-teal-500/10 text-teal-600", label: "Academy" },
   referral: { icon: HeartHandshake, tone: "bg-pink-500/10 text-pink-600", label: "Refer & Earn" },
   players: { icon: UserSearch, tone: "bg-sky-500/10 text-sky-600", label: "Players needed" },

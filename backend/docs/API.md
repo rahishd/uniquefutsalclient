@@ -164,6 +164,10 @@ can be booked once.
 | GET | `/complaints/me` | User | own complaints, newest first, with `status`, `staffReply`, `photos` (paths under `/uploads/complaints/...` or full R2 URLs) |
 | GET | `/complaints/admin?status=&page=&limit=` | Staff | all complaints with `userId` and `customerName` |
 | PATCH | `/complaints/admin/:id` | Staff | `{status?: open|in_review|resolved|closed, reply?}`; notifies the customer (`type: "complaint"`); audited |
+| GET | `/wheelchair/options` | Guest | `{maxPeople, noteMax, daysAhead, perDay}` for the Wheelchair Request form |
+| POST | `/wheelchair` | User | `{date (YYYY-MM-DD, today to +60 days), time (HH:MM), people? (1-10), note? (max 500), bookingCode?}` -> request with code `WC-XXXXXX`, status `pending`. `bookingCode` must be the caller's own booking. 3 requests per customer per 24 hours (429 after) |
+| GET | `/wheelchair/me` | User | own wheelchair requests, newest first, with `status` (pending, confirmed, completed, declined, cancelled) and `staffReply` |
+| POST | `/wheelchair/:id/cancel` | User | cancels the caller's own request while it is `pending` or `confirmed` (409 otherwise). Staff answer in the admin portal (`/admin/wheelchair`), which notifies the customer with `type: "wheelchair"` |
 
 Table `Complaint` (migration `20261007000001_complaints`, additive). Notification type `complaint` added.
 
