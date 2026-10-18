@@ -1,4 +1,4 @@
-// Home banner mascot: a smiling cartoon boy in an orange football kit showing off ball skills.
+// Home banner mascot: a smiling cartoon boy in a dark blue Unique Futsal football kit showing off ball skills.
 // One 20-second routine, then it starts again. Pure SVG + CSS keyframes (no video, no images), so it
 // is tiny, sharp on every screen, and stops moving for people who prefer reduced motion.
 //
@@ -135,7 +135,8 @@ const CSS = [
 ].join("");
 
 const SKIN = "#f0b48a";
-const ORANGE = "#f5822a";
+const ORANGE = "#f5822a"; // boots only
+const KIT = "#14215e"; // dark blue kit
 const NAVY = "#0c0b5d";
 
 function Leg({ x, cls }: { x: number; cls: string }) {
@@ -143,7 +144,7 @@ function Leg({ x, cls }: { x: number; cls: string }) {
     <g className={cls}>
       <rect x={x - 6} y={146} width={12} height={30} rx={6} fill={SKIN} />
       <rect x={x - 6.5} y={172} width={13} height={34} rx={5} fill="#fff" />
-      <rect x={x - 6.5} y={180} width={13} height={5} fill={ORANGE} />
+      <rect x={x - 6.5} y={180} width={13} height={5} fill={KIT} />
       <rect x={x - 6.5} y={188} width={13} height={3} fill={NAVY} />
       <ellipse cx={x} cy={214} rx={13} ry={7} fill="#1f2937" />
       <path d={`M${x - 9} 212 Q${x} 207 ${x + 9} 212`} stroke={ORANGE} strokeWidth={2} fill="none" strokeLinecap="round" />
@@ -154,7 +155,7 @@ function Leg({ x, cls }: { x: number; cls: string }) {
 function Arm({ x, cls }: { x: number; cls: string }) {
   return (
     <g className={cls}>
-      <rect x={x - 7} y={98} width={14} height={20} rx={7} fill={ORANGE} />
+      <rect x={x - 7} y={98} width={14} height={20} rx={7} fill={KIT} />
       <rect x={x - 7} y={112} width={14} height={3} fill="#fff" />
       <rect x={x - 4.5} y={114} width={9} height={28} rx={4.5} fill={SKIN} />
       <circle cx={x} cy={146} r={6.5} fill={SKIN} />
@@ -164,7 +165,7 @@ function Arm({ x, cls }: { x: number; cls: string }) {
 
 export default function KidSkills({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 220 262" role="img" aria-label="A smiling boy in a football kit juggling a ball" className={`uf-kid ${className}`}>
+    <svg viewBox="0 0 220 262" role="img" aria-label="A smiling boy in a Unique Futsal football kit juggling a ball" className={`uf-kid ${className}`}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <defs>
         <clipPath id="uf-ball-clip"><circle r={13} /></clipPath>
@@ -184,13 +185,15 @@ export default function KidSkills({ className = "" }: { className?: string }) {
             <Leg x={120} cls="uf-leg-r" />
 
             {/* shorts and shirt */}
-            <path d="M88 148 L132 148 L134 172 L112 172 L110 162 L108 172 L86 172 Z" fill="#fff" />
-            <path d="M88 148 L86 172 L90 172 L92 148 Z M132 148 L134 172 L130 172 L128 148 Z" fill={ORANGE} />
-            <path d="M86 100 Q86 94 94 94 L126 94 Q134 94 134 100 L132 152 L88 152 Z" fill={ORANGE} />
+            <path d="M88 148 L132 148 L134 172 L112 172 L110 162 L108 172 L86 172 Z" fill={KIT} />
+            <path d="M88 148 L86 172 L90 172 L92 148 Z M132 148 L134 172 L130 172 L128 148 Z" fill="#fff" />
+            <path d="M86 100 Q86 94 94 94 L126 94 Q134 94 134 100 L132 152 L88 152 Z" fill={KIT} />
             <rect x={87} y={128} width={46} height={6} fill="#fff" opacity={0.9} />
             <path d="M100 94 Q110 108 120 94 Z" fill="#fff" />
             <circle cx={97} cy={114} r={4.5} fill="#fff" />
-            <circle cx={97} cy={114} r={2} fill={NAVY} />
+            <circle cx={97} cy={114} r={2} fill={KIT} />
+            {/* printed club name */}
+            <text x={110} y={144} textAnchor="middle" textLength={40} lengthAdjust="spacingAndGlyphs" fontSize={5.6} fontWeight={800} fill="#fff" fontFamily="Arial, Helvetica, sans-serif">UNIQUE FUTSAL</text>
 
             <rect x={102} y={88} width={16} height={12} fill={SKIN} />
 
