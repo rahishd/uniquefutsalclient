@@ -35,7 +35,13 @@ export function periodOfHour(hour: number): Period {
   return hour < 10 ? "Morning" : hour < 17 ? "Day" : "Evening";
 }
 
-export type LoyaltyKind = "game" | "captain_win" | "goods" | "membership" | "free_game" | "referral" | "goal_rush" | "gift" | "watch_earn";
+export type LoyaltyKind = "game" | "captain_win" | "goods" | "membership" | "free_game" | "referral" | "goal_rush" | "gift" | "watch_earn" | "shared_out" | "shared_in";
+
+// Sharing points: a customer sends whole points they hold to another registered customer. The points keep the expiry
+// they had, so sharing never makes points last longer.
+export const SHARE_MIN = 1;
+export const SHARE_MAX = 500; // per share
+export const SHARE_PER_DAY = 5; // shares one customer can send in 24 hours
 
 export const r1 = (n: number) => Math.round(n * 10) / 10;
 
@@ -102,6 +108,24 @@ function buildLots(ledger: LedgerRow[]): Lot[] {
   return lots;
 }
 
+// Which of the points a customer holds today would be given away for `amount` points: the ones that expire soonest first,
+// the same order a claim spends them. Each part keeps its own expiry (null = never). Empty when the balance is too small.
+export function planShare(ledger: LedgerRow[], today: string, amount: number): { expiresOn: string | null; points: number }[] {
+  const usable = buildLots(ledger)
+    .filter((l) => l.left > 0 && (l.row.expiresOn === null || l.row.expiresOn >= today))
+    .sort((a, b) => (a.row.expiresOn ?? "9999").localeCompare(b.row.expiresOn ?? "9999"));
+  const parts = new Map<string | null, number>();
+  let need = amount;
+  for (const l of usable) {
+    if (need <= 0) break;
+    const take = Math.min(l.left, need);
+    parts.set(l.row.expiresOn, r1((parts.get(l.row.expiresOn) ?? 0) + take));
+    need = r1(need - take);
+  }
+  if (need > 0) return [];
+  return [...parts].map(([expiresOn, points]) => ({ expiresOn, points }));
+}
+
 export interface Bucket {
   points: number;
   nextExpiry: string | null;
@@ -113,7 +137,7 @@ export interface LoyaltySummary {
   expired: number;
   remaining: number;
   expiringSoon: { points: number; date: string } | null;
-  byType: { games: Bucket; goods: Bucket; membership: Bucket; watch: Bucket };
+  byType: { games: Bucket; goods: Bucket; membership: Bucket; watch: Bucket; shared: Bucket };
   rows: { id: string; kind: LoyaltyKind; points: number; earnedOn: string; expiresOn: string | null; detail: string; status: "valid" | "used" | "expired" | "never" | "spent" }[];
 }
 
@@ -160,6 +184,7 @@ export function summarize(ledger: LedgerRow[], today: string): LoyaltySummary {
       watch: bucket((l) => l.row.kind === "watch_earn"),
       goods: bucket((l) => l.row.kind === "goods"),
       membership: bucket((l) => l.row.kind === "membership"),
+      shared: bucket((l) => l.row.kind === "shared_in"),
     },
     rows,
   };

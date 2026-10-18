@@ -5,6 +5,7 @@ import { ApiResponseUtil } from "../../utils/apiResponse";
 import { authMiddleware, AuthRequest } from "../../middlewares/auth.middleware";
 import adminOnly from "../../middlewares/admin.middleware";
 import validateRequest from "../../middlewares/validate.middleware";
+import { AppError } from "../../middlewares/error.middleware";
 import { AuditService } from "../audit";
 import loyaltyService from "./loyalty.service";
 import { Period } from "../../utils/loyaltyPoints";
@@ -29,6 +30,26 @@ router.post(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     const voucher = await loyaltyService.claim(req.user!.id, req.body.period as Period);
     res.status(201).json(ApiResponseUtil.success(201, "Free game claimed", voucher));
+  }),
+);
+
+// Share points with another registered customer: check who the number belongs to (first name only), then send
+router.get(
+  "/share/friend/:phone",
+  authMiddleware,
+  asyncHandler(async (req: AuthRequest, res: Response) => {
+    res.json(ApiResponseUtil.success(200, "Friend", await loyaltyService.shareFriend(req.user!.id, req.params.phone)));
+  }),
+);
+
+router.post(
+  "/share",
+  authMiddleware,
+  asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (req.user!.role !== "user") throw new AppError(403, "Sharing points is for customers");
+    const sent = await loyaltyService.share(req.user!.id, req.body ?? {});
+    await AuditService.log({ action: "POINTS_SHARE", entity: "LoyaltyEntry", entityId: sent.id, changes: `${sent.points} points from ${req.user!.id} to ${req.body?.friendPhone}`, userId: req.user!.id });
+    res.status(201).json(ApiResponseUtil.success(201, "Points shared", sent));
   }),
 );
 

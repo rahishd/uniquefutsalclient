@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useHighlight } from "@/lib/highlight";
 import Link from "next/link";
-import { Gift, Star, Trophy, ShoppingBag, Gamepad2, UserRound, ChevronDown, Crown, HeartHandshake, Check, Clock, TriangleAlert, Loader2, Goal, Clapperboard } from "lucide-react";
+import { Gift, Star, Trophy, ShoppingBag, Gamepad2, UserRound, ChevronDown, Crown, HeartHandshake, Check, Clock, TriangleAlert, Loader2, Goal, Clapperboard, Send } from "lucide-react";
+import SharePoints from "@/components/points/SharePoints";
 import { useSession, openSignIn } from "@/lib/session";
 import { errorText } from "@/lib/api";
 import { GZ_POINTS_PER_HOUR, GAME_POINTS_MONTHS, MEMBERSHIP_POINTS, POINTS_CAPTAIN_WIN, RS_PER_POINT, SHIFT_HOURS, WATCH_POINTS_MONTHS, fmtPts } from "@/lib/points";
@@ -23,6 +24,8 @@ const KIND: Record<LoyaltyRow["kind"], { icon: typeof Star; tone: string }> = {
   goal_rush: { icon: Goal, tone: "bg-emerald-400/20 text-emerald-700" },
   gift: { icon: Gift, tone: "bg-rose-400/20 text-rose-600" },
   watch_earn: { icon: Clapperboard, tone: "bg-sky-400/20 text-sky-700" },
+  shared_out: { icon: Send, tone: "bg-orange-400/20 text-orange-600" },
+  shared_in: { icon: Send, tone: "bg-emerald-400/20 text-emerald-700" },
 };
 
 const SHOWN = 4;
@@ -50,6 +53,7 @@ export default function PointsPage() {
   const [confirming, setConfirming] = useState<Period | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
 
   if (!session) return <div className="h-96 animate-pulse rounded-3xl bg-white/40" aria-label="Loading" />;
   if (!session.registered) {
@@ -111,7 +115,12 @@ export default function PointsPage() {
             {fmtPts(loy.expiringSoon.points)} points expire on {fmtDay(loy.expiringSoon.date)}. Claim a free game before then.
           </p>
         )}
+        <button type="button" onClick={() => setSharing((v) => !v)} aria-expanded={sharing} className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-white/15 px-4 py-3 text-sm font-semibold text-white ring-1 ring-white/25 transition hover:bg-white/25">
+          <Send size={16} /> Share points with a friend
+        </button>
       </section>
+
+      {sharing && <SharePoints loy={loy} onClose={() => setSharing(false)} />}
 
       {/* Claim a free game */}
       <section className="glass rounded-3xl p-5 desk:col-span-2" aria-label="Claim a free game">
@@ -202,6 +211,7 @@ export default function PointsPage() {
           <li className="flex gap-3"><Clapperboard size={20} className="mt-0.5 shrink-0 text-sky-600" /><span><b>Watch &amp; Earn:</b> watch ads in Quick Access. Each ad is {WE_RULES.adSeconds} seconds, and <b>{WE_RULES.adsPerPoint} ads ({WE_RULES.minutesPerPoint} minutes) = 1 point</b>.</span></li>
           <li className="flex gap-3"><Goal size={20} className="mt-0.5 shrink-0 text-emerald-600" /><span><b>Unique Goal Rush:</b> score {GR_RULES.goalsToQualify} or more of {GR_RULES.shotsPerGame} penalties to win 1 point, up to {GR_RULES.gamesPerDay} games a day.</span></li>
           <li className="flex gap-3"><Trophy size={20} className="mt-0.5 shrink-0 text-amber-600" /><span>Challenge games: only the <b>winning captain</b> earns <b>{POINTS_CAPTAIN_WIN} points</b>.</span></li>
+          <li className="flex gap-3"><Send size={20} className="mt-0.5 shrink-0 text-brand" /><span><b>Share points:</b> send whole points to a friend who has an account. They keep their expiry date, and sent points can&apos;t be taken back.</span></li>
         </ul>
       </section>
 
@@ -214,7 +224,8 @@ export default function PointsPage() {
             { label: "Watch & Earn", rule: `${WATCH_POINTS_MONTHS / 12} year from the day you earn it`, b: loy.byType.watch ?? { points: 0, nextExpiry: null } },
             { label: "Extra goods", rule: "1 year from purchase", b: loy.byType.goods },
             { label: "Membership", rule: "Never expire", b: loy.byType.membership },
-          ].map((r) => (
+            { label: "Shared with you", rule: "Keep the expiry they had", b: loy.byType.shared ?? { points: 0, nextExpiry: null } },
+          ].filter((r) => r.label !== "Shared with you" || r.b.points > 0).map((r) => (
             <li key={r.label} className="flex items-center justify-between gap-3 py-2.5">
               <div>
                 <p className="font-medium">{r.label}</p>

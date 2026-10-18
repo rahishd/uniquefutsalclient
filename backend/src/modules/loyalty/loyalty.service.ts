@@ -4,9 +4,10 @@ import { AppError } from "../../middlewares/error.middleware";
 import SettingsService from "../settings/settings.service";
 import notificationService from "../notification/notification.service";
 import { todayKey } from "../../utils/dates";
+import { randomUUID } from "crypto";
 import {
-  EXPIRY_WARN_DAYS, LedgerRow, LoyaltyKind, MEMBERSHIP_POINTS, PERIODS, PERIOD_HOUR, POINTS_CAPTAIN_WIN,
-  Period, expiryFor, freeGameCost, periodOfHour, pointsForGame, pointsForGoods, r1, summarize,
+  EXPIRY_WARN_DAYS, LedgerRow, LoyaltyKind, MEMBERSHIP_POINTS, PERIODS, PERIOD_HOUR, POINTS_CAPTAIN_WIN, SHARE_MAX, SHARE_MIN, SHARE_PER_DAY,
+  Period, expiryFor, freeGameCost, periodOfHour, planShare, pointsForGame, pointsForGoods, r1, summarize,
 } from "../../utils/loyaltyPoints";
 import { addDaysKey } from "../../utils/dates";
 import logger from "../../config/logger";
@@ -66,7 +67,72 @@ export class LoyaltyService {
       toNext: r1(Math.max(0, cheapest - summary.remaining)),
       shifts: shifts.map((s) => ({ ...s, canClaim: summary.remaining >= s.cost })),
       vouchers: vouchers.map((v) => ({ id: v.id, period: v.period, cost: num(v.cost), claimedAt: v.claimedAt })),
+      share: { min: SHARE_MIN, max: SHARE_MAX, perDay: SHARE_PER_DAY },
     };
+  }
+
+  /** The person points would go to: another registered customer. Returns only their first name, to check it is the right one. */
+  async shareFriend(me: string, phone: unknown) {
+    const p = typeof phone === "string" ? phone.trim() : "";
+    if (!/^9\d{9}$/.test(p)) throw new AppError(400, "Enter your friend's 10-digit mobile number starting with 9");
+    if (p === me) throw new AppError(400, "Choose a friend, not yourself");
+    const u = await prisma.user.findUnique({ where: { phoneNumber: p }, select: { phoneNumber: true, name: true, isActive: true, role: true } });
+    if (!u || !u.isActive || u.role !== "user") throw new AppError(404, "No account with this number. Your friend needs to register in the app first.");
+    return { phone: u.phoneNumber, firstName: (u.name ?? "").trim().split(/\s+/)[0] || "Player" };
+  }
+
+  // Send whole points to another registered customer. Locked per sender (the same lock a free-game claim uses), so points
+  // cannot be spent and shared at once. The points that expire soonest go first and keep their expiry on the other side.
+  async share(userId: string, input: { friendPhone?: unknown; points?: unknown }) {
+    const friend = await this.shareFriend(userId, input.friendPhone);
+    const points = Number(input.points);
+    if (!Number.isInteger(points) || points < SHARE_MIN || points > SHARE_MAX) {
+      throw new AppError(400, `Share between ${SHARE_MIN} and ${SHARE_MAX} whole points at a time`);
+    }
+    const me = await prisma.user.findUnique({ where: { phoneNumber: userId }, select: { name: true } });
+    const from = (me?.name ?? "").trim().split(/\s+/)[0] || "A friend";
+    const today = todayKey();
+    const id = randomUUID();
+
+    const remaining = await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${"loyalty:" + userId}))`;
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      if ((await tx.loyaltyEntry.count({ where: { userId, kind: "shared_out", createdAt: { gte: since } } })) >= SHARE_PER_DAY) {
+        throw new AppError(429, `You can share points up to ${SHARE_PER_DAY} times a day. Please try again tomorrow.`);
+      }
+      const ledger = await this.ledger(userId, tx);
+      const parts = planShare(ledger, today, points);
+      if (parts.length === 0) {
+        throw new AppError(409, `Not enough points. You have ${summarize(ledger, today).remaining} and tried to share ${points}.`);
+      }
+      await tx.loyaltyEntry.create({
+        data: {
+          userId, kind: "shared_out", points: new Prisma.Decimal((-points).toFixed(1)), earnedOn: today, expiresOn: null,
+          sourceType: "share", sourceId: id, detail: `Shared with ${friend.firstName}`,
+        },
+      });
+      for (const [i, part] of parts.entries()) {
+        await tx.loyaltyEntry.create({
+          data: {
+            userId: friend.phone, kind: "shared_in", points: new Prisma.Decimal(part.points.toFixed(1)), earnedOn: today, expiresOn: part.expiresOn,
+            sourceType: "share", sourceId: `${id}:${i}`, detail: `Shared by ${from}`,
+          },
+        });
+      }
+      return summarize(await this.ledger(userId, tx), today).remaining;
+    });
+
+    await notificationService.notify({
+      userId: friend.phone, type: "points", title: "Points received",
+      message: `${from} shared ${points} loyalty points with you.`,
+      href: await this.pointsHref(friend.phone, "share", `${id}:0`), dedupeKey: `share-in-${id}`,
+    });
+    await notificationService.notify({
+      userId, type: "points", title: "Points shared",
+      message: `${points} loyalty points were sent to ${friend.firstName}.`,
+      href: await this.pointsHref(userId, "share", id), dedupeKey: `share-out-${id}`,
+    });
+    return { id, points, to: friend.firstName, remaining };
   }
 
   // Adds points once per (kind, source). Calling it again for the same source changes nothing.

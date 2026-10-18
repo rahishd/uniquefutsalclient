@@ -78,6 +78,8 @@ Times use Nepal time. Dates are `YYYY-MM-DD`. Money is whole rupees.
 | POST | `/promos/validate` | Guest | `{code,date,startTime}` |
 | GET | `/loyalty/me` | User | `remaining, earned, claimed, expired, expiringSoon, byType, rows[], shifts[{period,price,perGame,cost,canClaim}], vouchers[], toNext` |
 | POST | `/loyalty/claim` | User | `{period: Morning|Day|Evening}` -> voucher. 409 if not enough points. Locked so a double tap cannot spend twice |
+| GET | `/loyalty/share/friend/:phone` | User | the registered customer a number belongs to, first name only (400 bad number or yourself, 404 not registered) |
+| POST | `/loyalty/share` | User | `{friendPhone, points}`: send whole points (1 to 500) to another registered customer -> `{id, points, to, remaining}`. 409 if not enough points, 429 after 5 shares in 24 hours. Locked per sender with `claim`. `GET /loyalty/me` also returns `share:{min,max,perDay}` |
 | POST | `/loyalty/goods-sale` | Staff | `{phone, amount, items?}`: 1 point per Rs. 100 |
 
 Promo use limits: staff can set `maxUses` (everyone together) and `maxPerCustomer` on a code in the admin portal. A use is a booking or membership carrying the code that is not cancelled, so cancelling gives it back. A code with no uses left is not listed by `GET /promos`. `POST /bookings/quote` answers `promo:{ok:false,message}`, and `/bookings/checkout` and the membership request answer 400 ("This promo code has been fully used." / "You have already used this promo code."). It is checked just before the booking is saved, not under a lock, so two people taking the last use at the same instant could both get it.
@@ -86,6 +88,7 @@ Rules (single source: `src/utils/loyaltyPoints.ts`): a completed and paid regula
 a free game costs price/10; goods Rs. 100 = 1 point; membership 3 months 30 / 6 months 70; challenge win 5 (winning captain only).
 Game and challenge points last 3 months, goods 1 year, membership never; claims spend the soonest-expiring points first.
 Awards are idempotent per source. Free-game bookings, guests, membership ledger rows and challenge bookings earn no game points.
+Sharing: the sender gets one `shared_out` row (negative, source `share`), the friend one `shared_in` row per expiry date. The points that expire soonest go first and keep their expiry (never-expiring stay never-expiring), so sharing cannot extend how long points last. Both people get a points notice that opens their row.
 
 ## Gamezone
 

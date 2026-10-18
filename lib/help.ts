@@ -175,6 +175,7 @@ export const helpTopics: HelpTopic[] = [
       `Game points last ${GAME_POINTS_MONTHS} months, goods points 1 year, membership points never expire. We warn you before points expire.`,
       "To use them: open Points, pick a shift and tap Claim. Then book that shift and tap \"Use a free game voucher\".",
       "Free games work for regular bookings only, not for hosting a challenge.",
+      "To share points: open Points, tap Share points with a friend, enter their mobile number (they need an account), choose how many whole points and send. Their points keep the same expiry date. Sent points can't be taken back, and you can share up to 5 times a day.",
     ],
     href: { label: "My points", to: "/points" },
   },
