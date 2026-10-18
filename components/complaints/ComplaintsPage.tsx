@@ -112,6 +112,10 @@ export default function ComplaintsPage() {
         <p className="text-sm text-slate-500">Something went wrong? Tell us and we will look into it.</p>
       </header>
 
+      <section aria-label="Confidentiality" className="rounded-2xl bg-white p-4 text-sm leading-relaxed text-[#0c0b5d] shadow-sm ring-1 ring-slate-200">
+        <p>Complaints at Unique Futsal are reported directly to the Owner and kept strictly confidential. Track progress through Received, Reviewed, Solved, and Closed. You&apos;ll receive updates, and your identity will never be disclosed even with the staff, ensuring a private relationship between you and the Owner.</p>
+      </section>
+
       <form onSubmit={submit} className="glass space-y-5 rounded-3xl p-5" aria-label="New complaint">
         <fieldset>
           <legend className="mb-2 text-sm font-medium">What is it about?</legend>
