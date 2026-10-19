@@ -13,7 +13,7 @@ export default function DigitalIdButton({ variant = "icon" }: { variant?: "icon"
   return (
     <>
       {variant === "icon" ? (
-        <button type="button" onClick={() => setOpen(true)} aria-label="My Digital ID" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/70 text-brand shadow-sm">
+        <button type="button" onClick={() => setOpen(true)} aria-label="My Digital ID" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dcebff] text-black shadow-sm">
           <QrCode size={18} />
         </button>
       ) : (

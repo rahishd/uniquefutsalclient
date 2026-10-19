@@ -37,7 +37,7 @@ export default function WhatsAppChat() {
         onClick={() => setOpen(true)}
         aria-label="Need urgent help? Chat with us on WhatsApp"
         aria-haspopup="dialog"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white shadow-sm transition active:scale-95"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dcebff] text-black shadow-sm transition active:scale-95"
       >
         <FaWhatsapp size={20} />
       </button>

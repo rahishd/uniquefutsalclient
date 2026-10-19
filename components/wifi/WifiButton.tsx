@@ -16,7 +16,7 @@ export default function WifiButton() {
   if (!session?.registered || !data?.visible) return null;
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} aria-label="Venue Wi-Fi" className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/70 text-brand shadow-sm">
+      <button type="button" onClick={() => setOpen(true)} aria-label="Venue Wi-Fi" className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dcebff] text-black shadow-sm">
         <WifiIcon size={18} />
         {cellular && <span aria-hidden className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full bg-orange-500 ring-2 ring-white" />}
       </button>
