@@ -2,14 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Check, ChevronLeft, Layers, Loader2, Lock, ShieldCheck, Tag, X } from "lucide-react";
+import { Check, ChevronLeft, Layers, Loader2, Lock, ShieldCheck, Sparkles, Tag, X } from "lucide-react";
 import PaymentQr from "@/components/payment/PaymentQr";
 import { errorText } from "@/lib/api";
 import { openSignIn, useSession } from "@/lib/session";
 import { myBookingsStore, dateKey, fetchSlotsAndClosed, formatHour, formatRs, parseKey, type Slot } from "@/lib/booking";
 import {
-  BULK_ADVANCE_PERCENT, BULK_MAX_HOURS, BULK_WINDOW_DAYS, bulkAmount, createBulkBooking, fetchBulkQuote,
-  type BulkMode, type BulkQuote, type BulkResult, type BulkSlot,
+  BULK_ADVANCE_PERCENT, BULK_MAX_HOURS, BULK_MAX_PER_WEEK, BULK_WINDOW_DAYS, bulkAmount, createBulkBooking, fetchBulkAllowance, fetchBulkQuote, weekStartOf,
+  type BulkAllowance, type BulkMode, type BulkQuote, type BulkResult, type BulkSlot,
 } from "@/lib/bulk";
 
 const PERIODS = ["Morning", "Day", "Evening"] as const;
@@ -50,6 +50,14 @@ export default function BulkBookingFlow() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BulkResult | null>(null);
   const [paid, setPaid] = useState(false);
+  const [allowance, setAllowance] = useState<BulkAllowance | null>(null); // bulk games already held, per week
+  const isRegistered = session?.registered === true;
+  useEffect(() => {
+    if (!isRegistered) return;
+    let off = false;
+    fetchBulkAllowance().then((a) => !off && setAllowance(a)).catch(() => {});
+    return () => { off = true; };
+  }, [isRegistered, result]);
 
   // free hours of the day being looked at (kept, so switching days does not ask again)
   useEffect(() => {
@@ -85,6 +93,13 @@ export default function BulkBookingFlow() {
     setPicked((cur) => {
       if (cur.some((p) => keyOf(p) === k)) return cur.filter((p) => keyOf(p) !== k);
       if (cur.length >= BULK_MAX_HOURS) { setError(`You can pick up to ${BULK_MAX_HOURS} hours in one bulk booking.`); return cur; }
+      const week = weekStartOf(item.date);
+      const limit = allowance?.limit ?? BULK_MAX_PER_WEEK;
+      const held = allowance?.used[week] ?? 0;
+      if (held + cur.filter((p) => weekStartOf(p.date) === week).length >= limit) {
+        setError(held > 0 ? `You can bulk-book up to ${limit} games a week and already hold ${held} this week.` : `You can bulk-book up to ${limit} games a week.`);
+        return cur;
+      }
       return [...cur, item].sort((a, b) => keyOf(a).localeCompare(keyOf(b)));
     });
   };
@@ -190,7 +205,7 @@ export default function BulkBookingFlow() {
               </ul>
               <dl className="mt-3 space-y-1.5 border-t border-white/60 pt-3 text-sm">
                 <div className="flex justify-between"><dt className="text-slate-400">Subtotal</dt><dd>{formatRs(quote.subtotal)}</dd></div>
-                {quote.discount > 0 && <div className="flex justify-between text-emerald-600"><dt>Discounts</dt><dd>− {formatRs(quote.discount)}</dd></div>}
+                {quote.discount > 0 && <div className="flex justify-between text-emerald-600"><dt>Promocode Discounts<span className="block text-xs font-normal text-emerald-600/80">(Auto Applied for Maximum Discounts)</span></dt><dd>− {formatRs(quote.discount)}</dd></div>}
                 <div className="flex justify-between text-base"><dt className="font-medium">Total</dt><dd className="font-semibold">{formatRs(quote.total)}</dd></div>
               </dl>
             </>
@@ -204,6 +219,38 @@ export default function BulkBookingFlow() {
             <button type="button" onClick={() => setCode(promoInput.trim())} className="rounded-2xl bg-brand px-5 text-sm font-medium text-white">Apply</button>
           </div>
           <p className="mt-2 text-xs text-slate-500">A promo code is applied only to the hours it is valid for (for example its days, times and limits).</p>
+          {quote && quote.suggestions.length > 0 && (
+            <div className="mt-4" aria-label="Best promo codes for your hours">
+              <p className="flex items-center gap-1.5 text-xs font-semibold text-slate-600"><Sparkles size={14} className="text-amber-500" /> Best codes for your hours</p>
+              <ul className="mt-2 space-y-2">
+                {quote.suggestions.map((s) => {
+                  const on = Boolean(quote.promo?.ok && quote.promo.code === s.code.toUpperCase());
+                  return (
+                    <li key={s.code}>
+                      <button
+                        type="button"
+                        onClick={() => { setPromoInput(s.code); setCode(s.code); }}
+                        aria-pressed={on}
+                        className={`flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left ring-1 transition ${on ? "bg-emerald-50 ring-emerald-300" : s.best ? "bg-amber-50 ring-amber-300 hover:bg-amber-100" : "bg-white/70 ring-white/80 hover:bg-white"}`}
+                      >
+                        <span className="min-w-0 flex-1">
+                          <span className="flex flex-wrap items-center gap-1.5">
+                            <span className="font-mono text-sm font-bold tracking-wide text-[#0c0b5d]">{s.code}</span>
+                            {s.best && <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-amber-950">Best saving</span>}
+                          </span>
+                          <span className="block text-xs leading-snug text-slate-500">{s.label} · works on {s.hours} of {picked.length} {picked.length === 1 ? "hour" : "hours"}</span>
+                        </span>
+                        <span className="shrink-0 text-right">
+                          <span className="block text-sm font-bold text-emerald-600">Save {formatRs(s.discount)}</span>
+                          <span className="block text-[11px] text-slate-500">{on ? "Applied" : "Tap to apply"}</span>
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
           {code && quote?.promo && (
             <p role="status" className={`mt-2 flex items-center gap-1 text-xs ${quote.promo.ok ? "text-emerald-600" : "text-rose-500"}`}>
               {quote.promo.ok ? <Check size={14} /> : <X size={14} />}
@@ -250,7 +297,7 @@ export default function BulkBookingFlow() {
       <header>
         <Link href="/book" className="mb-2 flex items-center gap-1 text-sm text-brand"><ChevronLeft size={18} /> Single booking</Link>
         <h1 className="flex items-center gap-2 text-2xl font-semibold"><Layers size={24} className="text-brand" /> Bulk booking</h1>
-        <p className="text-sm text-slate-500">Pick up to {BULK_MAX_HOURS} hours across the next {BULK_WINDOW_DAYS} days and pay once with Fonepay: {BULK_ADVANCE_PERCENT}% now or in full.</p>
+        <p className="text-sm text-slate-500">Pick up to {BULK_MAX_PER_WEEK} games a week across the next {BULK_WINDOW_DAYS} days and pay once with Fonepay: {BULK_ADVANCE_PERCENT}% now or in full.</p>
       </header>
 
       {!registered && (
@@ -310,7 +357,7 @@ export default function BulkBookingFlow() {
 
       <div className="sticky bottom-24 z-10 desk:bottom-6">
         <div className="glass flex items-center justify-between gap-3 rounded-full p-2 pl-5 shadow-lg desk:max-w-xl">
-          <span className="text-sm"><span className="font-semibold">{picked.length}</span> / {BULK_MAX_HOURS} hours picked</span>
+          <span className="text-sm"><span className="font-semibold">{picked.length}</span> {picked.length === 1 ? "game" : "games"} picked <span className="text-slate-400">· max {BULK_MAX_PER_WEEK} a week</span></span>
           <button type="button" disabled={picked.length === 0 || !registered} onClick={() => { setError(null); setStep(1); }} className="glass-btn rounded-full px-6 py-3 text-sm font-semibold text-white disabled:opacity-50">Review &amp; pay</button>
         </div>
       </div>

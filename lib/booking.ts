@@ -103,6 +103,7 @@ export interface Booking {
   paymentStatus: string; // pending | completed | partially_paid
   status: string; // pending | confirmed | completed | cancelled
   promoCode?: string;
+  notes?: string; // a bulk booking game carries BULK:BLK-XXXXXX here
   createdAt?: string;
 }
 

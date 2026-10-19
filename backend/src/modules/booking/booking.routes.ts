@@ -102,7 +102,8 @@ const slotBody = [
 // Customer app: price + promo preview (no side effects)
 router.post("/quote", optionalAuthMiddleware, slotBody, validateRequest, checkoutController.quote);
 
-// Customer app: Bulk Booking (up to 10 hours in the next 7 days, one Fonepay payment of 50% or the full amount)
+// Customer app: Bulk Booking (up to 5 games a week, 10 per booking, in the next 7 days; one Fonepay payment of 50% or the full amount)
+router.get("/bulk/allowance", optionalAuthMiddleware, bulkController.allowance);
 router.post("/bulk/quote", optionalAuthMiddleware, [body("slots").isArray({ min: 1, max: 10 }), body("promoCode").optional({ checkFalsy: true }).isString().trim()], validateRequest, bulkController.quote);
 router.post("/bulk", optionalAuthMiddleware, [body("slots").isArray({ min: 1, max: 10 }), body("mode").isIn(["advance", "full"]), body("promoCode").optional({ checkFalsy: true }).isString().trim()], validateRequest, bulkController.create);
 

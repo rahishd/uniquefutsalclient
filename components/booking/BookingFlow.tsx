@@ -466,7 +466,7 @@ export default function BookingFlow({ initialDate, initialHour }: { initialDate?
         <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white text-[#0c0b5d]"><Layers size={24} /></span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-2 text-base font-semibold">Bulk Booking <span className="rounded-full bg-orange-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0c0b5d]">New</span></span>
-          <span className="block text-xs text-[#0c0b5d]/80">Up to 10 hours over the next 7 days. Pay 50% now or in full.</span>
+          <span className="block text-xs text-[#0c0b5d]/80">Up to 5 games a week over the next 7 days. Pay 50% now or in full.</span>
         </span>
         <ChevronRight size={20} className="shrink-0 transition group-hover:translate-x-0.5" />
       </Link>

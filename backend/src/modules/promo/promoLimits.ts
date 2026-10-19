@@ -24,3 +24,11 @@ export async function assertPromoLimits(promo: PromoCode, userId?: string | null
     throw new AppError(400, promo.maxPerCustomer === 1 ? "You have already used this promo code." : `You can use this promo code ${promo.maxPerCustomer} times, and you have used them all.`);
   }
 }
+
+// How many more bookings this customer can put the code on (null = no limit). Used to show only the saving they can really get.
+export async function usesLeft(promo: PromoCode, userId?: string | null): Promise<number | null> {
+  const left: number[] = [];
+  if (promo.maxUses) left.push(promo.maxUses - (await uses(promo.code)));
+  if (promo.maxPerCustomer && userId) left.push(promo.maxPerCustomer - (await uses(promo.code, userId)));
+  return left.length ? Math.max(0, Math.min(...left)) : null;
+}
