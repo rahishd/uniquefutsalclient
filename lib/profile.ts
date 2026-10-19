@@ -20,6 +20,7 @@ export interface Profile {
   registeredAt: string;
   status: "Active" | "Suspended";
   mode: "player" | "captain";
+  vip?: boolean; // staff gave this customer a VIP code: the Profile card turns red
 }
 
 export const POSITIONS: { value: string; label: string }[] = [

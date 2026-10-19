@@ -82,8 +82,10 @@ router.get(
     const user = await prisma.user.findUnique({ where: { phoneNumber: req.user!.id } });
     if (!user) throw new AppError(404, "User not found");
     const p = await prefsFor(user.phoneNumber);
+    const vip = (await prisma.vipCode.count({ where: { userId: user.phoneNumber, active: true } })) > 0; // staff gave this customer a VIP code
     res.json(
       ApiResponseUtil.success(200, "Profile", {
+        vip,
         customerCode: customerCode(user.phoneNumber),
         name: user.name ?? "",
         phone: user.phoneNumber,

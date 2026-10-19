@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { BadgeCheck } from "lucide-react";
+import { clubStore } from "@/lib/club";
 import ProfileAvatar from "@/components/captain/ProfileAvatar";
 import { useSession } from "@/lib/session";
 import { useTeams } from "@/lib/teams";
@@ -18,6 +20,8 @@ export default function UserBadge() {
   const t = useT();
   const name = session?.registered ? session.name : "Guest";
   const captain = Boolean(session?.registered && teams?.mode === "captain");
+  const club = clubStore.use().data;
+  const clubMember = Boolean(session?.registered && club?.member); // active Unique Club member
 
   return (
     <div className="flex w-full min-w-0 items-center gap-3">
@@ -27,7 +31,8 @@ export default function UserBadge() {
           <span className="block text-sm text-slate-400">
             {captain ? t("Captain") : t("Hello")} <span aria-hidden>👋</span>
           </span>
-          <span className="block min-h-8 text-xl font-medium leading-tight [overflow-wrap:anywhere] tab:text-2xl">{session ? name : ""}</span>
+          <span className="block min-h-8 truncate text-xl font-medium leading-tight tab:text-2xl">{session ? name : ""}</span>
+          {clubMember && <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-[#0c0b5d] px-2.5 py-0.5 text-[11px] font-semibold text-white"><BadgeCheck size={13} aria-hidden /> Club Member</span>}
         </span>
       </Link>
       {/* the quick icons: 3 across, 2 rows on phones and tablets; one big row on desktop */}
