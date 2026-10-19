@@ -5,7 +5,7 @@ import { ApiResponseUtil } from "../../utils/apiResponse";
 import { authMiddleware, AuthRequest } from "../../middlewares/auth.middleware";
 import validateRequest from "../../middlewares/validate.middleware";
 import friendsService from "./friends.service";
-import chatService, { BODY_MAX, GROUP_MAX_MEMBERS, GROUP_NAME_MAX, GROUP_NAME_MIN } from "./chat.service";
+import chatService, { BODY_MAX, GROUP_MAX_MEMBERS, GROUP_NAME_MAX, GROUP_NAME_MIN, REPORT_NOTE_MAX, REPORT_REASONS } from "./chat.service";
 
 const ok = (res: Response, message: string, data?: unknown, status = 200) => res.status(status).json(ApiResponseUtil.success(status, message, data));
 
@@ -78,6 +78,12 @@ chatRouter.get("/threads/:id/status", asyncHandler(async (req: AuthRequest, res:
 
 chatRouter.delete("/threads/:id/messages/:messageId", asyncHandler(async (req: AuthRequest, res: Response) => {
   ok(res, "Message deleted", await chatService.deleteMessage(req.user!.id, req.params.id, req.params.messageId));
+}));
+
+chatRouter.get("/report-reasons", (_req, res: Response) => ok(res, "Report reasons", { reasons: REPORT_REASONS, noteMax: REPORT_NOTE_MAX }));
+
+chatRouter.post("/threads/:id/messages/:messageId/report", [body("reason").isString(), body("note").optional({ values: "null" }).isString()], validateRequest, asyncHandler(async (req: AuthRequest, res: Response) => {
+  ok(res, "Report received", await chatService.reportMessage(req.user!.id, req.params.id, req.params.messageId, req.body), 201);
 }));
 
 chatRouter.post("/threads/:id/messages", [body("body").isString()], validateRequest, asyncHandler(async (req: AuthRequest, res: Response) => {

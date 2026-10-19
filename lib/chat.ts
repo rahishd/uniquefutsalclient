@@ -76,6 +76,17 @@ export const loadThread = (id: string) => api<ChatInfo>(`/chat/threads/${id}`);
 export const loadMessages = (id: string, after?: string) => api<ChatMessage[]>(`/chat/threads/${id}/messages`, { query: { after } });
 export const loadStatus = (id: string) => api<ChatStatus>(`/chat/threads/${id}/status`);
 export const deleteMessage = (id: string, messageId: string) => api<{ id: string; deleted: true }>(`/chat/threads/${id}/messages/${messageId}`, { method: "DELETE" });
+export type ReportReason = { id: string; label: string };
+export const FALLBACK_REPORT_REASONS: ReportReason[] = [
+  { id: "harassment", label: "Harassment or bullying" },
+  { id: "inappropriate", label: "Inappropriate or offensive" },
+  { id: "spam", label: "Spam or scam" },
+  { id: "threat", label: "Threat or violence" },
+  { id: "other", label: "Something else" },
+];
+export const loadReportReasons = () => api<{ reasons: ReportReason[]; noteMax: number }>("/chat/report-reasons");
+export const reportMessage = (id: string, messageId: string, reason: string, note?: string) =>
+  api<{ reported: true; code: string }>(`/chat/threads/${id}/messages/${messageId}/report`, { method: "POST", body: { reason, note } });
 export const sendMessage = (id: string, body: string) => api<ChatMessage>(`/chat/threads/${id}/messages`, { method: "POST", body: { body } });
 export const addMembers = (id: string, phones: string[]) => api<ChatInfo>(`/chat/threads/${id}/members`, { method: "POST", body: { phones } });
 export const removeMember = (id: string, phone: string) => api<{ left: boolean }>(`/chat/threads/${id}/members/${phone}`, { method: "DELETE" });

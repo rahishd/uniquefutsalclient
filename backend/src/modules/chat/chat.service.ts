@@ -2,6 +2,7 @@ import { randomInt } from "crypto";
 import { ChatMember, ChatThread } from "@prisma/client";
 import { prisma } from "../../config/db";
 import { AppError } from "../../middlewares/error.middleware";
+import complaintService from "../complaint/complaint.service";
 
 // Chat between registered customers: one to one and groups. Text only. Everything is decided here: who may read a
 // thread (its members only), who may add or remove people (group admins), and how fast one person may send.
@@ -13,6 +14,17 @@ export const GROUPS_PER_DAY = 5; // groups one customer can create in 24 hours
 export const SENDS_PER_MINUTE = 20;
 export const PAGE = 60;
 export const DELETED_NOTE = "This message was deleted";
+
+// Reporting a message from someone else: it becomes a complaint (category "chat") the venue reads in the admin portal.
+export const REPORT_REASONS = [
+  { id: "harassment", label: "Harassment or bullying" },
+  { id: "inappropriate", label: "Inappropriate or offensive" },
+  { id: "spam", label: "Spam or scam" },
+  { id: "threat", label: "Threat or violence" },
+  { id: "other", label: "Something else" },
+] as const;
+export const REPORTS_PER_DAY = 10;
+export const REPORT_NOTE_MAX = 300;
 
 const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 const makeInvite = () => Array.from({ length: 10 }, () => ALPHABET[randomInt(ALPHABET.length)]).join("");
@@ -239,6 +251,41 @@ export class ChatService {
       if (latest?.id === msg.id) await prisma.chatThread.update({ where: { id: threadId }, data: { lastMessage: DELETED_NOTE } });
     }
     return { id: msg.id, deleted: true };
+  }
+
+  /** Report a message someone else sent in a chat you are in. The venue sees it under Complaints. */
+  async reportMessage(userId: string, threadId: string, messageId: string, input: { reason?: unknown; note?: unknown }) {
+    const m = await membership(userId, threadId);
+    const msg = await prisma.chatMessage.findFirst({ where: { id: messageId, threadId } });
+    if (!msg) throw new AppError(404, "Message not found.");
+    if (msg.deletedAt) throw new AppError(409, "This message was deleted.");
+    if (msg.senderId === userId) throw new AppError(400, "You cannot report your own message.");
+    const reason = REPORT_REASONS.find((r) => r.id === input.reason);
+    if (!reason) throw new AppError(400, "Choose why you are reporting this message.");
+    const note = typeof input.note === "string" ? input.note.trim() : "";
+    if (note.length > REPORT_NOTE_MAX) throw new AppError(400, `Please keep the note under ${REPORT_NOTE_MAX} characters.`);
+
+    const ref = `Message ref: ${msg.id}`;
+    if (await prisma.complaint.findFirst({ where: { userId, category: "chat", message: { contains: ref } }, select: { id: true } })) {
+      throw new AppError(409, "You already reported this message. The venue will look into it.");
+    }
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    if ((await prisma.complaint.count({ where: { userId, category: "chat", createdAt: { gte: since } } })) >= REPORTS_PER_DAY) {
+      throw new AppError(429, `You can send up to ${REPORTS_PER_DAY} chat reports a day. Please try again tomorrow, or call the venue.`);
+    }
+
+    const sender = await prisma.user.findUnique({ where: { phoneNumber: msg.senderId }, select: { name: true } });
+    const where = m.thread.kind === "group" ? `group "${m.thread.name ?? "Group"}"` : "a one-to-one chat";
+    const lines = [
+      `Reported chat message (${reason.label})`,
+      `From: ${sender?.name ?? "A customer"} (${msg.senderId})`,
+      `In: ${where}`,
+      `Message: "${msg.body.slice(0, 300)}"`,
+      ...(note ? [`Note from the customer: ${note}`] : []),
+      ref,
+    ];
+    const c = await complaintService.createReport(userId, "chat", lines.join(String.fromCharCode(10)));
+    return { reported: true, code: c.code };
   }
 
   async send(userId: string, threadId: string, bodyInput: unknown) {

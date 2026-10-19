@@ -67,7 +67,7 @@ export default function ChatHome() {
               onClick={() => setMenu((v) => !v)}
               aria-expanded={menu}
               aria-label="Chat menu"
-              className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#3b3bd6] to-brand text-white shadow-[0_10px_20px_-10px_rgba(12,11,93,0.7)] active:scale-95 transition"
+              className="glass-active relative flex h-11 w-11 items-center justify-center rounded-2xl text-[#0c0b5d] active:scale-95 transition"
             >
               <Menu size={22} />
               {requests > 0 && <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-bold text-white ring-2 ring-white">{requests > 9 ? "9+" : requests}</span>}

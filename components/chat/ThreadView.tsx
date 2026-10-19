@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Ban, Check, CheckCheck, Info, Send, Trash2, Users, X } from "lucide-react";
+import { ArrowLeft, Ban, Check, CheckCheck, Flag, Info, Send, Trash2, Users, X } from "lucide-react";
 import { errorText } from "@/lib/api";
-import { BODY_MAX, chatTime, deleteMessage, loadMessages, loadStatus, loadThread, sendMessage, threadsStore, unreadStore, type ChatInfo, type ChatMessage } from "@/lib/chat";
+import { BODY_MAX, chatTime, FALLBACK_REPORT_REASONS, deleteMessage, loadMessages, reportMessage, loadStatus, loadThread, sendMessage, threadsStore, unreadStore, type ChatInfo, type ChatMessage } from "@/lib/chat";
 import { openSignIn, useSession } from "@/lib/session";
 import ProfileAvatar from "@/components/captain/ProfileAvatar";
 import GroupInfoSheet from "@/components/chat/GroupInfoSheet";
@@ -27,6 +27,12 @@ export default function ThreadView({ id }: { id: string }) {
   const [gone, setGone] = useState<Set<string>>(new Set()); // ids of messages deleted since they were loaded
   const [menuFor, setMenuFor] = useState<ChatMessage | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [reporting, setReporting] = useState(false); // the sheet is on its report step
+  const [reason, setReason] = useState("");
+  const [note, setNote] = useState("");
+  const [sendingReport, setSendingReport] = useState(false);
+  const [reportDone, setReportDone] = useState<string | null>(null);
+  const pressAt = useRef<{ x: number; y: number } | null>(null);
   const [tip, setTip] = useState(() => {
     try { return typeof window !== "undefined" && localStorage.getItem(TIP_KEY) !== "1"; } catch { return false; }
   });
@@ -34,13 +40,47 @@ export default function ThreadView({ id }: { id: string }) {
   const bottom = useRef<HTMLDivElement>(null);
   const press = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const startPress = (m: ChatMessage) => {
-    press.current = setTimeout(() => setMenuFor(m), 450);
+  const startPress = (m: ChatMessage, e: React.PointerEvent) => {
+    pressAt.current = { x: e.clientX, y: e.clientY };
+    press.current = setTimeout(() => {
+      try { navigator.vibrate?.(15); } catch {}
+      openMenu(m);
+    }, 400);
   };
   const stopPress = () => {
     if (press.current) clearTimeout(press.current);
     press.current = null;
   };
+  // a real move (a scroll or a drag) cancels the hold, but the small wobble of a finger or mouse does not
+  const movePress = (e: React.PointerEvent) => {
+    const s = pressAt.current;
+    if (s && Math.hypot(e.clientX - s.x, e.clientY - s.y) > 12) stopPress();
+  };
+  const openMenu = (m: ChatMessage) => {
+    setReporting(false);
+    setReason("");
+    setNote("");
+    setReportDone(null);
+    setMenuFor(m);
+  };
+  const closeMenu = () => {
+    setMenuFor(null);
+    setReporting(false);
+  };
+  async function sendReport() {
+    if (!menuFor || sendingReport || !reason) return;
+    setSendingReport(true);
+    setError(null);
+    try {
+      const r = await reportMessage(id, menuFor.id, reason, note.trim() || undefined);
+      setReportDone(r.code);
+    } catch (e) {
+      setError(errorText(e));
+      closeMenu();
+    } finally {
+      setSendingReport(false);
+    }
+  }
   const closeTip = () => {
     setTip(false);
     try { localStorage.setItem(TIP_KEY, "1"); } catch {}
@@ -180,7 +220,7 @@ export default function ThreadView({ id }: { id: string }) {
           <Info size={16} className="mt-0.5 shrink-0 text-brand" />
           <p className="flex-1">
             <b className="text-slate-800">Good to know:</b> a single tick <Check size={12} className="inline text-slate-400" /> means sent and a blue double tick <CheckCheck size={13} className="inline text-blue-600" /> means seen.
-            To delete one of your messages, press and hold it, then tap Delete message. It disappears for everyone.
+            Press and hold your own message to delete it for everyone, or someone else's message to report it.
           </p>
           <button type="button" onClick={closeTip} aria-label="Hide tip" className="shrink-0 rounded-full p-1 text-slate-400"><X size={14} /></button>
         </div>
@@ -193,18 +233,18 @@ export default function ThreadView({ id }: { id: string }) {
           const removed = m.deleted || gone.has(m.id);
           const seen = seenBy(m);
           const everyone = reads.length > 0 && seen === reads.length;
-          const canDelete = m.mine && !removed;
+          const canAct = !removed; // yours to delete, someone else's to report
           return (
             <div key={m.id} className={`flex items-end gap-2 ${m.mine ? "justify-end" : "justify-start"}`}>
               {m.mine && <span aria-hidden className="order-first mb-1 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#0c0b5d] text-[10px] font-bold text-white ring-2 ring-white">Me</span>}
               <div
-                onPointerDown={canDelete ? () => startPress(m) : undefined}
-                onPointerUp={canDelete ? stopPress : undefined}
-                onPointerLeave={canDelete ? stopPress : undefined}
-                onPointerCancel={canDelete ? stopPress : undefined}
-                onPointerMove={canDelete ? stopPress : undefined}
-                onContextMenu={canDelete ? (e) => { e.preventDefault(); setMenuFor(m); } : undefined}
-                className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm ${canDelete ? "select-none [-webkit-touch-callout:none]" : ""} ${removed ? "bg-slate-50 text-slate-400 ring-1 ring-slate-100" : m.mine ? "bg-[#dbeafe] text-[#0c0b5d]" : "bg-slate-100 text-slate-800"}`}
+                onPointerDown={canAct ? (e) => startPress(m, e) : undefined}
+                onPointerUp={canAct ? stopPress : undefined}
+                onPointerLeave={canAct ? stopPress : undefined}
+                onPointerCancel={canAct ? stopPress : undefined}
+                onPointerMove={canAct ? movePress : undefined}
+                onContextMenu={canAct ? (e) => { e.preventDefault(); openMenu(m); } : undefined}
+                className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm ${canAct ? "select-none [-webkit-touch-callout:none]" : ""} ${removed ? "bg-slate-50 text-slate-400 ring-1 ring-slate-100" : m.mine ? "bg-[#dbeafe] text-[#0c0b5d]" : "bg-slate-100 text-slate-800"}`}
               >
                 {showName && <p className="mb-0.5 text-[11px] font-semibold text-brand">{m.senderName}</p>}
                 {removed ? (
@@ -261,14 +301,54 @@ export default function ThreadView({ id }: { id: string }) {
       </form>
 
       {menuFor && (
-        <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-900/40 backdrop-blur-sm" onClick={() => setMenuFor(null)}>
-          <div role="dialog" aria-modal="true" aria-label="Message options" onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-t-3xl bg-white p-5 pb-8">
-            <p className="line-clamp-2 rounded-2xl bg-[#dbeafe] px-3.5 py-2.5 text-sm text-[#0c0b5d]">{menuFor.body}</p>
-            <button type="button" onClick={removeMessage} disabled={deleting} className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-red-50 py-3.5 text-sm font-semibold text-red-600 disabled:opacity-60">
-              <Trash2 size={17} /> {deleting ? "Deleting…" : "Delete message"}
-            </button>
-            <p className="mt-2 text-center text-xs text-slate-400">It will be deleted for everyone in this chat.</p>
-            <button type="button" onClick={() => setMenuFor(null)} className="mt-3 w-full rounded-2xl bg-slate-100 py-3.5 text-sm font-semibold text-slate-600">Cancel</button>
+        <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-900/40 backdrop-blur-sm" onClick={closeMenu}>
+          <div role="dialog" aria-modal="true" aria-label="Message options" onClick={(e) => e.stopPropagation()} className="max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-5 pb-8">
+            <p className={`line-clamp-2 rounded-2xl px-3.5 py-2.5 text-sm ${menuFor.mine ? "bg-[#dbeafe] text-[#0c0b5d]" : "bg-slate-100 text-slate-800"}`}>{menuFor.body}</p>
+
+            {menuFor.mine ? (
+              <>
+                <button type="button" onClick={removeMessage} disabled={deleting} className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-red-50 py-3.5 text-sm font-semibold text-red-600 disabled:opacity-60">
+                  <Trash2 size={17} /> {deleting ? "Deleting…" : "Delete message"}
+                </button>
+                <p className="mt-2 text-center text-xs text-slate-400">It will be deleted for everyone in this chat.</p>
+              </>
+            ) : reportDone ? (
+              <div className="mt-5 text-center">
+                <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-100 text-emerald-600"><Check size={28} /></span>
+                <p className="mt-3 text-base font-semibold">Thank you, we got your report</p>
+                <p className="mt-1 text-sm text-slate-500">Reference <span className="font-mono text-slate-700">{reportDone}</span>. The venue will look into it and answer under Complaints.</p>
+              </div>
+            ) : reporting ? (
+              <div className="mt-4">
+                <p className="text-sm font-semibold">Why are you reporting this message?</p>
+                <div className="mt-2 grid gap-2" role="radiogroup" aria-label="Reason">
+                  {FALLBACK_REPORT_REASONS.map((r) => (
+                    <button key={r.id} type="button" role="radio" aria-checked={reason === r.id} onClick={() => setReason(r.id)}
+                      className={`flex items-center justify-between rounded-2xl px-4 py-3 text-left text-sm ${reason === r.id ? "bg-[#0c0b5d] font-semibold text-white" : "bg-slate-100 text-slate-700"}`}>
+                      {r.label}
+                      {reason === r.id && <Check size={16} />}
+                    </button>
+                  ))}
+                </div>
+                <label className="mt-3 block text-xs font-medium text-slate-500">Anything we should know (optional)
+                  <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} maxLength={300} placeholder="Tell us a little more"
+                    className="mt-1 w-full rounded-2xl bg-slate-100 px-3.5 py-2.5 text-sm font-normal text-slate-800 outline-none ring-1 ring-black/5 focus:ring-[#0c0b5d]" />
+                </label>
+                <button type="button" onClick={sendReport} disabled={!reason || sendingReport} className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0c0b5d] py-3.5 text-sm font-semibold text-white disabled:opacity-50">
+                  <Flag size={16} /> {sendingReport ? "Sending…" : "Send report"}
+                </button>
+                <p className="mt-2 text-center text-xs text-slate-400">The venue team reads reports. The sender is not told it was you.</p>
+              </div>
+            ) : (
+              <>
+                <button type="button" onClick={() => setReporting(true)} className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-amber-50 py-3.5 text-sm font-semibold text-amber-700">
+                  <Flag size={17} /> Report message
+                </button>
+                <p className="mt-2 text-center text-xs text-slate-400">Tell the venue if this message is abusive, a scam or makes you feel unsafe.</p>
+              </>
+            )}
+
+            <button type="button" onClick={closeMenu} className="mt-3 w-full rounded-2xl bg-slate-100 py-3.5 text-sm font-semibold text-slate-600">{reportDone ? "Close" : "Cancel"}</button>
           </div>
         </div>
       )}

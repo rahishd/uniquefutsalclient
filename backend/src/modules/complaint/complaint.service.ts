@@ -12,6 +12,7 @@ export const COMPLAINT_CATEGORIES = [
   { id: "staff", label: "Staff behaviour" },
   { id: "gamezone", label: "Gamezone" },
   { id: "membership", label: "Membership" },
+  { id: "chat", label: "Chat message" },
   { id: "app", label: "App problem" },
   { id: "other", label: "Other" },
 ] as const;
@@ -37,6 +38,13 @@ export function view(c: Complaint) {
 }
 
 export class ComplaintService {
+  /** A complaint the app files for the customer, for example when they report a chat message. */
+  async createReport(userId: string, category: string, message: string) {
+    let code = makeCode();
+    for (let i = 0; i < 5 && (await prisma.complaint.findUnique({ where: { code }, select: { id: true } })); i++) code = makeCode();
+    return view(await prisma.complaint.create({ data: { code, userId, category, message } }));
+  }
+
   async create(userId: string, input: { category?: unknown; message?: unknown; bookingCode?: unknown; photos?: unknown }) {
     const category = typeof input.category === "string" ? input.category : "";
     if (!COMPLAINT_CATEGORIES.some((c) => c.id === category)) throw new AppError(400, "Choose what your complaint is about.");

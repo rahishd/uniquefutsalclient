@@ -41,6 +41,7 @@ export const FALLBACK_RULES: ComplaintRules = {
     { id: "staff", label: "Staff behaviour" },
     { id: "gamezone", label: "Gamezone" },
     { id: "membership", label: "Membership" },
+    { id: "chat", label: "Chat message" },
     { id: "app", label: "App problem" },
     { id: "other", label: "Other" },
   ],
