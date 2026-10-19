@@ -2,14 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Ban, Check, CheckCheck, Flag, Info, Send, Trash2, Users, X } from "lucide-react";
+import { ArrowLeft, Ban, CalendarPlus, Check, CheckCheck, Flag, Info, Send, Trash2, Users } from "lucide-react";
+import ShareBookingSheet from "@/components/chat/ShareBookingSheet";
 import { errorText } from "@/lib/api";
 import { BODY_MAX, chatTime, FALLBACK_REPORT_REASONS, deleteMessage, loadMessages, reportMessage, loadStatus, loadThread, sendMessage, threadsStore, unreadStore, type ChatInfo, type ChatMessage } from "@/lib/chat";
 import { openSignIn, useSession } from "@/lib/session";
 import ProfileAvatar from "@/components/captain/ProfileAvatar";
 import GroupInfoSheet from "@/components/chat/GroupInfoSheet";
-
-const TIP_KEY = "uf_chat_tip_seen";
 
 // One conversation. New messages, read receipts and deletions are fetched every few seconds while the page is open.
 export default function ThreadView({ id }: { id: string }) {
@@ -27,15 +26,13 @@ export default function ThreadView({ id }: { id: string }) {
   const [gone, setGone] = useState<Set<string>>(new Set()); // ids of messages deleted since they were loaded
   const [menuFor, setMenuFor] = useState<ChatMessage | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [sharing, setSharing] = useState(false); // the share-a-booking sheet is open
   const [reporting, setReporting] = useState(false); // the sheet is on its report step
   const [reason, setReason] = useState("");
   const [note, setNote] = useState("");
   const [sendingReport, setSendingReport] = useState(false);
   const [reportDone, setReportDone] = useState<string | null>(null);
   const pressAt = useRef<{ x: number; y: number } | null>(null);
-  const [tip, setTip] = useState(() => {
-    try { return typeof window !== "undefined" && localStorage.getItem(TIP_KEY) !== "1"; } catch { return false; }
-  });
   const last = useRef<string | undefined>(undefined);
   const bottom = useRef<HTMLDivElement>(null);
   const press = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -81,10 +78,6 @@ export default function ThreadView({ id }: { id: string }) {
       setSendingReport(false);
     }
   }
-  const closeTip = () => {
-    setTip(false);
-    try { localStorage.setItem(TIP_KEY, "1"); } catch {}
-  };
 
   const reloadInfo = useCallback(() => {
     loadThread(id).then(setInfo).catch(() => setMissing(true));
@@ -137,14 +130,14 @@ export default function ThreadView({ id }: { id: string }) {
     bottom.current?.scrollIntoView({ block: "end" });
   }, [messages.length]);
 
-  async function submit() {
-    const body = text.trim();
+  async function submit(override?: string) {
+    const body = (override ?? text).trim();
     if (!body || sending) return;
     setSending(true);
     setError(null);
     try {
       const m = await sendMessage(id, body);
-      setText("");
+      if (override === undefined) setText("");
       merge([m]);
     } catch (e) {
       setError(errorText(e));
@@ -198,8 +191,8 @@ export default function ThreadView({ id }: { id: string }) {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-col px-5 tab:max-w-2xl desk:max-w-2xl" style={{ minHeight: "calc(100dvh - 9rem)" }}>
-      <header className="sticky top-[calc(env(safe-area-inset-top)+6.5rem)] desk:top-16 z-10 -mx-5 flex items-center gap-3 border-b border-slate-100 bg-white px-5 py-3">
+    <main className="mx-auto flex w-full max-w-md flex-col px-5 pb-40 pt-20 tab:max-w-2xl desk:max-w-2xl desk:pb-28 desk:pt-24" style={{ minHeight: "calc(100dvh - 9rem)" }}>
+      <header className="fixed inset-x-0 top-[calc(env(safe-area-inset-top)+6.5rem)] desk:top-16 z-10 mx-auto flex w-full max-w-md items-center gap-3 border-b border-slate-100 bg-white px-5 py-3 tab:max-w-2xl desk:max-w-2xl">
         <Link href="/chat" aria-label="Back to chats" className="rounded-full p-1.5 text-brand"><ArrowLeft size={20} /></Link>
         {isGroup ? (
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-brand"><Users size={20} /></span>
@@ -214,17 +207,6 @@ export default function ThreadView({ id }: { id: string }) {
           <button type="button" onClick={() => setShowInfo(true)} aria-label="Group info" className="rounded-full p-2 text-brand"><Info size={20} /></button>
         )}
       </header>
-
-      {tip && (
-        <div role="note" className="mt-3 flex items-start gap-2.5 rounded-2xl bg-blue-50 px-3.5 py-3 text-xs leading-relaxed text-slate-600">
-          <Info size={16} className="mt-0.5 shrink-0 text-brand" />
-          <p className="flex-1">
-            <b className="text-slate-800">Good to know:</b> a single tick <Check size={12} className="inline text-slate-400" /> means sent and a blue double tick <CheckCheck size={13} className="inline text-blue-600" /> means seen.
-            Press and hold your own message to delete it for everyone, or someone else's message to report it.
-          </p>
-          <button type="button" onClick={closeTip} aria-label="Hide tip" className="shrink-0 rounded-full p-1 text-slate-400"><X size={14} /></button>
-        </div>
-      )}
 
       <div className="flex-1 space-y-2 py-4" aria-live="polite">
         {loaded && messages.length === 0 && <p className="py-10 text-center text-sm text-slate-400">No messages yet. Say hello.</p>}
@@ -278,8 +260,11 @@ export default function ThreadView({ id }: { id: string }) {
           e.preventDefault();
           void submit();
         }}
-        className="sticky bottom-20 z-10 -mx-5 flex items-end gap-2 border-t border-slate-100 bg-white px-5 py-3 desk:bottom-0"
+        className="fixed inset-x-0 bottom-20 z-10 mx-auto flex w-full max-w-md items-end gap-2 border-t border-slate-100 bg-white px-5 py-3 tab:max-w-2xl desk:bottom-0 desk:max-w-2xl"
       >
+        <button type="button" onClick={() => setSharing(true)} aria-label="Share a booking" title="Share a booking" className="glass-active flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#0c0b5d]">
+          <CalendarPlus size={19} />
+        </button>
         <textarea
           value={text}
           rows={1}
@@ -299,6 +284,10 @@ export default function ThreadView({ id }: { id: string }) {
           <Send size={18} />
         </button>
       </form>
+
+      {sharing && (
+        <ShareBookingSheet busy={sending} onClose={() => setSharing(false)} onPick={async (t) => { await submit(t); setSharing(false); }} />
+      )}
 
       {menuFor && (
         <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-900/40 backdrop-blur-sm" onClick={closeMenu}>
