@@ -31,12 +31,12 @@ afterAll(async () => {
 });
 
 describe("loyalty awards", () => {
-  it("a completed, paid game earns price/100 points, once", async () => {
+  it("a completed, paid game earns price/10 points, once", async () => {
     const b = await booking();
     expect(await loyaltyService.awardForCompletedBooking(b as any)).toBe(true);
     expect(await loyaltyService.awardForCompletedBooking(b as any)).toBe(false); // replay changes nothing
     const o = await loyaltyService.overview(U, "2026-10-05");
-    expect(o.remaining).toBe(12.5);
+    expect(o.remaining).toBe(125);
     expect(o.byType.games.nextExpiry).toBe("2026-12-01");
   });
 
@@ -75,7 +75,7 @@ describe("loyalty awards", () => {
     expect(res.status).toBe(201);
     expect(res.body.data.points).toBe(100);
     const o = await loyaltyService.overview(U, "2026-10-05");
-    expect(o.remaining).toBe(112.5);
+    expect(o.remaining).toBe(225);
     expect(o.byType.goods.points).toBe(100);
   });
 
@@ -88,10 +88,11 @@ describe("loyalty awards", () => {
 
 describe("claiming a free game", () => {
   it("is refused when there are not enough points", async () => {
-    const o = await loyaltyService.overview(U);
+    await makeUser(G, "Other"); // a customer with no points
+    const o = await loyaltyService.overview(G);
     const evening = o.shifts.find((s) => s.period === "Evening")!;
     expect(evening.cost).toBeGreaterThan(o.remaining);
-    const res = await api().post("/api/loyalty/claim").set(bearer(tokenFor(U))).send({ period: "Evening" });
+    const res = await api().post("/api/loyalty/claim").set(bearer(tokenFor(G))).send({ period: "Evening" });
     expect(res.status).toBe(409);
   });
 
@@ -101,26 +102,27 @@ describe("claiming a free game", () => {
   });
 
   it("two simultaneous claims cannot spend the same points twice", async () => {
-    const day = (await loyaltyService.overview(U)).shifts.find((s) => s.period === "Day")!;
-    expect(day.cost).toBe(100); // default Day price Rs. 1,000 / 10
+    // 225 points can pay for one Evening game (150) but not two
+    const evening = (await loyaltyService.overview(U)).shifts.find((s) => s.period === "Evening")!;
+    expect(evening.cost).toBe(150); // default Evening price Rs. 1,500 / 10
     const [a, b] = await Promise.all([
-      api().post("/api/loyalty/claim").set(bearer(tokenFor(U))).send({ period: "Day" }),
-      api().post("/api/loyalty/claim").set(bearer(tokenFor(U))).send({ period: "Day" }),
+      api().post("/api/loyalty/claim").set(bearer(tokenFor(U))).send({ period: "Evening" }),
+      api().post("/api/loyalty/claim").set(bearer(tokenFor(U))).send({ period: "Evening" }),
     ]);
     expect([a.status, b.status].sort()).toEqual([201, 409]);
     const o = await loyaltyService.overview(U);
     expect(o.vouchers).toHaveLength(1);
-    expect(o.remaining).toBe(12.5);
-    expect(o.claimed).toBe(100);
+    expect(o.remaining).toBe(75);
+    expect(o.claimed).toBe(150);
   });
 
   it("a voucher can be used once, only by its owner and only for its shift", async () => {
     const v = (await loyaltyService.overview(U)).vouchers[0];
     await makeUser(G, "Other");
-    await expect(prisma.$transaction((tx) => loyaltyService.useVoucher(tx, v.id, G, "b1", "Day"))).rejects.toThrow();
-    await expect(prisma.$transaction((tx) => loyaltyService.useVoucher(tx, v.id, U, "b1", "Evening"))).rejects.toThrow();
-    await prisma.$transaction((tx) => loyaltyService.useVoucher(tx, v.id, U, "b1", "Day"));
-    await expect(prisma.$transaction((tx) => loyaltyService.useVoucher(tx, v.id, U, "b2", "Day"))).rejects.toThrow();
+    await expect(prisma.$transaction((tx) => loyaltyService.useVoucher(tx, v.id, G, "b1", "Evening"))).rejects.toThrow();
+    await expect(prisma.$transaction((tx) => loyaltyService.useVoucher(tx, v.id, U, "b1", "Day"))).rejects.toThrow();
+    await prisma.$transaction((tx) => loyaltyService.useVoucher(tx, v.id, U, "b1", "Evening"));
+    await expect(prisma.$transaction((tx) => loyaltyService.useVoucher(tx, v.id, U, "b2", "Evening"))).rejects.toThrow();
     await loyaltyService.releaseVoucherForBooking("b1");
     expect((await loyaltyService.overview(U)).vouchers).toHaveLength(1);
   });

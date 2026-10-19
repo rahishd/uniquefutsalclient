@@ -11,7 +11,7 @@ import { openSignIn, useSession } from "@/lib/session";
 import { useTeams } from "@/lib/teams";
 import { FALLBACK_RULES, loadRules, playersLabel, postRequest, requestsStore, type PlayerRules } from "@/lib/playerRequests";
 import { markReadByTypes } from "@/lib/notifications";
-import { ageGroupLabel, groupsText } from "@/lib/age";
+import { MOST_ACTIVE_GROUP, ageGroupLabel, groupsText } from "@/lib/age";
 import { profileStore } from "@/lib/profile";
 import RequestCard from "@/components/findplayer/RequestCard";
 import TeamFinder from "@/components/captain/TeamFinder";
@@ -170,20 +170,24 @@ export default function FindPlayerPage() {
             <div>
               <p className="text-sm font-medium">Age group</p>
               <p className="mt-0.5 text-xs text-slate-400">Pick one or more. Only players in the chosen groups are notified and can join.</p>
-              <div className="-mx-1 mt-2 flex flex-wrap gap-2 px-1" role="group" aria-label="Age groups">
+              <div className="-mx-1 mt-2 flex flex-wrap gap-x-2 gap-y-3 px-1 pt-2" role="group" aria-label="Age groups">
                 {rules.ageGroups.map((g) => {
                   const on = ageGroups.includes(g);
                   return (
-                    <button
-                      key={g}
-                      type="button"
-                      aria-pressed={on}
-                      onClick={() => toggleGroup(g)}
-                      className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium ${on ? "glass-active" : "border border-slate-200 bg-white text-slate-600"}`}
-                    >
-                      {on && <Check size={14} aria-hidden />}
-                      {ageGroupLabel(g)}
-                    </button>
+                    <span key={g} className="relative">
+                      <button
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => toggleGroup(g)}
+                        className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium ${on ? "glass-active" : "border border-slate-200 bg-white text-slate-600"}`}
+                      >
+                        {on && <Check size={14} aria-hidden />}
+                        {ageGroupLabel(g)}
+                      </button>
+                      {g === MOST_ACTIVE_GROUP && (
+                        <span className="pointer-events-none absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-orange-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0c0b5d]">Most active</span>
+                      )}
+                    </span>
                   );
                 })}
               </div>
@@ -207,7 +211,7 @@ export default function FindPlayerPage() {
               onClick={submit}
               className="glass-btn flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-sm font-semibold disabled:opacity-50"
             >
-              {busy ? <Loader2 size={16} className="animate-spin" /> : <BellRing size={16} />} {everyone ? "Notify all players" : `Notify ${chosenText}`}
+              {busy ? <Loader2 size={16} className="animate-spin" /> : <BellRing size={16} />} {everyone ? "Notify all players" : `Notify ${chosenText.replace(/years/g, "Years")}`}
             </button>
             <p className="-mt-2 text-center text-xs text-slate-400">
               A friendly game: the court price is shared equally, win or lose. Once everyone has joined you pay a Rs. {rules.advanceFee} advance to book the court.

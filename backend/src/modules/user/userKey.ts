@@ -23,7 +23,7 @@ export async function moveUserKey(tx: Tx, oldPhone: string, newPhone: string): P
 // When a player is deleted: personal customer-app data goes, money records stay (anonymised), and a team
 // cannot be left without its captain.
 export async function cleanupUserForDelete(tx: Tx, phone: string): Promise<void> {
-  const captain = await tx.team.findUnique({ where: { captainId: phone } });
+  const captain = await tx.team.findFirst({ where: { captainId: phone } });
   if (captain) throw new AppError(409, `This player is the captain of "${captain.name}". Move or remove that team first.`);
   await tx.teamMember.deleteMany({ where: { userId: phone } });
   await tx.userPrefs.deleteMany({ where: { userId: phone } });

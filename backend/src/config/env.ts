@@ -62,6 +62,10 @@ export const env = {
   VAPID_SUBJECT: process.env.VAPID_SUBJECT || "mailto:admin@example.com",
   // Google sign-in used as the second factor for password reset. Empty = reset is unavailable.
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "",
+  // Face ID / fingerprint sign-in (passkeys). RP ID = the site domain without a port (localhost in development); origins = the exact site addresses.
+  WEBAUTHN_RP_ID: process.env.WEBAUTHN_RP_ID || "localhost",
+  WEBAUTHN_RP_NAME: process.env.WEBAUTHN_RP_NAME || "Unique Futsal",
+  WEBAUTHN_ORIGINS: (process.env.WEBAUTHN_ORIGINS || process.env.ALLOWED_ORIGINS || "http://localhost:3000").split(",").map((s) => s.trim()).filter(Boolean),
 };
 
 export default env;

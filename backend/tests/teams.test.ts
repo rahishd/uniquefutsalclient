@@ -54,12 +54,19 @@ describe("captain mode and creating a team", () => {
     expect((await captainMode(CAP_B)).status).toBe(200);
     expect((await json("put", "/api/me/mode", CAP_A, { mode: "king" })).status).toBe(400);
   });
-  it("creates teams: name 2 to 30 characters, unique, one team per player", async () => {
+  it("creates teams: name 2 to 30 characters, unique, up to 3 teams per person", async () => {
     expect((await json("post", "/api/teams", CAP_A, { name: "A" })).status).toBe(400);
     const a = await json("post", "/api/teams", CAP_A, { name: "Team Alpha Test" });
     expect(a.status).toBe(201);
     teamA = a.body.data.id;
-    expect((await json("post", "/api/teams", CAP_A, { name: "Another One" })).status).toBe(409); // already in a team
+    // one person can create up to 3 teams; the newest one becomes the team in use
+    expect((await json("post", "/api/teams", CAP_A, { name: "Another One" })).status).toBe(201);
+    expect((await json("post", "/api/teams", CAP_A, { name: "Third One" })).status).toBe(201);
+    expect((await json("post", "/api/teams", CAP_A, { name: "Fourth One" })).status).toBe(409);
+    const list = await json("get", "/api/teams/mine", CAP_A);
+    expect(list.body.data.teams).toHaveLength(3);
+    expect(list.body.data.canCreate).toBe(false);
+    expect((await json("put", "/api/teams/me/active", CAP_A, { teamId: teamA })).status).toBe(200); // back to the first team
     expect((await json("post", "/api/teams", CAP_B, { name: "Team Alpha Test" })).status).toBe(409); // name taken
     const b = await json("post", "/api/teams", CAP_B, { name: "Team Bravo Test" });
     teamB = b.body.data.id;
@@ -82,8 +89,8 @@ describe("roster", () => {
     expect(full.body.message).toMatch(/full/);
     expect((await json("get", "/api/teams/me", CAP_A)).body.data.members).toHaveLength(12);
   });
-  it("a player can be in only one team, and the captain cannot be removed", async () => {
-    expect((await json("post", "/api/teams/me/members", CAP_B, { phone: A_PLAYERS[0] })).status).toBe(409);
+  it("a player cannot be added twice to the same team, and the captain cannot be removed", async () => {
+    expect((await json("post", "/api/teams/me/members", CAP_A, { phone: A_PLAYERS[0] })).status).toBe(409);
     expect((await json("delete", `/api/teams/me/members/${CAP_A}`, CAP_A)).status).toBe(400);
     expect((await json("delete", `/api/teams/me/members/${A_PLAYERS[10]}`, CAP_A)).status).toBe(200);
     expect((await json("post", "/api/teams/me/members", CAP_A, { phone: EXTRA })).status).toBe(201); // room again

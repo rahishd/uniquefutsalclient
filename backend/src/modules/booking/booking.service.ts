@@ -317,7 +317,7 @@ export class BookingService {
       data: { status: "completed" },
     });
 
-    // New loyalty points: a completed AND paid regular game earns price/100 points (once per booking).
+    // New loyalty points: a completed AND paid regular game earns price/10 points (once per booking).
     await this.awardLoyaltyFor(affectedBookings.map((b) => b.id));
 
     // Update loyalty stats for affected users
@@ -1435,7 +1435,7 @@ export class BookingService {
 
     const existing = await prisma.booking.findUnique({
       where: { id },
-      select: { status: true, date: true, startTime: true, userId: true, customerPhone: true, customerName: true, notes: true },
+      select: { status: true, date: true, startTime: true, userId: true, customerPhone: true, customerName: true, notes: true, onlineAmount: true, paymentOrderCode: true },
     });
 
     if (!existing) {
@@ -1478,7 +1478,12 @@ export class BookingService {
     });
     await this.freeSlots(id);
     await loyaltyService.releaseVoucherForBooking(id);
-    const refund = await paymentService.refundOnCancel(id);
+    let refund = await paymentService.refundOnCancel(id);
+    // one hour of a Bulk Booking: its share of the shared online payment goes back to the customer through the venue
+    if (refund === 0 && existing.notes?.includes("BULK:") && existing.paymentOrderCode && existing.onlineAmount > 0) {
+      refund = existing.onlineAmount;
+      await prisma.paymentEvent.create({ data: { orderCode: existing.paymentOrderCode, source: "system", payload: JSON.stringify({ event: "REFUND_DUE", reason: "BULK_HOUR_CANCELLED_BY_CUSTOMER", bookingId: id, amount: refund, method: "fonepay" }) } });
+    }
     await notificationService.notify({
       userId, type: "booking", title: "Booking cancelled",
       message: refund > 0 ? `${existing.date} · ${existing.startTime} cancelled for free. Rs. ${refund} will be returned to you by the venue.` : `${existing.date} · ${existing.startTime} cancelled for free.`,

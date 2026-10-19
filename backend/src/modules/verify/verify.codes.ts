@@ -1,19 +1,24 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../config/db";
 
-// Verification codes. 4 digits (1000 to 9999) so they are easy to read out or type; if a random 4-digit code keeps clashing
-// (the shorter codes are nearly all used) it moves to 5 digits, then 6. A code is never reused.
-const randomCode = (digits: number) => {
-  const min = 10 ** (digits - 1);
-  return String(min + Math.floor(Math.random() * 9 * min));
+// Verification codes. A code is never reused.
+// New codes are 5 characters: digits and capital letters mixed, like 1234A (no I or O, so they are not mistaken for 1 and 0).
+// Older all-digit codes (4 to 6 digits) keep working. If every 5-character code that is drawn keeps clashing, it moves to 6.
+const ALPHABET = "0123456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const randomCode = (len: number) => {
+  for (;;) {
+    let c = "";
+    for (let i = 0; i < len; i++) c += ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
+    if (/[0-9]/.test(c) && /[A-Z]/.test(c)) return c;
+  }
 };
 
 type NewDoc = Omit<Prisma.DocVerificationUncheckedCreateInput, "code">;
 
 /** Creates the row with a free code. For a payment that already has a code, returns that one instead (never a second code). */
 export async function createWithCode(data: NewDoc) {
-  for (const digits of [4, 5, 6]) {
-    const tries = digits === 4 ? 25 : 60;
+  for (const digits of [5, 6]) {
+    const tries = digits === 5 ? 60 : 100;
     for (let i = 0; i < tries; i++) {
       try {
         return await prisma.docVerification.create({ data: { ...data, code: randomCode(digits) } });

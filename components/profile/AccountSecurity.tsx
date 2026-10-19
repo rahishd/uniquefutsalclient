@@ -5,6 +5,7 @@ import { errorText } from "@/lib/api";
 import { disablePush, enablePush, pushState, type PushState } from "@/lib/push";
 import { changeMyPassword, googleStatus, linkGoogle, unlinkGoogle, type GoogleStatus } from "@/lib/google";
 import GoogleButton from "@/components/auth/GoogleButton";
+import { enablePasskey, listPasskeys, passkeyCancelled, passkeyName, passkeySupported, removePasskey, type PasskeyRow } from "@/lib/passkey";
 
 function Switch({ checked, onChange, label, disabled }: { checked: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }) {
   return (
@@ -32,11 +33,17 @@ export default function AccountSecurity() {
   const [linking, setLinking] = useState(false);
   const [pw, setPw] = useState<{ cur: string; next: string } | null>(null);
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [faceOk, setFaceOk] = useState(false); // this device can use Face ID / fingerprint
+  const [keys, setKeys] = useState<PasskeyRow[] | null>(null);
+  const [faceBusy, setFaceBusy] = useState(false);
+  const [faceError, setFaceError] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
     pushState().then((s) => alive && setPush(s));
     googleStatus().then((s) => alive && setGoogle(s)).catch(() => {});
+    passkeySupported().then((s) => alive && setFaceOk(s));
+    listPasskeys().then((r) => alive && setKeys(r)).catch(() => {});
     return () => {
       alive = false;
     };
@@ -57,6 +64,20 @@ export default function AccountSecurity() {
     } finally {
       setPush(await pushState());
       setBusy(false);
+    }
+  }
+
+  async function toggleFace(on: boolean) {
+    setFaceBusy(true);
+    setFaceError(null);
+    try {
+      if (on) await enablePasskey();
+      else await Promise.all((keys ?? []).map((k) => removePasskey(k.id)));
+    } catch (e) {
+      if (!passkeyCancelled(e)) setFaceError(errorText(e));
+    } finally {
+      setKeys(await listPasskeys().catch(() => keys));
+      setFaceBusy(false);
     }
   }
 
@@ -111,6 +132,18 @@ export default function AccountSecurity() {
           </div>
         )}
         {pwMsg && <p role="alert" className={`mt-1 text-xs ${pwMsg.ok ? "text-brand" : "text-rose-600"}`}>{pwMsg.text}</p>}
+      </li>
+      <li>
+        <div className="flex items-center justify-between gap-4">
+          <span>
+            {passkeyName()} sign-in
+            <span className="block text-xs text-slate-400">Sign in without typing your password. Turn it on while signed in; it works on this device only.</span>
+          </span>
+          <Switch checked={(keys?.length ?? 0) > 0} disabled={faceBusy || keys === null || !faceOk} onChange={toggleFace} label={`${passkeyName()} sign-in`} />
+        </div>
+        {keys && keys.length > 0 && <p className="mt-1 text-xs text-slate-400">On for: {keys.map((k) => k.deviceName || "a device").join(", ")}. Turning it off removes it from every device.</p>}
+        {!faceOk && <p className="mt-1 text-xs text-slate-400">This device or browser does not support it.</p>}
+        {faceError && <p role="alert" className="mt-1 text-xs text-rose-600">{faceError}</p>}
       </li>
       <li>
         <div className="flex items-center justify-between gap-4">

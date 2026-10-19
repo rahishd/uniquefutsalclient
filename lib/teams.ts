@@ -8,6 +8,7 @@
 import { api, errorText } from "@/lib/api";
 import { createRemoteStore } from "@/lib/remote-store";
 
+export const MAX_TEAMS_PER_PERSON = 3; // one person can captain / play in up to 3 teams
 export const MAX_TEAM_SIZE = 12; // captain included (the server enforces it)
 export const MIN_GAMES_FOR_RATING = 3; // a team is "Unrated" before this many approved games
 export const LOSER_SHARES = [70, 60, 100] as const;
@@ -149,8 +150,13 @@ async function act(fn: () => Promise<unknown>, reload = true): Promise<ActionRes
   }
 }
 
+/** The person's teams (up to 3) and the one in use. Everything captain-related acts for the active team. */
+export interface MyTeamsList { max: number; activeId: string | null; canCreate: boolean; teams: { id: string; name: string; isCaptain: boolean }[] }
+export const myTeamsStore = createRemoteStore<MyTeamsList | null>(() => api<MyTeamsList>("/teams/mine"), { pollMs: 60000, signedOut: null });
+export const switchTeam = (teamId: string) => act(async () => { await api("/teams/me/active", { method: "PUT", body: { teamId } }); await myTeamsStore.refresh(); });
+
 export const setMode = (mode: "player" | "captain") => act(() => api("/me/mode", { method: "PUT", body: { mode } }));
-export const createTeam = (name: string) => act(() => api("/teams", { method: "POST", body: { name } }));
+export const createTeam = (name: string) => act(async () => { await api("/teams", { method: "POST", body: { name } }); await myTeamsStore.refresh(); });
 export const addMember = (phone: string) => act(() => api("/teams/me/members", { method: "POST", body: { phone } }));
 export const removeMember = (userId: string) => act(() => api(`/teams/me/members/${encodeURIComponent(userId)}`, { method: "DELETE" }));
 

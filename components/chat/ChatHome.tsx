@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, CheckCheck, Inbox, Info, Menu, Plus, Shield, UserPlus, Users } from "lucide-react";
+import { Check, CheckCheck, Inbox, Info, Menu, Plus, Shield, Trash2, UserPlus, Users } from "lucide-react";
 import { openSignIn, useSession } from "@/lib/session";
-import { chatTime, friendsStore, openDirect, threadsStore, type ChatPerson } from "@/lib/chat";
+import { chatTime, deleteChat, friendsStore, openDirect, threadsStore, type ChatPerson, type ChatThreadRow } from "@/lib/chat";
+import { askConfirm } from "@/lib/confirm";
 import ProfileAvatar from "@/components/captain/ProfileAvatar";
 import NewChatSheet from "@/components/chat/NewChatSheet";
 import FriendsSheet from "@/components/chat/FriendsSheet";
@@ -38,6 +39,9 @@ export default function ChatHome() {
   const [friendsTab, setFriendsTab] = useState<"add" | "requests" | "friends" | null>(null);
   const [opening, setOpening] = useState<string | null>(null);
   const [menu, setMenu] = useState(false);
+  const [target, setTarget] = useState<ChatThreadRow | null>(null); // the chat that was pressed and held (or right-clicked)
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const held = useRef(false); // a long press happened: the tap that follows must not open the chat
   const threads = data ?? [];
   const friends = social?.friends ?? [];
   const requests = social?.incoming.length ?? 0;
@@ -50,6 +54,23 @@ export default function ChatHome() {
       router.push(`/chat/${id}`);
     } catch {
       setOpening(null);
+    }
+  }
+
+  const startHold = (t: ChatThreadRow) => {
+    held.current = false;
+    clearTimeout(holdTimer.current);
+    holdTimer.current = setTimeout(() => { held.current = true; setTarget(t); try { navigator.vibrate?.(20); } catch { /* not supported */ } }, 500);
+  };
+  const stopHold = () => clearTimeout(holdTimer.current);
+
+  async function removeChat(t: ChatThreadRow) {
+    setTarget(null);
+    if (!(await askConfirm(`Delete the entire chat with ${t.title}? It is removed from your side only; ${t.kind === "group" ? "the group and its other members keep it" : "they keep their copy"}.`, { confirmLabel: "Delete chat", danger: true }))) return;
+    try {
+      await deleteChat(t.id);
+    } finally {
+      threadsStore.refresh();
     }
   }
 
@@ -134,7 +155,16 @@ export default function ChatHome() {
               <ul className="overflow-hidden rounded-3xl bg-white shadow-[0_8px_24px_-16px_rgba(12,11,93,0.3)] ring-1 ring-slate-100">
                 {threads.map((t, i) => (
                   <li key={t.id} className={i > 0 ? "border-t border-slate-100" : ""}>
-                    <Link href={`/chat/${t.id}`} className="flex items-center gap-3 px-4 py-3 transition hover:bg-slate-50 active:bg-slate-100">
+                    <Link
+                      href={`/chat/${t.id}`}
+                      onPointerDown={() => startHold(t)}
+                      onPointerUp={stopHold}
+                      onPointerLeave={stopHold}
+                      onPointerCancel={stopHold}
+                      onContextMenu={(e) => { e.preventDefault(); stopHold(); held.current = true; setTarget(t); }}
+                      onClick={(e) => { if (held.current) { e.preventDefault(); held.current = false; } }}
+                      className="flex select-none items-center gap-3 px-4 py-3 transition hover:bg-slate-50 active:bg-slate-100 [-webkit-touch-callout:none]"
+                    >
                       {t.kind === "group" ? (
                         <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand"><Users size={20} /></span>
                       ) : (
@@ -166,6 +196,18 @@ export default function ChatHome() {
             )}
           </section>
         </>
+      )}
+
+      {target && (
+        <div role="dialog" aria-modal="true" aria-label={`Options for ${target.title}`} className="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 p-4 sm:items-center" onClick={() => setTarget(null)}>
+          <div className="w-full max-w-sm rounded-3xl bg-white p-3 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <p className="truncate px-3 pb-2 pt-1 text-sm font-semibold text-slate-800">{target.title}</p>
+            <button type="button" onClick={() => removeChat(target)} className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-semibold text-rose-600 hover:bg-rose-50">
+              <Trash2 size={18} /> Delete entire chat
+            </button>
+            <button type="button" onClick={() => setTarget(null)} className="mt-1 w-full rounded-2xl px-3 py-3 text-center text-sm font-medium text-slate-500 hover:bg-slate-50">Cancel</button>
+          </div>
+        </div>
       )}
 
       {sheet === "group" && <NewChatSheet onClose={() => setSheet(null)} />}

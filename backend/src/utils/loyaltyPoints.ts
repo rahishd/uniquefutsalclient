@@ -1,6 +1,6 @@
 // Loyalty points rules for the new customer app (pure functions, no database).
 //
-// - A regular game earns price / 100 points, kept to one decimal (Rs. 1,250 = 12.5).
+// - A regular game earns price / 10 points, kept to one decimal (Rs. 1,250 = 125).
 // - A free game costs the shift's price / 10 in points (Rs. 1,250 = 125 points). There is no "10 games played" rule:
 //   a customer can claim as soon as they hold that many valid points.
 // - Gamezone: every hour played earns 5 points (awarded by the admin server when the session is completed and paid).
@@ -15,6 +15,7 @@
 import { addDaysKey, addMonthsKey } from "./dates";
 
 export const RS_PER_POINT = 100;
+export const GAME_PRICE_DIVISOR = 10; // a game earns (court price / 10) points
 export const FREE_GAME_DIVISOR = 10;
 export const GZ_POINTS_PER_HOUR = 5;
 export const POINTS_CAPTAIN_WIN = 5;
@@ -39,14 +40,15 @@ export type LoyaltyKind = "game" | "captain_win" | "goods" | "membership" | "fre
 
 // Sharing points: a customer sends whole points they hold to another registered customer. The points keep the expiry
 // they had, so sharing never makes points last longer.
-export const SHARE_MIN = 1;
-export const SHARE_MAX = 500; // per share
-export const SHARE_PER_DAY = 5; // shares one customer can send in 24 hours
+export const SHARE_MIN = 10;
+export const SHARE_MAX = 10; // one share sends exactly this many points (min = max)
+export const SHARE_MIN_BALANCE = 100; // a customer needs at least this many points before they can share any
+export const SHARE_PER_DAY = 3; // shares one customer can send in 24 hours
 
 export const r1 = (n: number) => Math.round(n * 10) / 10;
 
 export function pointsForGame(priceRs: number): number {
-  return Math.floor(Math.max(0, priceRs) / 10) / 10; // price / 100, cut to one decimal
+  return Math.floor(Math.max(0, priceRs)) / GAME_PRICE_DIVISOR; // price / 10, cut to one decimal
 }
 
 export function freeGameCost(priceRs: number): number {

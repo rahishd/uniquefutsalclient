@@ -28,6 +28,9 @@ model User {
   emergencyName        String? // who to call if this player is hurt (asked at sign-up; the app reminds those who skipped)
   emergencyPhone       String? // 10-digit mobile, never the account's own number
   emergencyRelation    String? // e.g. Father, Wife, Friend (optional)
+  referredBy           String? // a customer who registered this account for a friend (Refer & Earn)
+  mustChangePassword   Boolean                  @default(false) // the shared first password must be replaced at the first sign-in
+  referralBonusAt      DateTime? // when the friend's first sign-in paid the sign-up points
   bookings             Booking[]
   subscriptions        MembershipSubscription[]
   notifications        Notification[]
@@ -50,6 +53,7 @@ model Product {
   lowStockThreshold Int            @default(10)
   unit              String         @default("pcs")
   costPrice         Float?
+  orderable         Boolean        @default(false) // shown in the customer app Order list for people playing a booked game
   logs              InventoryLog[]
   orderItems        OrderItem[]
   category          Category       @relation(fields: [categoryId], references: [id])
@@ -437,6 +441,7 @@ model UserPrefs {
   mode               String   @default("player") // player | captain
   location           String?
   position           String? // GK | DEF | MID | FWD
+  activeTeamId       String? // which of the person's teams the app is acting for
   updatedAt          DateTime @updatedAt
 }
 
@@ -509,6 +514,7 @@ model FreeGameVoucher {
   bookingId String?
   claimedAt DateTime  @default(now())
   usedAt    DateTime?
+  spent     String? // JSON: which points were spent, [{expiresOn, points}], so a cancel gives each part back with its expiry
 
   @@index([userId, status])
 }
@@ -529,20 +535,25 @@ model Team {
   id        String       @id @default(cuid())
   name      String       @unique
   area      String       @default("Tilottama")
-  captainId String       @unique
+  captainId String       // a person may captain up to 3 teams
+
   createdAt DateTime     @default(now())
   members   TeamMember[]
+
+  @@index([captainId])
 }
 
 model TeamMember {
   id       String   @id @default(cuid())
   teamId   String
-  userId   String   @unique // a player can be in only one team
+  userId   String   // a player can be in up to 3 teams
   position String   @default("MID")
   joinedAt DateTime @default(now())
   team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
+  @@unique([teamId, userId])
   @@index([teamId])
+  @@index([userId])
 }
 
 model Challenge {
@@ -1049,6 +1060,7 @@ model ChatMember {
   userId     String
   role       String     @default("member") // admin | member
   lastReadAt DateTime   @default(now())
+  clearedAt  DateTime? // this member deleted the whole chat for themselves: older messages are hidden and the chat leaves their list
   joinedAt   DateTime   @default(now())
   thread     ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
 
@@ -1274,4 +1286,40 @@ model WatchEarnStat {
   views     Int      @default(0) // ads counted, all time
   points    Int      @default(0) // points written so far (views / 40, rounded down)
   updatedAt DateTime @default(now()) @updatedAt
+}
+
+// A phone's Face ID / fingerprint / screen-lock key for signing in without typing the password (WebAuthn passkey).
+// Only the public half is stored here; the private key never leaves the person's device.
+model Passkey {
+  id           String    @id @default(cuid())
+  userId       String // User.phoneNumber
+  credentialId String    @unique // base64url
+  publicKey    String // base64url COSE public key
+  counter      Int       @default(0)
+  transports   String? // comma separated: internal, hybrid, ...
+  deviceName   String?
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime?
+
+  @@index([userId])
+}
+
+// Goods on credit: made by staff, and by the customer app when someone orders at the venue during their game. Paid later with the bill.
+model GoodsDue {
+  id           String    @id @default(cuid())
+  userId       String // the customer's account (phone)
+  saleId       String    @unique // the GoodsSale row made when the goods were given
+  amount       Int
+  items        String // "5 x Gloves, 20 x Energy drink"
+  lines        String // JSON lines as on a bill
+  status       String    @default("due") // due | paid
+  createdBy    String
+  createdAt    DateTime  @default(now())
+  paidAt       DateTime?
+  paidBy       String?
+  checkoutCode String?
+  cashAmount   Int       @default(0)
+  onlineAmount Int       @default(0)
+
+  @@index([userId, status])
 }

@@ -3,6 +3,7 @@ import { authRouter } from "../modules/auth";
 import { bookingRouter } from "../modules/booking";
 import settingsRouter from "../modules/settings/settings.routes";
 import { wifiRouter } from "../modules/wifi/wifi.routes";
+import { venueOrderRouter } from "../modules/venueorder/venueorder.routes";
 import { productRouter } from "../modules/product";
 import { categoryRouter } from "../modules/category";
 import { expenseRouter } from "../modules/expense";
@@ -49,6 +50,7 @@ router.use("/admin", adminRoutes);
 router.use("/bookings", bookingRouter);
 router.use("/settings", settingsRouter);
 router.use("/wifi", wifiRouter);
+router.use("/venue-orders", venueOrderRouter); // order drinks and snacks during your booked game
 router.use("/products", productRouter);
 router.use("/categories", categoryRouter);
 router.use("/expenses", expenseRouter);

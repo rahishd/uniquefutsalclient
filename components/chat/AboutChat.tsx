@@ -19,7 +19,7 @@ export default function AboutChat() {
         <Info size={18} className="mt-0.5 shrink-0 text-brand" aria-hidden />
         <p>
           <b className="text-slate-800">Good to know:</b> a single tick <Check size={13} className="inline text-slate-400" aria-label="single tick" /> means sent and a blue double tick <CheckCheck size={14} className="inline text-blue-600" aria-label="blue double tick" /> means seen.
-          To delete one of your messages, press and hold it, then tap Delete message. It disappears for everyone.
+          To delete one of your messages, press and hold it, then tap Delete message. It disappears for everyone. To delete a whole chat, press and hold it in your chat list.
         </p>
       </section>
 
@@ -36,6 +36,14 @@ export default function AboutChat() {
         <ul className="mt-3 space-y-3 text-sm">
           <li className="flex items-center gap-3"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-50"><Trash2 size={18} className="text-rose-500" /></span><span>Press and hold one of your messages, then tap <b>Delete message</b>.</span></li>
           <li className="flex items-center gap-3"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100"><Info size={18} className="text-brand" /></span><span>It disappears for everyone in the chat.</span></li>
+        </ul>
+      </section>
+
+      <section className="glass rounded-3xl p-5" aria-label="Deleting a whole chat">
+        <h2 className="text-base font-semibold">Delete an entire chat</h2>
+        <ul className="mt-3 space-y-3 text-sm">
+          <li className="flex items-center gap-3"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-50"><Trash2 size={18} className="text-rose-500" /></span><span>In your chat list, press and hold a chat (or right-click it on a computer), then tap <b>Delete entire chat</b>.</span></li>
+          <li className="flex items-center gap-3"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100"><Info size={18} className="text-brand" /></span><span>It is removed from your side only. The other person, or the rest of the group, keeps it. If someone writes to you again, the chat comes back with only the new messages.</span></li>
         </ul>
       </section>
     </main>

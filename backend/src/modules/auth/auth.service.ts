@@ -52,6 +52,61 @@ export class AuthService {
     }
   }
 
+  /**
+   * A friend registered through Refer & Earn signs in with the shared first password: the referrer and the friend each get
+   * the sign-up points (once, ever), and the app must now ask for a new password. Returns true while the new one is still owed.
+   */
+  private async friendFirstLogin(user: { phoneNumber: string; name: string | null; mustChangePassword: boolean; referredBy: string | null; referralBonusAt: Date | null }): Promise<boolean> {
+    if (!user.mustChangePassword) return false;
+    if (user.referredBy && !user.referralBonusAt) {
+      const claimed = await prisma.user.updateMany({ where: { phoneNumber: user.phoneNumber, referralBonusAt: null }, data: { referralBonusAt: new Date() } });
+      if (claimed.count === 1) {
+        try {
+          const { default: loyaltyService } = await import("../loyalty/loyalty.service");
+          const { FRIEND_SIGNUP_POINTS } = await import("../refer/refer.service");
+          await loyaltyService.award({ userId: user.referredBy, kind: "referral", points: FRIEND_SIGNUP_POINTS, sourceType: "friend-signup", sourceId: `${user.phoneNumber}:referrer`, detail: `Refer & Earn: ${user.name ?? "your friend"} signed in to Unique Futsal` });
+          await loyaltyService.award({ userId: user.phoneNumber, kind: "referral", points: FRIEND_SIGNUP_POINTS, sourceType: "friend-signup", sourceId: `${user.phoneNumber}:friend`, detail: "Welcome bonus: a friend registered you" });
+        } catch (e) {
+          logger.error(`Friend sign-up points failed for ${user.phoneNumber}: ${(e as Error).message}`);
+        }
+      }
+    }
+    return true;
+  }
+
+  /** The friend replaces the shared first password. Only allowed while it is still owed (no old password needed: they just used it). */
+  async setInitialPassword(userId: string, newPassword: string): Promise<boolean> {
+    const user = await prisma.user.findUnique({ where: { phoneNumber: userId } });
+    if (!user) throw new AppError(404, "User not found");
+    if (!user.mustChangePassword) throw new AppError(409, "Your password is already set. Use Change password in Settings.");
+    if (await HashUtil.compare(newPassword, user.password)) throw new AppError(400, "Choose a different password from the one you were given.");
+    await prisma.user.update({ where: { phoneNumber: userId }, data: { password: await HashUtil.hash(newPassword), mustChangePassword: false } });
+    logger.info(`User ${userId} replaced the shared first password.`);
+    return true;
+  }
+
+  /** Signs in a customer who proved who they are another way (Face ID / fingerprint). Same checks and result as the password login. */
+  async loginWithPasskey(phoneNumber: string): Promise<AuthResponse> {
+    const user = await prisma.user.findUnique({ where: { phoneNumber } });
+    if (!user || user.role !== "user") throw new AppError(401, "Face ID sign-in failed. Use your password.");
+    if (!user.isActive) throw new AppError(403, SUSPENDED_MESSAGE);
+    await this.recordLogin(user.phoneNumber);
+    const claims = { id: user.phoneNumber, email: user.email, role: user.role || "user" };
+    return {
+      token: JwtUtil.sign(claims),
+      refreshToken: JwtUtil.signRefresh(claims),
+      user: {
+        id: user.phoneNumber,
+        email: user.email,
+        name: user.name || "",
+        phoneNumber: user.phoneNumber,
+        role: user.role || "user",
+        avatar: user.avatar || undefined,
+        freeMatchesAvailable: user.freeMatchesAvailable,
+      },
+    };
+  }
+
   async login(dto: LoginDTO): Promise<AuthResponse> {
     const user = await prisma.user.findFirst({
       where: {
@@ -81,6 +136,7 @@ export class AuthService {
     }
 
     await this.recordLogin(user.phoneNumber);
+    const mustChangePassword = await this.friendFirstLogin(user);
 
     const token = JwtUtil.sign({
       id: user.phoneNumber,
@@ -105,6 +161,7 @@ export class AuthService {
         role: user.role || "user",
         avatar: user.avatar || undefined,
         freeMatchesAvailable: user.freeMatchesAvailable,
+        mustChangePassword,
       },
     };
   }
@@ -519,6 +576,7 @@ export class AuthService {
         freeMatchesAvailable: true,
         loginCount: true,
         emergencyPhone: true,
+        mustChangePassword: true,
       },
     });
 
@@ -540,6 +598,7 @@ export class AuthService {
       freeMatchesAvailable: user.freeMatchesAvailable,
       loginCount: user.loginCount,
       hasEmergencyContact: !!user.emergencyPhone,
+      mustChangePassword: user.mustChangePassword,
     };
   }
 

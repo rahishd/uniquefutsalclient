@@ -30,6 +30,9 @@ Times use Nepal time. Dates are `YYYY-MM-DD`. Money is whole rupees.
 | POST | `/auth/signup` | Guest | `{name, phoneNumber (9XXXXXXXXX), password>=6, dateOfBirth (YYYY-MM-DD, required: a real date, age 5 to 100), emergencyName (required), emergencyPhone (required, 9XXXXXXXXX, not the customer's own number), emergencyRelation?, email?}` -> `{token, refreshToken, user}`. 400 without a real date of birth or a valid emergency contact. 409 if the number already exists (an existing account is never taken over) |
 | POST | `/auth/login` | Guest | `{identifier: phone, password}`. Limited to 5 tries / 15 min / IP |
 | POST | `/auth/refresh` | Guest | `{refreshToken}` |
+| POST | `/auth/passkey/register/options`, `/auth/passkey/register/verify` | User | Turn on Face ID / fingerprint sign-in for this device (WebAuthn passkey, platform authenticator, user verification required). Options return `{options, challengeToken}`; verify takes `{response, challengeToken, deviceName?}`. Only the public key is stored (table `Passkey`) |
+| GET / DELETE | `/auth/passkey`, `/auth/passkey/:id` | User | List this customer's Face ID devices; turn one off |
+| POST | `/auth/passkey/login/options`, `/auth/passkey/login/verify` | Guest | Sign in with Face ID, no number or password (discoverable credential). Same result as `/auth/login`; customers (role user) only, suspended accounts refused. Limited like login. Needs `WEBAUTHN_RP_ID` and `WEBAUTHN_ORIGINS` in production |
 | GET | `/auth/me` | User | account basics and `loginCount` (sign-ins so far; counted on password sign-in, OTP sign-in and registration, not on token refresh) |
 | POST | `/auth/check-phone` | Guest | `{exists, isVerified}` only |
 | POST | `/auth/verify-otp`, `/resend-otp`, `/forgot-password`, `/reset-password` | - | 503 while `OTP_ENABLED=false` |
@@ -55,6 +58,8 @@ Times use Nepal time. Dates are `YYYY-MM-DD`. Money is whole rupees.
 | GET | `/bookings/occupancy?date=` | Guest | taken hours only; staff with a token also see names/phones |
 | GET | `/bookings/slots?date=` | Guest | Free hours for a date (today..+10 days, Nepal time) -> `{date,slots:[{hour,startTime,endTime,price}]}` |
 | POST | `/bookings/quote` | Guest | `{date,startTime,duration?,promoCode?,voucherId?}` -> `{basePrice,discount,total,promo,vip,water,usesVoucher,earnPoints}`; `water` is `{bottles, excluded}`: the 2 complimentary mineral water bottles, or 0 with `excluded: "vip"` (a VIP discount applies) or `"promo"` (a promo code applies and staff did not switch `includesWater` on for it). The booking stores the same number in `waterBottles` |
+| POST | `/bookings/bulk/quote` | User | `{slots:[{date,startTime}] (1..10, today..+7), promoCode?}`. Prices every hour on its own; the promo counts only on hours where it is valid. Returns `{slots,subtotal,discount,total,advance,promo}` |
+| POST | `/bookings/bulk` | User | `{slots, mode: advance|full, promoCode?}`. Fonepay only (50% advance or full). Holds every hour (10 minutes, tagged `BULK:<code>`), makes ONE order `BLK-XXXXXX` (purpose `bulk`) -> `{code,total,payNow,restAtVenue,bookings,payment}`. When paid, all hours confirm and the amount is shared across them in proportion to price; unpaid, all are released together |
 | POST | `/bookings/checkout` | Guest or User | `{date,startTime,duration?,method: fonepay|venue,promoCode?,voucherId?,guest?:{name,phone}}`. Guest: details required, `venue` refused (403), no voucher. User: no guest details. Window today..+10. Online -> `{booking, payment:{orderCode,amount,remarks,qrPayload,expiresAt}}` and the slot is held 10 minutes |
 | GET | `/bookings/me` | User | my bookings (membership ledger rows hidden) |
 | POST | `/verify` | Public | `{code}` (4 to 6 digits): is this bill or document genuine? 200 `{genuine, kind: payment|document, bill|document}` (customer name shortened, no phone); 404 = not genuine ("may be fake"); 400 bad format; 429 after 8 wrong codes from one connection in an hour. Every receipt in `GET /me/payments` carries `verifyCode` |
@@ -79,7 +84,8 @@ Times use Nepal time. Dates are `YYYY-MM-DD`. Money is whole rupees.
 | GET | `/loyalty/me` | User | `remaining, earned, claimed, expired, expiringSoon, byType, rows[], shifts[{period,price,perGame,cost,canClaim}], vouchers[], toNext` |
 | POST | `/loyalty/claim` | User | `{period: Morning|Day|Evening}` -> voucher. 409 if not enough points. Locked so a double tap cannot spend twice |
 | GET | `/loyalty/share/friend/:phone` | User | the registered customer a number belongs to, first name only (400 bad number or yourself, 404 not registered) |
-| POST | `/loyalty/share` | User | `{friendPhone, points}`: send whole points (1 to 500) to another registered customer -> `{id, points, to, remaining}`. 409 if not enough points, 429 after 5 shares in 24 hours. Locked per sender with `claim`. `GET /loyalty/me` also returns `share:{min,max,perDay}` |
+| DELETE | `/loyalty/vouchers/:id` | User | Cancel your own unused free game voucher: it is voided and its points come back as new entries (kind `free_game`) with the same expiry dates they were spent from (vouchers claimed before this was recorded get 3 months from today) -> `{id, period, refunded}`. 409 if already used or already cancelled, 404 for someone else's voucher |
+| POST | `/loyalty/share` | User | `{friendPhone, points}`: send exactly 10 points per share to another registered customer -> `{id, points, to, remaining}`. The sender must hold at least 100 points to share at all (409 below that, and 409 if the share is more than they have), 429 after 3 shares in 24 hours. Locked per sender with `claim`. `GET /loyalty/me` also returns `share:{min,max,minBalance,perDay}` |
 | POST | `/loyalty/goods-sale` | Staff | `{phone, amount, items?}`: 1 point per Rs. 100 |
 
 Promo use limits: staff can set `maxUses` (everyone together) and `maxPerCustomer` on a code in the admin portal. A use is a booking or membership carrying the code that is not cancelled, so cancelling gives it back. A code with no uses left is not listed by `GET /promos`. `POST /bookings/quote` answers `promo:{ok:false,message}`, and `/bookings/checkout` and the membership request answer 400 ("This promo code has been fully used." / "You have already used this promo code."). It is checked just before the booking is saved, not under a lock, so two people taking the last use at the same instant could both get it.
@@ -202,6 +208,9 @@ A customer books a game for ANOTHER team on their own account, then files it her
 | GET | `/refer/rules` | Guest | `{enabled, referrerPoints, friendPoints, perDay}` (staff set the points in `Settings` key `referEarn`) |
 | GET | `/refer/me` | User | `{rules, referrals[] (as referrer or as friend; `points` is what the caller gets), eligibleBookings[]}` (own, not cancelled, regular, last 30 days, not already sent) |
 | POST | `/refer` | User | `{bookingCode, friendPhone, teamName}` -> referral `RF-XXXXXX`, pending. 404 booking not yours or friend not registered, 400 yourself / bad fields, 409 cancelled, too old or already referred, 403 paused, 429 over 5 a day. Friend is notified (`type: "referral"`) |
+| POST | `/refer/friend` | User | `{name, phone}`. Registers a friend with no account: creates the account (verified, `mustChangePassword`) with a shared first password, returned ONCE as `{name,phone,password,points}` (only a hash is stored). 409 if the number has an account, 429 after 5 friends in 24 hours |
+| GET | `/refer/friends` | User | The friends this customer registered: `{phone,name,signedIn,points}` |
+| PATCH | `/auth/set-new-password` | User | `{newPassword}`. Only while `mustChangePassword` is true (a friend's first sign-in): no old password needed, must differ from the shared one. Login and `/auth/me` return `mustChangePassword`; the app shows a pop-up that cannot be closed. At that first sign-in the referrer and the friend each get 5 loyalty points (once, kind `referral`, source `friend-signup`) |
 | POST | `/refer/book` | User | `{date, startTime "HH:00", friendPhone, friendName}`: one step. Reserves the slot on the caller's account (1 hour, pay at the venue, 10-day window) and files the referral for it; if filing fails (friend not registered, over 5 a day, ...) the reservation is cancelled again and the slot freed. Same errors as `POST /refer` plus 400 for a bad date/time |
 | DELETE | `/refer/:id` | User | withdraw while pending (referrer only) |
 | GET | `/gifts/rules` | Guest | Gift Card: `{rsPerPoint: 10, minPoints: 10, maxPoints: 500, perDay: 5}` |
@@ -281,8 +290,6 @@ Registered customers can chat one to one or in groups (text only). Every route n
 | GET | `/chat/threads/:id/messages?after=` | Member | the latest 60 messages, or those after an ISO time. Marks the chat read. `[{id, senderId, senderName, body, createdAt, mine, deleted}]`; a deleted message has `body: ""` and `deleted: true` |
 | GET | `/chat/threads/:id/status` | Member | `{reads: [ISO time each other member last opened the chat], deleted: [ids of recent deleted messages]}`. Does not mark the chat read. A message of yours is Seen when every time in `reads` is at or after its `createdAt` |
 | DELETE | `/chat/threads/:id/messages/:messageId` | Sender | deletes your own message for everyone: the words are erased and a "deleted" note stays (403 for someone else's message, 404 if it is not in this chat). Deleting twice is harmless. If it was the latest message the chat preview becomes "This message was deleted"; deleted messages are not counted as unread |
-| GET | `/chat/report-reasons` | User | `{reasons[{id,label}], noteMax}` for the Report message sheet |
-| POST | `/chat/threads/:id/messages/:messageId/report` | Member | `{reason (harassment, inappropriate, spam, threat, other), note? (max 300)}`: reports a message someone else sent. It becomes a complaint with category `chat` (code `CP-XXXXXX`) that staff read under Complaints, with who sent it, which chat, the words and a message ref. 400 own message or bad reason, 404 not in the chat, 409 already reported or deleted, 429 after 10 reports in 24 hours. The sender is not told |
 | POST | `/chat/threads/:id/messages` | Member | `{body (1-1000)}`. 20 messages a minute per customer (429) |
 | PATCH | `/chat/threads/:id` | Group admin | `{name}` renames the group |
 | POST | `/chat/threads/:id/members` | Group admin | `{phones: []}` adds registered customers (max 50 in a group) |
@@ -357,3 +364,12 @@ The customer taps **View Ads** and keeps watching ads one after another. **1 ad 
 | GET | `/watch-earn/me` | User | `{rules, totalViews, pointsEarned, adsTowardNext, adsLeftForNext, todayViews, balance}` |
 | POST | `/watch-earn/views` | User | `{adId?}` -> 201 `{viewId, seconds: 15, startedAt}`; closes any view still open |
 | POST | `/watch-earn/views/:id/complete` | Owner | counts the ad -> `{counted, earnedNow (0 or 1), ...me}`. 409 too early / closed / timed out, 404 not yours |
+
+## Order at the venue (venue orders)
+
+Drinks and snacks (Mineral Water Bottle, Frooty...) ordered from the app during a booked game. Only a registered customer, and only the account that booked the game that is on (from its start time to its end time, a game past midnight counts). Products appear only when staff switch on "Show to Order list in client side" in the admin Inventory page (`Product.orderable`). An order is stored as a pay-later due (`GoodsSale` with the booking id plus a `GoodsDue`, created by `app:<phone>`), the stock goes down at once, and the admin bell shows it with a siren. Staff collect it in Payments and the final bill like any goods due.
+
+| Method | Path | Auth | Notes |
+|---|---|---|---|
+| GET | `/venue-orders/current` | User | `{active, next, limits:{perItem, perOrder}, items:[{id,name,price,unit,left}]}`. `active` is the customer's own confirmed game that is on now (items are empty without one); `next` is their next game |
+| POST | `/venue-orders` | User | `{items:[{productId, quantity}]}` -> `{id, items, total, game}`. 403 outside the game or for someone who did not book it, 404 for a product not switched on, 409 when stock is short, 400 for more than 6 of one item or 10 items in all, 429 after 5 orders for one game |

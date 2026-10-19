@@ -6,10 +6,12 @@ import validateRequest from "../../middlewares/validate.middleware";
 import { authRateLimitMiddleware } from "../../middlewares/rateLimit.middleware";
 import authMiddleware, { optionalAuthMiddleware } from "../../middlewares/auth.middleware";
 import googleRoutes from "./google.routes";
+import passkeyRoutes from "./passkey.routes";
 
 const router = Router();
 
 router.use(googleRoutes); // Google link + password reset (no SMS)
+router.use(passkeyRoutes); // Face ID / fingerprint sign-in
 
 // OTP / SMS verification is switched off (OTP_ENABLED=false). These routes answer 503 until the owner turns it on.
 const needsOtp = (_req: Request, res: Response, next: NextFunction) => {
@@ -106,6 +108,8 @@ router.post(
 
 router.get("/me", authMiddleware, authController.me);
 router.patch("/me", authMiddleware, authController.updateMe);
+// the friend registered through Refer & Earn replaces the shared first password (no old password needed)
+router.patch("/set-new-password", authMiddleware, [body("newPassword").isLength({ min: 6 }).withMessage("Use at least 6 characters")], validateRequest, authController.setNewPassword);
 router.patch(
   "/change-password",
   authMiddleware,

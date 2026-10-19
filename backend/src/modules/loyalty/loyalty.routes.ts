@@ -33,6 +33,16 @@ router.post(
   }),
 );
 
+// Cancel a free game voucher that has not been used yet: its points come back
+router.delete(
+  "/vouchers/:id",
+  authMiddleware,
+  asyncHandler(async (req: AuthRequest, res: Response) => {
+    const r = await loyaltyService.cancelVoucher(req.user!.id, req.params.id);
+    res.json(ApiResponseUtil.success(200, "Free game cancelled. Your points are back.", r));
+  }),
+);
+
 // Share points with another registered customer: check who the number belongs to (first name only), then send
 router.get(
   "/share/friend/:phone",

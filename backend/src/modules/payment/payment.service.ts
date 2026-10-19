@@ -7,10 +7,11 @@ import { getGateway, OnlineMethod } from "../../services/paymentGateway";
 
 export const QR_HOLD_MS = 10 * 60 * 1000; // an unpaid QR (and the slot behind it) is held for 10 minutes
 
-export type PaymentPurpose = "game" | "gamezone" | "purchase" | "renew" | "club" | "gift_points";
+export type PaymentPurpose = "game" | "bulk" | "gamezone" | "purchase" | "renew" | "club" | "gift_points";
 
 const PURPOSE_LABEL: Record<PaymentPurpose, string> = {
   game: "Regular game",
+  bulk: "Bulk booking",
   gamezone: "Gamezone PS5",
   purchase: "Membership purchase",
   renew: "Membership renew",
@@ -132,6 +133,34 @@ export class PaymentService {
       await giftService.onGamePaid(b.id);
       return true;
     }
+    if (order.purpose === "bulk") {
+      // One payment for a set of hours: the advance (or full amount) is shared across them in proportion to their prices.
+      const rows = await prisma.booking.findMany({ where: { paymentOrderCode: order.orderCode, notes: { contains: `BULK:${order.orderCode}` } }, orderBy: [{ date: "asc" }, { startTime: "asc" }] });
+      const live = rows.filter((b) => b.status !== "cancelled");
+      if (live.length === 0) {
+        await prisma.paymentEvent.create({ data: { orderCode: order.orderCode, source: "system", payload: JSON.stringify({ problem: "PAID_AFTER_RELEASE", action: "REFUND_NEEDED" }) } });
+        logger.error(`Payment ${order.orderCode} arrived after the bulk booking was released: refund needed`);
+        return false;
+      }
+      const total = live.reduce((n, b) => n + b.totalPrice, 0);
+      let left = Math.min(order.amount, total);
+      for (let i = 0; i < live.length; i++) {
+        const b = live[i];
+        const share = i === live.length - 1 ? left : Math.min(left, Math.round((b.totalPrice * Math.min(order.amount, total)) / total));
+        const paid = Math.min(share, b.totalPrice);
+        left -= paid;
+        const rest = b.totalPrice - paid;
+        await prisma.booking.update({
+          where: { id: b.id },
+          data: { paymentStatus: rest > 0 ? "partially_paid" : "completed", status: "confirmed", amountPaidNow: paid, remainingAmount: rest, onlineAmount: paid, holdExpiresAt: null },
+        });
+      }
+      if (order.userId) {
+        await notificationService.notify({ userId: order.userId, type: "payment", title: "Payment received", message: `Rs. ${order.amount} received for bulk booking ${order.orderCode}.`, href: "/profile", dedupeKey: `pay-${order.orderCode}` });
+        await notificationService.notify({ userId: order.userId, type: "booking", title: "Bulk booking confirmed", message: `${live.length} ${live.length === 1 ? "hour is" : "hours are"} confirmed${total > order.amount ? `. Rs. ${total - order.amount} is paid at the venue` : ""}. Code ${order.orderCode}.`, href: "/profile", dedupeKey: `booked-${order.orderCode}` });
+      }
+      return true;
+    }
     if (order.purpose === "gamezone") {
       const g = await prisma.gzBooking.findUnique({ where: { code: order.orderCode } });
       if (!g || g.status === "cancelled" || g.status === "expired") {
@@ -190,6 +219,13 @@ export class PaymentService {
         await prisma.booking.update({ where: { id: b.id }, data: { status: "cancelled", cancelledAt: new Date(), notes: b.notes ? `${b.notes} | EXPIRED_UNPAID` : "EXPIRED_UNPAID" } });
         await prisma.bookingSlot.deleteMany({ where: { bookingId: b.id } });
         await loyaltyService.releaseVoucherForBooking(b.id);
+      }
+    } else if (order.purpose === "bulk") {
+      // nobody paid in time: every held hour is released together
+      const held = await prisma.booking.findMany({ where: { paymentOrderCode: orderCode, status: "pending", paymentStatus: "pending" } });
+      for (const b of held) {
+        await prisma.booking.update({ where: { id: b.id }, data: { status: "cancelled", cancelledAt: new Date(), notes: b.notes ? `${b.notes} | EXPIRED_UNPAID` : "EXPIRED_UNPAID" } });
+        await prisma.bookingSlot.deleteMany({ where: { bookingId: b.id } });
       }
     } else if (order.purpose === "gamezone") {
       const g = await prisma.gzBooking.updateMany({ where: { code: orderCode, status: "confirmed", paymentStatus: "pending" }, data: { status: "expired" } });

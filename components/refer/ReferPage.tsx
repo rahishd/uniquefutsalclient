@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { CheckCircle2, HeartHandshake, Loader2, UserRound } from "lucide-react";
+import { CalendarPlus, CheckCircle2, ChevronDown, HeartHandshake, Loader2, UserRound } from "lucide-react";
 import { openSignIn, useSession } from "@/lib/session";
 import { errorText } from "@/lib/api";
+import FriendRegister from "@/components/refer/FriendRegister";
 import { markReadByTypes } from "@/lib/notifications";
 import { MAX_ADVANCE_DAYS, dateKey, fetchSlots, type Slot } from "@/lib/booking";
 import { STATUS_TEXT, bookAndRefer, clock, dayLabel, loadMe, loadRules, withdrawReferral, type ReferMe, type ReferRules } from "@/lib/refer";
@@ -16,6 +17,7 @@ export default function ReferPage() {
   const registered = session?.registered === true;
   const [rules, setRules] = useState<ReferRules | null>(null);
   const [me, setMe] = useState<ReferMe | null>(null);
+  const [open, setOpen] = useState<"friend" | "game" | null>(null); // which option is opened (none at first)
   const [date, setDate] = useState("");
   const [slots, setSlots] = useState<Slot[] | null>(null);
   const [startTime, setStartTime] = useState("");
@@ -107,7 +109,16 @@ export default function ReferPage() {
 
       {rules && !rules.enabled && <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-700">Refer &amp; Earn is paused right now. Please check back later.</p>}
 
-      <form onSubmit={submit} className="glass space-y-5 rounded-3xl p-5" aria-label="Book a slot for another team">
+      <div className="space-y-3">
+        <FriendRegister enabled={rules?.enabled !== false} open={open === "friend"} onToggle={() => setOpen((o) => (o === "friend" ? null : "friend"))} />
+
+        <section className="glass rounded-3xl">
+          <button type="button" onClick={() => setOpen((o) => (o === "game" ? null : "game"))} aria-expanded={open === "game"} className="flex w-full items-center justify-between gap-3 p-5 text-left">
+            <span className="flex items-center gap-2 text-lg font-semibold"><CalendarPlus size={20} className="text-brand" /> Pick a Game for Friend</span>
+            <ChevronDown size={20} className={`shrink-0 transition ${open === "game" ? "rotate-180" : ""}`} />
+          </button>
+          {open === "game" && (
+      <form onSubmit={submit} className="space-y-5 px-5 pb-5" aria-label="Book a slot for another team">
         <div>
           <p className="text-sm font-medium">1. Pick a date</p>
           <div className="mt-2 flex gap-2 overflow-x-auto pb-1" role="radiogroup" aria-label="Date">
@@ -156,6 +167,9 @@ export default function ReferPage() {
         )}
         {!startTime && error && <p role="alert" className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</p>}
       </form>
+          )}
+        </section>
+      </div>
 
       <section aria-label="My referrals" className="space-y-3">
         <h2 className="text-lg font-medium">My referrals</h2>

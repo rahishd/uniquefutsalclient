@@ -67,7 +67,7 @@ export const GROUP_NAME_MAX = 40;
 export const MIN_SEARCH_DIGITS = 5;
 
 export const threadsStore = createRemoteStore<ChatThreadRow[]>(() => api<ChatThreadRow[]>("/chat/threads"), { pollMs: 8000, signedOut: [] });
-export const unreadStore = createRemoteStore<number>(async () => (await api<{ unread: number }>("/chat/unread")).unread, { pollMs: 20000, signedOut: 0 });
+export const unreadStore = createRemoteStore<number>(async () => (await api<{ unread: number }>("/chat/unread")).unread, { pollMs: 6000, signedOut: 0 });
 
 export const searchPeople = (q: string) => api<ChatPerson[]>("/chat/people", { query: { q } });
 export const openDirect = (phone: string) => api<{ id: string }>("/chat/direct", { method: "POST", body: { phone } });
@@ -75,6 +75,8 @@ export const createGroup = (name: string, members: string[]) => api<{ id: string
 export const loadThread = (id: string) => api<ChatInfo>(`/chat/threads/${id}`);
 export const loadMessages = (id: string, after?: string) => api<ChatMessage[]>(`/chat/threads/${id}/messages`, { query: { after } });
 export const loadStatus = (id: string) => api<ChatStatus>(`/chat/threads/${id}/status`);
+/** Delete the whole chat for me: it leaves my list and its old messages are hidden. The other people keep it. */
+export const deleteChat = (id: string) => api<{ id: string; deleted: true }>(`/chat/threads/${id}`, { method: "DELETE" });
 export const deleteMessage = (id: string, messageId: string) => api<{ id: string; deleted: true }>(`/chat/threads/${id}/messages/${messageId}`, { method: "DELETE" });
 export type ReportReason = { id: string; label: string };
 export const FALLBACK_REPORT_REASONS: ReportReason[] = [

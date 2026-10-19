@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Cake, CheckCircle2, Eye, EyeOff, HeartPulse, Loader2, Lock, Phone, User } from "lucide-react";
+import { Cake, CheckCircle2, Eye, EyeOff, HeartPulse, Loader2, Lock, Phone, ScanFace, User } from "lucide-react";
 import { errorText } from "@/lib/api";
 import { signIn, signUp, useSession } from "@/lib/session";
 import { site } from "@/lib/site";
@@ -10,6 +10,7 @@ import { googleConfig, requestPasswordReset, resetPasswordWithGoogle, type Googl
 import GoogleButton from "@/components/auth/GoogleButton";
 import { useT } from "@/lib/i18n";
 import { dobKey, dobOk } from "@/lib/age";
+import { passkeyCancelled, passkeyName, passkeySupported, signInWithPasskey } from "@/lib/passkey";
 
 // A soft grey field with its icon on the left; focus shows a blue ring, a bad value turns it red with the message under it.
 const field = "flex items-center gap-3 rounded-2xl bg-slate-100 px-4 py-3.5 ring-1 transition focus-within:bg-white focus-within:ring-2";
@@ -40,6 +41,8 @@ export default function AuthForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  const [faceOk, setFaceOk] = useState(false); // this device can use Face ID / fingerprint
+  useEffect(() => { passkeySupported().then(setFaceOk); }, []);
 
   useEffect(() => {
     if (mode !== "reset" || google) return;
@@ -87,6 +90,19 @@ export default function AuthForm() {
     } catch (err) {
       setError(errorText(err));
     } finally {
+      setBusy(false);
+    }
+  }
+
+  async function faceSignIn() {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await signInWithPasskey();
+      window.location.assign(nextPath());
+    } catch (err) {
+      if (!passkeyCancelled(err)) setError(errorText(err));
       setBusy(false);
     }
   }
@@ -289,9 +305,16 @@ export default function AuthForm() {
             )}
           </div>
         ) : (
-          <button type="submit" disabled={!ok || busy} className={primary}>
-            {busy ? <><Loader2 size={18} className="animate-spin" /> Please wait…</> : mode === "in" ? t("Log In") : t("Create account")}
-          </button>
+          <>
+            <button type="submit" disabled={!ok || busy} className={primary}>
+              {busy ? <><Loader2 size={18} className="animate-spin" /> Please wait…</> : mode === "in" ? t("Log In") : t("Create account")}
+            </button>
+            {mode === "in" && faceOk && (
+              <button type="button" onClick={faceSignIn} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-100 py-3.5 text-[15px] font-semibold text-[#0c0b5d] ring-1 ring-slate-200 transition hover:bg-slate-200/70 active:scale-[0.99] disabled:opacity-40">
+                <ScanFace size={20} /> {t("Sign in with")} {passkeyName()}
+              </button>
+            )}
+          </>
         )}
       </form>
 

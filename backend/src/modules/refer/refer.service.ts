@@ -6,12 +6,15 @@ import { addDaysKey, todayKey } from "../../utils/dates";
 import notificationService from "../notification/notification.service";
 import BookingService from "../booking/booking.service";
 import { assertWindow } from "../booking/booking.checkout";
+import { HashUtil } from "../../utils/hash";
 
 // Refer & Earn: a customer books a game on behalf of ANOTHER team. They file the booking here with the friend's number and
 // team name. Staff check it in the admin portal and approve it; then BOTH get loyalty points (amounts set by staff).
 // The points are written by the admin portal on approval, never by the app, so nobody can give themselves points.
 export const SETTINGS_KEY = "referEarn";
 export const PER_DAY = 5; // referrals one customer can file in 24 hours
+export const FRIEND_SIGNUP_POINTS = 5; // each, once the friend signs in with the shared password
+export const FRIENDS_PER_DAY = 5; // friends one customer can register in 24 hours
 export const LOOKBACK_DAYS = 30; // a game played up to 30 days ago can still be referred
 
 export interface ReferRules { enabled: boolean; referrerPoints: number; friendPoints: number }
@@ -43,7 +46,48 @@ const view = (r: Referral, role: "referrer" | "friend", names: Map<string, strin
   createdAt: r.createdAt, decidedAt: r.decidedAt,
 });
 
+// The shared first password looks like hjvdnv2651: six lowercase letters (no look-alikes) and four digits.
+const LETTERS = "abcdefghjkmnpqrstuvwxyz";
+const firstPassword = () => Array.from({ length: 6 }, () => LETTERS[randomInt(LETTERS.length)]).join("") + String(randomInt(1000, 10000));
+
 export class ReferService {
+  /**
+   * A customer registers a friend who has no account. The friend gets an account with a shared first password; the referrer
+   * shares the number and password (the password is shown only now, the server keeps just a hash). At the friend's first
+   * sign-in with it, the app asks for a new password and BOTH get FRIEND_SIGNUP_POINTS points (see AuthService.friendFirstLogin).
+   */
+  async registerFriend(userId: string, input: { name?: unknown; phone?: unknown }) {
+    const name = String(input.name ?? "").trim();
+    const phone = String(input.phone ?? "").replace(/[^0-9]/g, "");
+    if (name.length < 2 || name.length > 60) throw new AppError(400, "Enter your friend's name.");
+    if (!/^9[0-9]{9}$/.test(phone)) throw new AppError(400, "Enter a 10-digit mobile number starting with 9.");
+    const me = await prisma.user.findUnique({ where: { phoneNumber: userId }, select: { phoneNumber: true, role: true } });
+    if (!me || me.role !== "user") throw new AppError(403, "Only customers can register a friend.");
+    if (phone === userId) throw new AppError(400, "This is your own number.");
+    if (!(await getRules()).enabled) throw new AppError(403, "Refer & Earn is paused right now.");
+    if (await prisma.user.findUnique({ where: { phoneNumber: phone }, select: { phoneNumber: true } })) throw new AppError(409, "This number already has a Unique Futsal account.");
+    const since = new Date(Date.now() - 86_400_000);
+    if ((await prisma.user.count({ where: { referredBy: userId, createdAt: { gte: since } } })) >= FRIENDS_PER_DAY) {
+      throw new AppError(429, `You can register up to ${FRIENDS_PER_DAY} friends a day. Please try again tomorrow.`);
+    }
+    const password = firstPassword();
+    try {
+      await prisma.user.create({
+        data: { phoneNumber: phone, name, password: await HashUtil.hash(password), isVerified: true, role: "user", referredBy: userId, mustChangePassword: true },
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") throw new AppError(409, "This number already has a Unique Futsal account.");
+      throw e;
+    }
+    return { name, phone, password, points: FRIEND_SIGNUP_POINTS };
+  }
+
+  /** The friends this customer registered: whether each has signed in yet (then the points were paid). */
+  async myFriends(userId: string) {
+    const rows = await prisma.user.findMany({ where: { referredBy: userId }, orderBy: { createdAt: "desc" }, take: 50, select: { phoneNumber: true, name: true, createdAt: true, referralBonusAt: true } });
+    return rows.map((u) => ({ phone: u.phoneNumber, name: u.name ?? "", createdAt: u.createdAt, signedIn: Boolean(u.referralBonusAt), points: u.referralBonusAt ? FRIEND_SIGNUP_POINTS : 0 }));
+  }
+
   async rules() {
     const r = await getRules();
     return { ...r, perDay: PER_DAY };

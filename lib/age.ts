@@ -7,12 +7,24 @@ export const MAX_AGE = 100;
 export const AGE_GROUPS = ["open", "15-20", "20-25", "25-30", "30-35", "35-40", "40+"] as const;
 export type AgeGroup = (typeof AGE_GROUPS)[number];
 
+/** The age group with the most players, tagged "Most active" in Find Player. */
+export const MOST_ACTIVE_GROUP = "20-25";
+
 export const ageGroupLabel = (g: string) => (g === "open" ? "Open" : g === "40+" ? "40+" : g);
 /** A request's groups as one label: "Open", "20 to 25 years", "20 to 25 years or 30 to 35 years". */
 export const groupsText = (groups: string[]) => {
   if (groups.length === 0 || groups.includes("open")) return "Open";
-  const one = (g: string) => (g === "40+" ? "40 and over" : g.replace("-", " to ")) + " years";
-  return groups.map(one).join(" or ");
+  // groups that touch are joined: 30-35 and 35-40 read as "30-40 years"
+  const spans = groups
+    .map((g) => (g === "40+" ? [40, Infinity] : g.split("-").map(Number)) as [number, number])
+    .sort((a, b) => a[0] - b[0])
+    .reduce<[number, number][]>((out, [lo, hi]) => {
+      const last = out[out.length - 1];
+      if (last && lo <= last[1]) last[1] = Math.max(last[1], hi);
+      else out.push([lo, hi]);
+      return out;
+    }, []);
+  return spans.map(([lo, hi]) => (hi === Infinity ? `${lo}+ years` : `${lo}-${hi} years`)).join(" or ");
 };
 
 export const ageGroupHint = (g: string) => (g === "open" ? "Anyone can join" : `Players aged ${g === "40+" ? "40 and over" : g.replace("-", " to ")}`);

@@ -46,11 +46,12 @@ export interface Loyalty {
 // Sharing points with a friend (rules come from the server)
 export interface ShareRules {
   min: number;
-  max: number;
+  max: number; // the most one share can send
+  minBalance: number; // points needed before sharing is possible at all
   perDay: number;
 }
 
-export const FALLBACK_SHARE: ShareRules = { min: 1, max: 500, perDay: 5 };
+export const FALLBACK_SHARE: ShareRules = { min: 10, max: 10, minBalance: 100, perDay: 3 };
 
 export const findShareFriend = (phone: string) => api<{ phone: string; firstName: string }>(`/loyalty/share/friend/${encodeURIComponent(phone)}`);
 
@@ -64,6 +65,11 @@ export const loyaltyStore = createRemoteStore<Loyalty | null>(() => api<Loyalty>
 
 export async function claimFreeGame(period: Period) {
   await api("/loyalty/claim", { method: "POST", body: { period } });
+  await loyaltyStore.refresh();
+}
+
+export async function cancelVoucher(id: string) {
+  await api(`/loyalty/vouchers/${encodeURIComponent(id)}`, { method: "DELETE" });
   await loyaltyStore.refresh();
 }
 

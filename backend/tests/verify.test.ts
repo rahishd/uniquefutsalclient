@@ -51,7 +51,7 @@ describe("verification codes", () => {
     const first = await ensurePaymentCode("checkout", checkoutId);
     const m = await ensurePaymentCodes([{ sourceType: "checkout", sourceId: checkoutId }, { sourceType: "booking", sourceId: bookingId }]);
     expect(m.get(codeKey("checkout", checkoutId))).toBe(first);
-    expect(m.get(codeKey("booking", bookingId))).toMatch(/^\d{4}$/);
+    expect(m.get(codeKey("booking", bookingId))).toMatch(/^[0-9A-Z]{5}$/);
   });
 
   it("shorten a name to first name and last initial", () => {
@@ -66,7 +66,7 @@ describe("customer payment history", () => {
     const r1 = await api().get("/api/me/payments").set(bearer(tokenFor(CUST)));
     expect(r1.status).toBe(200);
     expect(r1.body.data.length).toBeGreaterThanOrEqual(2);
-    for (const item of r1.body.data) expect(item.verifyCode).toMatch(/^\d{4,6}$/);
+    for (const item of r1.body.data) expect(item.verifyCode).toMatch(/^[0-9A-Z]{5,6}$/);
     const r2 = await api().get("/api/me/payments").set(bearer(tokenFor(CUST)));
     expect(r2.body.data.map((i: { verifyCode: string }) => i.verifyCode)).toEqual(r1.body.data.map((i: { verifyCode: string }) => i.verifyCode));
   });

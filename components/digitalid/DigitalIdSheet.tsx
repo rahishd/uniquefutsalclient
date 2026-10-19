@@ -5,6 +5,7 @@ import { Download, Loader2, MessageCircle, RefreshCw, X } from "lucide-react";
 import { errorText } from "@/lib/api";
 import { loadDigitalId, replaceDigitalId, type DigitalId } from "@/lib/digitalid";
 import { cardToBlob, drawIdCard } from "@/lib/idcard";
+import { useSession } from "@/lib/session";
 
 import { askConfirm } from "@/lib/confirm";
 // The customer's portrait Digital ID card: view, download, share (WhatsApp) and replace.
@@ -15,6 +16,8 @@ export default function DigitalIdSheet({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const session = useSession();
+  const avatar = session?.registered ? session.avatar ?? null : null; // their profile picture goes in the round photo
 
   useEffect(() => {
     let alive = true;
@@ -28,7 +31,7 @@ export default function DigitalIdSheet({ onClose }: { onClose: () => void }) {
     let alive = true;
     let url: string | null = null;
     const canvas = document.createElement("canvas");
-    drawIdCard(canvas, id)
+    drawIdCard(canvas, { ...id, photo: avatar })
       .then(() => cardToBlob(canvas))
       .then((b) => {
         if (!alive) return;
@@ -38,7 +41,7 @@ export default function DigitalIdSheet({ onClose }: { onClose: () => void }) {
       })
       .catch(() => alive && setError("Could not draw your card. Please try again."));
     return () => { alive = false; if (url) URL.revokeObjectURL(url); };
-  }, [id]);
+  }, [id, avatar]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();

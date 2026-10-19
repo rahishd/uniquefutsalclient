@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import { body, query } from "express-validator";
 import bookingController from "./booking.controller";
 import checkoutController from "./booking.checkout";
+import bulkController from "./booking.bulk";
 import bookingExtras from "./booking.extras";
 import validateRequest from "../../middlewares/validate.middleware";
 import {
@@ -100,6 +101,10 @@ const slotBody = [
 
 // Customer app: price + promo preview (no side effects)
 router.post("/quote", optionalAuthMiddleware, slotBody, validateRequest, checkoutController.quote);
+
+// Customer app: Bulk Booking (up to 10 hours in the next 7 days, one Fonepay payment of 50% or the full amount)
+router.post("/bulk/quote", optionalAuthMiddleware, [body("slots").isArray({ min: 1, max: 10 }), body("promoCode").optional({ checkFalsy: true }).isString().trim()], validateRequest, bulkController.quote);
+router.post("/bulk", optionalAuthMiddleware, [body("slots").isArray({ min: 1, max: 10 }), body("mode").isIn(["advance", "full"]), body("promoCode").optional({ checkFalsy: true }).isString().trim()], validateRequest, bulkController.create);
 
 // Customer app: create a booking (guest rules, 10-day window, held slot, QR for online payment)
 router.post(

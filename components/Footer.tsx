@@ -70,23 +70,10 @@ export default function Footer() {
           <span className="block text-xs font-medium uppercase tracking-[0.25em] text-slate-500 desk:text-sm">Founder</span>
           <span className="mt-0.5 block text-xl font-semibold tracking-wide text-slate-900 desk:text-3xl">Rahish Dumre</span>
         </div>
-        {/* the same ISO certification box, under the founder's name card */}
       </section>
 
-      {/* the ISO certification card: its own card, so it reads as separate from the founder card */}
-        <div className="mb-10 mt-4 rounded-2xl bg-[#0c0b5d] p-4 text-white shadow-[0_14px_30px_-16px_rgba(12,11,93,0.8)]">
-        <div className="flex items-center gap-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/iso-certification.png" alt="ISO certification" className="h-14 w-auto shrink-0 rounded-md bg-white p-1" />
-          <p className="text-sm font-semibold leading-snug">Nepal&apos;s First ISO Certified Futsal</p>
-        </div>
-        <div className="mt-3 border-t border-white/25 pt-3">
-          <p className="text-sm font-bold">ISO 9001:2015 Certification</p>
-          <p className="mt-1 text-xs leading-relaxed text-white/90">Since 2026, Unique Futsal has upheld quality-driven operations, earning ISO 9001:2015 certification for its commitment to efficient management, consistent service standards, customer satisfaction, safety, and continuous improvement.</p>
-        </div>
-      </div>
 
-      <div className="space-y-10 desk:grid desk:grid-cols-3 desk:gap-10 desk:space-y-0">
+      <div className="mt-10 space-y-10 desk:grid desk:grid-cols-3 desk:gap-10 desk:space-y-0">
         <div>
           <h2 className={heading}>{t("Contact us")}</h2>
           <ul className="mt-4 space-y-3 text-sm font-medium text-slate-600">

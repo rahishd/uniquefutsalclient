@@ -1,4 +1,5 @@
 // Simple table-to-PDF export for the Profile page (bookings, games, payments).
+import { api } from "@/lib/api";
 // jsPDF is loaded only when a customer taps "Download PDF", so it doesn't weigh down the page.
 
 export interface PdfColumn {
@@ -14,7 +15,18 @@ export interface PdfTable {
   rows: string[][];
 }
 
+// Every PDF gets its own verification number (made by the server) and a line saying where to check it.
+async function issueCode(title: string, details: string): Promise<string | null> {
+  try {
+    const r = await api<{ code: string }>("/verify/issue", { method: "POST", body: { title, details } });
+    return r.code;
+  } catch {
+    return null; // offline or signed out: the PDF is still made, without a number
+  }
+}
+
 export async function downloadPdf(t: PdfTable) {
+  const code = await issueCode(t.title, (t.lines ?? []).join("\n"));
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const M = 40;
@@ -50,7 +62,7 @@ export async function downloadPdf(t: PdfTable) {
   for (const row of t.rows) {
     const cells = row.map((cell, i) => doc.splitTextToSize(cell, t.columns[i].width - 8) as string[]);
     const h = Math.max(...cells.map((c) => c.length)) * lineH;
-    if (y + h > pageH - M) {
+    if (y + h > pageH - M - 36) {
       doc.addPage();
       y = M;
       header();
@@ -59,6 +71,18 @@ export async function downloadPdf(t: PdfTable) {
     cells.forEach((c, i) => doc.text(c, xs[i], y));
     y += h + 4;
     doc.setDrawColor(241, 245, 249).line(M, y - 2, 555, y - 2);
+  }
+
+  if (code) {
+    const pages = doc.getNumberOfPages();
+    for (let p = 1; p <= pages; p++) {
+      doc.setPage(p);
+      doc.setDrawColor(203, 213, 225).line(M, pageH - 44, 555, pageH - 44);
+      doc.setFont("helvetica", "bold").setFontSize(10).setTextColor(12, 11, 93);
+      doc.text(`Verification number: ${code}`, M, pageH - 30);
+      doc.setFont("helvetica", "normal").setFontSize(8.5).setTextColor(100, 116, 139);
+      doc.text("Verify this document at Verify Documents in uniquefutsal.com/verify", M, pageH - 18);
+    }
   }
 
   doc.save(t.filename);

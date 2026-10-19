@@ -12,6 +12,7 @@ import {
 
 const PHONE = /^9\d{9}$/;
 export const MAX_ADVANCE_DAYS = 10;
+export const MAX_TEAMS_PER_PERSON = 3;
 const POSITIONS = ["GK", "DEF", "MID", "FWD"];
 const hh = (h: number) => `${String(h).padStart(2, "0")}:00`;
 
@@ -20,18 +21,27 @@ type Tx = Prisma.TransactionClient;
 export class TeamService {
   /* ---------- who is allowed ---------- */
 
+  // A person may captain or play in up to MAX_TEAMS_PER_PERSON teams. One of them is the "active" team (UserPrefs.activeTeamId):
+  // every captain action (challenge, answer, report, roster) acts for it, so the rest of this service stays one-team-at-a-time.
+  async myTeams(userId: string) {
+    const rows = await prisma.teamMember.findMany({ where: { userId }, include: { team: true }, orderBy: { joinedAt: "asc" } });
+    return rows.map((m) => m.team);
+  }
+
   async myTeam(userId: string) {
-    const m = await prisma.teamMember.findUnique({ where: { userId }, include: { team: true } });
-    return m?.team ?? null;
+    const teams = await this.myTeams(userId);
+    if (teams.length === 0) return null;
+    const prefs = await prisma.userPrefs.findUnique({ where: { userId }, select: { activeTeamId: true } });
+    return teams.find((t) => t.id === prefs?.activeTeamId) ?? teams[0];
   }
 
   // Captain mode on AND a team the user captains. Only captains challenge, answer, report and approve.
   async captainTeam(userId: string) {
     const prefs = await prisma.userPrefs.findUnique({ where: { userId } });
     if (prefs?.mode !== "captain") throw new AppError(403, "Switch to Captain mode first");
-    const team = await prisma.team.findUnique({ where: { captainId: userId } });
-    if (!team) throw new AppError(403, "Create your team first");
-    return team;
+    const captained = await prisma.team.findMany({ where: { captainId: userId }, orderBy: { createdAt: "asc" } });
+    if (captained.length === 0) throw new AppError(403, "Create your team first");
+    return captained.find((t) => t.id === prefs.activeTeamId) ?? captained[0];
   }
 
   /* ---------- stats from APPROVED results only ---------- */
@@ -101,6 +111,23 @@ export class TeamService {
     return { id: team.id, name: team.name, area: team.area, players: team.members.length, rating: r.rating, rank: r.rank, record: r.record, goalsFor: s.gf, goalsAgainst: s.ga, form: s.form.slice(-5) };
   }
 
+  /** The person's teams (up to 3), which one is in use, and whether they may make another. */
+  async myTeamsList(userId: string) {
+    const [teams, active] = await Promise.all([this.myTeams(userId), this.myTeam(userId)]);
+    return {
+      max: MAX_TEAMS_PER_PERSON,
+      activeId: active?.id ?? null,
+      canCreate: teams.length < MAX_TEAMS_PER_PERSON && (await prisma.team.count({ where: { captainId: userId } })) < MAX_TEAMS_PER_PERSON,
+      teams: teams.map((t) => ({ id: t.id, name: t.name, isCaptain: t.captainId === userId })),
+    };
+  }
+
+  async setActiveTeam(userId: string, teamId: string) {
+    if (!(await prisma.teamMember.findFirst({ where: { userId, teamId } }))) throw new AppError(404, "You are not in that team");
+    await prisma.userPrefs.upsert({ where: { userId }, update: { activeTeamId: teamId }, create: { userId, activeTeamId: teamId } });
+    return this.myTeamsList(userId);
+  }
+
   async myTeamView(userId: string) {
     const team = await this.myTeam(userId);
     if (!team) return null;
@@ -123,11 +150,13 @@ export class TeamService {
     if (name.length < 2 || name.length > 30) throw new AppError(400, "Team name must be 2 to 30 characters");
     const prefs = await prisma.userPrefs.findUnique({ where: { userId } });
     if (prefs?.mode !== "captain") throw new AppError(403, "Switch to Captain mode first");
-    if (await this.myTeam(userId)) throw new AppError(409, "You are already in a team");
+    if ((await this.myTeams(userId)).length >= MAX_TEAMS_PER_PERSON) throw new AppError(409, `You can be in up to ${MAX_TEAMS_PER_PERSON} teams. Leave or remove one first.`);
+    if ((await prisma.team.count({ where: { captainId: userId } })) >= MAX_TEAMS_PER_PERSON) throw new AppError(409, `You can create up to ${MAX_TEAMS_PER_PERSON} teams.`);
     try {
       const team = await prisma.team.create({
         data: { name, captainId: userId, members: { create: { userId, position: prefs.position ?? "MID" } } },
       });
+      await prisma.userPrefs.update({ where: { userId }, data: { activeTeamId: team.id } }); // the new team becomes the one in use
       return team;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") throw new AppError(409, "A team with this name already exists");
@@ -144,15 +173,14 @@ export class TeamService {
     if (await prisma.teamMember.findFirst({ where: { teamId: team.id, userId: phone } })) throw new AppError(409, "This player is already in your team.");
     const user = await prisma.user.findUnique({ where: { phoneNumber: phone }, select: { phoneNumber: true, name: true, isActive: true } });
     if (!user || !user.isActive) throw new AppError(404, "No registered player has this number. Ask them to sign up first.");
-    const other = await prisma.teamMember.findUnique({ where: { userId: phone }, include: { team: true } });
-    if (other) throw new AppError(409, `${user.name ?? "This player"} is already in ${other.team.name}.`);
+    if ((await prisma.teamMember.count({ where: { userId: phone } })) >= MAX_TEAMS_PER_PERSON) throw new AppError(409, `${user.name ?? "This player"} is already in ${MAX_TEAMS_PER_PERSON} teams, the most one person can be in.`);
     const prefs = await prisma.userPrefs.findUnique({ where: { userId: phone } });
     try {
       const m = await prisma.teamMember.create({ data: { teamId: team.id, userId: phone, position: prefs?.position ?? "MID" } });
       await notificationService.notify({ userId: phone, type: "challenge", title: "You joined a team", message: `${team.name} added you as a player.`, href: "/team", dedupeKey: `team-join-${team.id}-${phone}` });
       return { userId: m.userId, name: user.name ?? "Player", position: m.position };
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") throw new AppError(409, "This player is already in a team.");
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") throw new AppError(409, "This player is already in your team.");
       throw e;
     }
   }
@@ -169,6 +197,8 @@ export class TeamService {
   async createChallenge(userId: string, input: { teamId: string; type: string; date: string; hour: number; loserPct: number; message?: string }) {
     const team = await this.captainTeam(userId);
     if (input.teamId === team.id) throw new AppError(400, "You cannot challenge your own team.");
+    const target = await prisma.team.findUnique({ where: { id: input.teamId }, select: { captainId: true } });
+    if (target?.captainId === userId) throw new AppError(400, "You cannot challenge another team you captain.");
     const size = await prisma.teamMember.count({ where: { teamId: team.id } });
     if (size < MIN_TEAM_TO_CHALLENGE) throw new AppError(400, `Add at least ${MIN_TEAM_TO_CHALLENGE} players to your team before challenging.`);
     const other = await prisma.team.findUnique({ where: { id: input.teamId } });

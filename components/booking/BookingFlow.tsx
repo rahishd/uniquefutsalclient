@@ -4,7 +4,7 @@ import ShareBooking, { bookingShareText } from "@/components/ShareBooking";
 import CharityLine from "@/components/CharityLine";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { CalendarPlus, Check, ChevronDown, ChevronLeft, Droplets, Gift, Loader2, Lock, Tag, X } from "lucide-react";
+import { CalendarPlus, Check, ChevronDown, ChevronLeft, ChevronRight, Droplets, Gift, Layers, Loader2, Lock, Tag, X } from "lucide-react";
 import PaymentMethodPicker from "@/components/payment/PaymentMethodPicker";
 import PaymentQr from "@/components/payment/PaymentQr";
 import { errorText } from "@/lib/api";
@@ -458,6 +458,18 @@ export default function BookingFlow({ initialDate, initialHour }: { initialDate?
           <p role="status" className="mt-2 rounded-xl bg-amber-400/15 px-3 py-2 text-xs text-amber-700">That time isn&apos;t available on this date. Please pick another time.</p>
         )}
       </header>
+
+      <Link
+        href="/book/bulk"
+        className="group flex items-center gap-4 rounded-3xl bg-[#87ceeb] p-4 text-[#0c0b5d] transition active:scale-[0.99] desk:max-w-xl"
+      >
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white text-[#0c0b5d]"><Layers size={24} /></span>
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-2 text-base font-semibold">Bulk Booking <span className="rounded-full bg-orange-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0c0b5d]">New</span></span>
+          <span className="block text-xs text-[#0c0b5d]/80">Up to 10 hours over the next 7 days. Pay 50% now or in full.</span>
+        </span>
+        <ChevronRight size={20} className="shrink-0 transition group-hover:translate-x-0.5" />
+      </Link>
 
       <section aria-label="Select date">
         <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2 desk:mx-0 desk:flex-wrap desk:overflow-visible desk:px-0">

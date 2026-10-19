@@ -45,6 +45,10 @@ teamRouter.post("/", [body("name").isString().trim().isLength({ min: 2, max: 30 
   ok(res, "Team created", { id: t.id, name: t.name }, 201);
 }));
 
+teamRouter.get("/mine", asyncHandler(async (req: AuthRequest, res: Response) => ok(res, "My teams", await teamService.myTeamsList(req.user!.id))));
+
+teamRouter.put("/me/active", [body("teamId").isString().notEmpty()], validateRequest, asyncHandler(async (req: AuthRequest, res: Response) => ok(res, "Team switched", await teamService.setActiveTeam(req.user!.id, req.body.teamId))));
+
 teamRouter.get("/me", asyncHandler(async (req: AuthRequest, res: Response) => ok(res, "My team", await teamService.myTeamView(req.user!.id))));
 
 teamRouter.post("/me/members", [body("phone").isString().notEmpty()], validateRequest, asyncHandler(async (req: AuthRequest, res: Response) => {

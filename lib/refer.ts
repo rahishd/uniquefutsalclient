@@ -49,6 +49,12 @@ export const STATUS_TEXT: Record<ReferStatus, { label: string; tone: string }> =
   rejected: { label: "Not approved", tone: "bg-slate-300/50 text-slate-600" },
 };
 
+/** A friend who has no account, registered by this customer. The password is shown once, right after registering. */
+export interface RegisteredFriend { name: string; phone: string; password: string; points: number }
+export interface MyFriend { phone: string; name: string; createdAt: string; signedIn: boolean; points: number }
+export const registerFriend = (body: { name: string; phone: string }) => api<RegisteredFriend>("/refer/friend", { method: "POST", body });
+export const loadFriends = () => api<MyFriend[]>("/refer/friends");
+
 export const loadRules = () => api<ReferRules>("/refer/rules", { auth: "none" });
 export const loadMe = () => api<ReferMe>("/refer/me");
 export const sendReferral = (body: { bookingCode: string; friendPhone: string; teamName: string }) => api<Referral>("/refer", { method: "POST", body });

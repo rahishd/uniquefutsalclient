@@ -31,6 +31,7 @@ beforeAll(async () => {
   await seed("a", "game", 10, soon);
   await seed("b", "goods", 20, later);
   await seed("c", "membership", 5, null);
+  await seed("t", "membership", 300, null); // sharing needs at least 100 points
 });
 afterAll(async () => {
   await wipe();
@@ -55,20 +56,20 @@ describe("planShare (the rule)", () => {
 
 describe("sharing points", () => {
   it("moves the points, keeps their expiry, and tells both people", async () => {
-    const res = await share(15);
+    const res = await share(10);
     expect(res.status).toBe(201);
-    expect(res.body.data).toMatchObject({ points: 15, to: "Friend", remaining: 20 });
+    expect(res.body.data).toMatchObject({ points: 10, to: "Friend", remaining: 325 });
 
     const mine = await loyaltyService.overview(U);
-    expect(mine.remaining).toBe(20);
-    expect(mine.rows.find((r) => r.kind === "shared_out")).toMatchObject({ points: -15, detail: "Shared with Friend" });
+    expect(mine.remaining).toBe(325);
+    expect(mine.rows.find((r) => r.kind === "shared_out")).toMatchObject({ points: -10, detail: "Shared with Friend" });
 
     const theirs = await loyaltyService.overview(F);
-    expect(theirs.remaining).toBe(15);
-    expect(theirs.byType.shared.points).toBe(15);
+    expect(theirs.remaining).toBe(10);
+    expect(theirs.byType.shared.points).toBe(10);
     expect(theirs.byType.shared.nextExpiry).toBe(soon); // the points were not made to last longer
     const got = (await prisma.loyaltyEntry.findMany({ where: { userId: F, kind: "shared_in" }, orderBy: { expiresOn: "asc" } })).map((e) => [Number(e.points), e.expiresOn]);
-    expect(got).toEqual([[10, soon], [5, later]]);
+    expect(got).toEqual([[10, soon]]);
 
     const n = await api().get("/api/notifications").set(bearer(tokenFor(F)));
     expect(n.body.data.items.some((i: { title: string; href: string }) => i.title === "Points received" && i.href.startsWith("/points?hl="))).toBe(true);
@@ -77,46 +78,84 @@ describe("sharing points", () => {
   });
 
   it("never-expiring points stay never-expiring for the friend", async () => {
-    await share(15); // the rest of the later points; only the never-expiring 5 are left
-    const res = await share(5);
+    await prisma.loyaltyEntry.deleteMany({ where: { userId: U } });
+    await seed("n", "membership", 100, null);
+    const res = await share(10);
     expect(res.status).toBe(201);
     const e = await prisma.loyaltyEntry.findFirst({ where: { userId: F, kind: "shared_in", expiresOn: null } });
-    expect(Number(e?.points)).toBe(5);
-    expect((await loyaltyService.overview(U)).remaining).toBe(0);
+    expect(Number(e?.points)).toBe(10);
+    expect((await loyaltyService.overview(U)).remaining).toBe(90);
   });
 
   it("is refused without enough points, for a bad amount, or for a bad friend", async () => {
-    expect((await share(1)).status).toBe(409);
-    await seed("d", "game", 10, later);
+    await prisma.loyaltyEntry.deleteMany({ where: { userId: U } }); // back to no points
+    expect((await share(10)).status).toBe(409);
+    await seed("d", "game", 99, later); // one short of the minimum
+    expect((await share(10)).status).toBe(409);
+    await seed("d2", "game", 1, later);
     expect((await share(0)).status).toBe(400);
     expect((await share(1.5)).status).toBe(400);
-    expect((await share(501)).status).toBe(400);
-    expect((await share(5, U)).status).toBe(400); // yourself
-    expect((await share(5, "12345")).status).toBe(400);
-    expect((await share(5, X)).status).toBe(404); // nobody registered with this number
+    expect((await share(5)).status).toBe(400); // one share sends exactly 10
+    expect((await share(11)).status).toBe(400);
+    expect((await share(10, U)).status).toBe(400); // yourself
+    expect((await share(10, "12345")).status).toBe(400);
+    expect((await share(10, X)).status).toBe(404); // nobody registered with this number
     await prisma.user.update({ where: { phoneNumber: F }, data: { isActive: false } });
-    expect((await share(5)).status).toBe(404);
+    expect((await share(10)).status).toBe(404);
     await prisma.user.update({ where: { phoneNumber: F }, data: { isActive: true } });
   });
 
   it("asks you to sign in, and is for customers only", async () => {
-    expect((await api().post("/api/loyalty/share").send({ friendPhone: F, points: 1 })).status).toBe(401);
-    expect((await api().post("/api/loyalty/share").set(bearer(adminToken())).send({ friendPhone: F, points: 1 })).status).toBe(403);
+    expect((await api().post("/api/loyalty/share").send({ friendPhone: F, points: 10 })).status).toBe(401);
+    expect((await api().post("/api/loyalty/share").set(bearer(adminToken())).send({ friendPhone: F, points: 10 })).status).toBe(403);
     expect((await api().get(`/api/loyalty/share/friend/${F}`).set(bearer(tokenFor(U)))).body.data).toEqual({ phone: F, firstName: "Friend" });
     expect((await api().get(`/api/loyalty/share/friend/${F}`)).status).toBe(401);
   });
 
   it("two shares at once cannot give away the same points twice", async () => {
-    // U now holds 10 valid points (seed d)
+    // exactly 100 points: once one share has gone out the balance is under 100, so the other must be refused
+    await prisma.loyaltyEntry.deleteMany({ where: { userId: U } });
+    await seed("r", "membership", 100, null);
     const [a, b] = await Promise.all([share(10), share(10)]);
     expect([a.status, b.status].sort()).toEqual([201, 409]);
-    expect((await loyaltyService.overview(U)).remaining).toBe(0);
+    expect((await loyaltyService.overview(U)).remaining).toBe(90);
   });
 
-  it("allows only a few shares a day", async () => {
-    await prisma.loyaltyEntry.deleteMany({ where: { userId: U, kind: "shared_out" } });
-    await seed("e", "game", 50, later);
-    for (let i = 0; i < 5; i++) expect((await share(1)).status).toBe(201);
-    expect((await share(1)).status).toBe(429);
+  it("allows only 3 shares a day", async () => {
+    await prisma.loyaltyEntry.deleteMany({ where: { userId: U } });
+    await seed("e", "membership", 130, null);
+    for (let i = 0; i < 3; i++) expect((await share(10)).status).toBe(201);
+    expect((await share(10)).status).toBe(429);
+  });
+});
+
+describe("the sharing rules: 100 points to start, 10 points a share, 3 shares a day", () => {
+  const reset = async (points: number) => {
+    await prisma.loyaltyEntry.deleteMany({ where: { userId: { in: ALL } } });
+    if (points > 0) await seed("rule", "membership", points, null);
+  };
+
+  it("tells the app the limits", async () => {
+    await reset(0);
+    expect((await loyaltyService.overview(U)).share).toEqual({ min: 10, max: 10, minBalance: 100, perDay: 3 });
+  });
+
+  it("refuses below 100 points and allows from exactly 100", async () => {
+    await reset(99);
+    const no = await share(10);
+    expect(no.status).toBe(409);
+    expect(no.body.message).toMatch(/at least 100 points/);
+    expect((await loyaltyService.overview(U)).remaining).toBe(99); // nothing moved
+    await reset(100);
+    expect((await share(10)).status).toBe(201);
+  });
+
+  it("sends exactly 10 points in one share", async () => {
+    await reset(1000);
+    const over = await share(100);
+    expect(over.status).toBe(400);
+    expect(over.body.message).toMatch(/10 points/);
+    expect((await share(10)).status).toBe(201);
+    expect((await loyaltyService.overview(U)).remaining).toBe(990);
   });
 });

@@ -46,7 +46,7 @@ export default function BottomNav() {
               <span className="relative">
                 <Icon size={21} strokeWidth={active ? 2.3 : 1.9} />
                 {href === "/chat" && unread > 0 && (
-                  <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[9px] font-bold leading-none text-white ring-2 ring-white">
+                  <span className="absolute -right-3 -top-2.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold leading-none text-white shadow ring-2 ring-white">
                     {unread > 9 ? "9+" : unread}
                   </span>
                 )}

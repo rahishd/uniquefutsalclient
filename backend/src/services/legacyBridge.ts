@@ -51,7 +51,7 @@ export async function importLegacyLoyalty(opts: { apply: boolean; voucherPeriod?
   if (opts.voucherPeriod && !PERIODS.includes(opts.voucherPeriod)) throw new Error("voucherPeriod must be Morning, Day or Evening");
   const refPeriod = opts.referencePeriod ?? "Day";
   const price = await loyaltyService.shiftPrice(refPeriod);
-  const perHour = pointsForGame(price); // one old "hour point" is worth one game of the reference shift
+  const perHour = Math.floor(Math.max(0, price) / 10) / 10; // one old "hour point" is worth what a game earned under the old rule (price / 100), so migrated balances keep their value
   const today = todayKey();
 
   const users = await prisma.user.findMany({

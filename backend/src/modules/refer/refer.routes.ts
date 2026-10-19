@@ -14,6 +14,10 @@ referRouter.get("/rules", asyncHandler(async (_req, res: Response) => ok(res, "R
 
 referRouter.get("/me", authMiddleware, asyncHandler(async (req: AuthRequest, res: Response) => ok(res, "My referrals", await referService.me(req.user!.id))));
 
+// Register a friend who has no account: returns the shared first password once
+referRouter.post("/friend", authMiddleware, asyncHandler(async (req: AuthRequest, res: Response) => ok(res, "Friend registered", await referService.registerFriend(req.user!.id, req.body ?? {}), 201)));
+referRouter.get("/friends", authMiddleware, asyncHandler(async (req: AuthRequest, res: Response) => ok(res, "My friends", await referService.myFriends(req.user!.id))));
+
 referRouter.post("/", authMiddleware, asyncHandler(async (req: AuthRequest, res: Response) => ok(res, "Referral sent", await referService.create(req.user!.id, req.body ?? {}), 201)));
 
 referRouter.post("/book", authMiddleware, asyncHandler(async (req: AuthRequest, res: Response) => ok(res, "Slot booked and referral sent", await referService.bookAndRefer(req.user!.id, req.body ?? {}), 201)));

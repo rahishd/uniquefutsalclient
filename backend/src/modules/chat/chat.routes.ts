@@ -68,6 +68,11 @@ chatRouter.get("/threads/:id", asyncHandler(async (req: AuthRequest, res: Respon
   ok(res, "Chat", await chatService.thread(req.user!.id, req.params.id));
 }));
 
+// delete the whole chat for me (the other people keep it)
+chatRouter.delete("/threads/:id", asyncHandler(async (req: AuthRequest, res: Response) => {
+  ok(res, "Chat deleted", await chatService.deleteChatForMe(req.user!.id, req.params.id));
+}));
+
 chatRouter.get("/threads/:id/messages", asyncHandler(async (req: AuthRequest, res: Response) => {
   ok(res, "Messages", await chatService.messages(req.user!.id, req.params.id, req.query.after));
 }));

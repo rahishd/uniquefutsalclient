@@ -177,6 +177,13 @@ export const authController = {
         ),
       );
   }),
+  setNewPassword: asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.user?.id) {
+      return res.status(CONSTANTS.HTTP_STATUS.UNAUTHORIZED).json(ApiResponseUtil.error(CONSTANTS.HTTP_STATUS.UNAUTHORIZED, "Unauthorized"));
+    }
+    await AuthService.setInitialPassword(req.user.id, String(req.body.newPassword));
+    res.status(CONSTANTS.HTTP_STATUS.OK).json(ApiResponseUtil.success(CONSTANTS.HTTP_STATUS.OK, "New password saved"));
+  }),
   changePassword: asyncHandler(async (req: AuthRequest, res: Response) => {
     if (!req.user?.id) {
       return res

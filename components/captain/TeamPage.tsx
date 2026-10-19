@@ -5,7 +5,50 @@ import Link from "next/link";
 import { ChevronRight, Trash2, UserPlus } from "lucide-react";
 import CaptainGate from "@/components/captain/CaptainGate";
 import Stars from "@/components/captain/Stars";
-import { MAX_TEAM_SIZE, addMember, removeMember, useTeams, type MyTeam } from "@/lib/teams";
+import { MAX_TEAM_SIZE, addMember, createTeam, myTeamsStore, removeMember, switchTeam, useTeams, type MyTeam } from "@/lib/teams";
+
+// Up to 3 teams per person: tap one to use it, or make another while there is room.
+function MyTeams() {
+  const { data } = myTeamsStore.use();
+  const [name, setName] = useState("");
+  const [msg, setMsg] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  if (!data || (data.teams.length < 2 && !data.canCreate)) return null;
+
+  async function make(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const r = await createTeam(name.trim());
+    setBusy(false);
+    if (r.ok) { setName(""); setMsg(null); } else setMsg(r.error);
+  }
+
+  return (
+    <section className="glass rounded-3xl p-5" aria-label="My teams">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-base font-medium">My teams</h2>
+        <span className="text-sm text-slate-500">{data.teams.length} / {data.max}</span>
+      </div>
+      <ul className="space-y-2">
+        {data.teams.map((t) => (
+          <li key={t.id}>
+            <button type="button" disabled={t.id === data.activeId} onClick={async () => { const r = await switchTeam(t.id); if (!r.ok) setMsg(r.error); }} aria-current={t.id === data.activeId} className={`flex w-full items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium ${t.id === data.activeId ? "bg-brand text-white" : "bg-white/60"}`}>
+              <span className="truncate">{t.name}{t.isCaptain ? " (C)" : ""}</span>
+              <span className="shrink-0 text-xs">{t.id === data.activeId ? "In use" : "Use this team"}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      {data.canCreate && (
+        <form onSubmit={make} className="mt-4 flex gap-2">
+          <input value={name} onChange={(e) => { setName(e.target.value.slice(0, 30)); setMsg(null); }} placeholder="Name of another team" className="min-w-0 flex-1 rounded-2xl bg-white/70 px-4 py-3 text-sm outline-none ring-1 ring-white/80 focus:ring-brand" />
+          <button type="submit" disabled={name.trim().length < 2 || busy} className="rounded-2xl bg-brand px-4 text-sm font-medium text-white disabled:opacity-50">Create</button>
+        </form>
+      )}
+      {msg && <p role="status" className="mt-2 text-xs text-rose-500">{msg}</p>}
+    </section>
+  );
+}
 
 function Roster({ team }: { team: MyTeam }) {
   const state = useTeams();
@@ -37,6 +80,8 @@ function Roster({ team }: { team: MyTeam }) {
         <p className="text-xs font-semibold uppercase tracking-wider text-amber-600">Captain profile</p>
         <h1 className="mt-1 text-2xl font-semibold">{team.name}</h1>
       </header>
+
+      <MyTeams />
 
       <section className="glass rounded-3xl p-5">
         <div className="flex items-center justify-between">

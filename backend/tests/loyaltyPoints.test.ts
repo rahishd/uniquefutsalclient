@@ -4,11 +4,11 @@ import {
 import { addMonthsKey, daysBetweenKeys, startsAtMs } from "../src/utils/dates";
 
 describe("point rules", () => {
-  it("game points are price/100 cut to one decimal", () => {
-    expect(pointsForGame(1250)).toBe(12.5);
-    expect(pointsForGame(1150)).toBe(11.5);
-    expect(pointsForGame(1350)).toBe(13.5);
-    expect(pointsForGame(1275)).toBe(12.7);
+  it("game points are price/10 cut to one decimal", () => {
+    expect(pointsForGame(1250)).toBe(125);
+    expect(pointsForGame(1150)).toBe(115);
+    expect(pointsForGame(1350)).toBe(135);
+    expect(pointsForGame(1275)).toBe(127.5);
     expect(pointsForGame(0)).toBe(0);
     expect(pointsForGame(-5)).toBe(0);
   });

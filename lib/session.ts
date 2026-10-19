@@ -9,7 +9,7 @@ import { api, ApiError } from "@/lib/api";
 import { getTokens, setTokens, subscribeTokens } from "@/lib/auth-token";
 
 export type Session =
-  | { registered: true; id: string; name: string; phone: string; avatar?: string | null; logins?: number; emergency?: boolean }
+  | { registered: true; id: string; name: string; phone: string; avatar?: string | null; logins?: number; emergency?: boolean; mustChange?: boolean }
   | { registered: false };
 
 const USER_KEY = "uf-user-v1"; // last known account, so the screen does not flash while /auth/me loads
@@ -28,9 +28,10 @@ interface ApiUser {
   avatar?: string | null;
   loginCount?: number;
   hasEmergencyContact?: boolean;
+  mustChangePassword?: boolean; // a friend's first sign-in with the shared password: a new one is owed
 }
 
-const toSession = (u: ApiUser): Session => ({ registered: true, id: u.phoneNumber, name: u.name || "Player", phone: u.phoneNumber, avatar: u.avatar ?? null, logins: u.loginCount, emergency: u.hasEmergencyContact });
+const toSession = (u: ApiUser): Session => ({ registered: true, id: u.phoneNumber, name: u.name || "Player", phone: u.phoneNumber, avatar: u.avatar ?? null, logins: u.loginCount, emergency: u.hasEmergencyContact, mustChange: Boolean(u.mustChangePassword) });
 
 function emit() {
   listeners.forEach((l) => l());
@@ -108,14 +109,27 @@ subscribeTokens(() => {
   emit();
 });
 
-interface AuthResult {
+export interface AuthResult {
   token: string;
   refreshToken: string;
   user: ApiUser;
 }
 
 export async function signIn(phone: string, password: string) {
-  const r = await api<AuthResult>("/auth/login", { method: "POST", body: { identifier: phone, password }, auth: "none" });
+  applyLogin(await api<AuthResult>("/auth/login", { method: "POST", body: { identifier: phone, password }, auth: "none" }));
+}
+
+/** The friend has replaced the shared first password: stop asking. */
+export function markPasswordSet() {
+  if (cached && cached.registered) {
+    cached = { ...cached, mustChange: false };
+    saveUser(cached);
+    emit();
+  }
+}
+
+/** Keeps a finished sign-in (password or Face ID): who they are, and the tokens. */
+export function applyLogin(r: AuthResult) {
   cached = toSession(r.user);
   saveUser(cached);
   setTokens({ token: r.token, refreshToken: r.refreshToken });

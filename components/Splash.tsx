@@ -46,11 +46,6 @@ export default function Splash() {
           ))}
         </p>
         <p className="uf-splash-motto">Connecting Players. Contributing Fitness</p>
-        <div className="uf-splash-iso">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/iso-certification.png" alt="ISO certified" className="uf-splash-iso-img" />
-          <p className="uf-splash-iso-text">Nepal&apos;s First ISO Certified Futsal</p>
-        </div>
       </div>
     </div>
   );

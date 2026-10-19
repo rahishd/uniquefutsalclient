@@ -6,7 +6,7 @@ import notificationService from "../notification/notification.service";
 import { todayKey } from "../../utils/dates";
 import { randomUUID } from "crypto";
 import {
-  EXPIRY_WARN_DAYS, LedgerRow, LoyaltyKind, MEMBERSHIP_POINTS, PERIODS, PERIOD_HOUR, POINTS_CAPTAIN_WIN, SHARE_MAX, SHARE_MIN, SHARE_PER_DAY,
+  EXPIRY_WARN_DAYS, LedgerRow, LoyaltyKind, MEMBERSHIP_POINTS, PERIODS, PERIOD_HOUR, POINTS_CAPTAIN_WIN, SHARE_MAX, SHARE_MIN, SHARE_MIN_BALANCE, SHARE_PER_DAY,
   Period, expiryFor, freeGameCost, periodOfHour, planShare, pointsForGame, pointsForGoods, r1, summarize,
 } from "../../utils/loyaltyPoints";
 import { addDaysKey } from "../../utils/dates";
@@ -67,7 +67,7 @@ export class LoyaltyService {
       toNext: r1(Math.max(0, cheapest - summary.remaining)),
       shifts: shifts.map((s) => ({ ...s, canClaim: summary.remaining >= s.cost })),
       vouchers: vouchers.map((v) => ({ id: v.id, period: v.period, cost: num(v.cost), claimedAt: v.claimedAt })),
-      share: { min: SHARE_MIN, max: SHARE_MAX, perDay: SHARE_PER_DAY },
+      share: { min: SHARE_MIN, max: SHARE_MAX, minBalance: SHARE_MIN_BALANCE, perDay: SHARE_PER_DAY },
     };
   }
 
@@ -87,7 +87,7 @@ export class LoyaltyService {
     const friend = await this.shareFriend(userId, input.friendPhone);
     const points = Number(input.points);
     if (!Number.isInteger(points) || points < SHARE_MIN || points > SHARE_MAX) {
-      throw new AppError(400, `Share between ${SHARE_MIN} and ${SHARE_MAX} whole points at a time`);
+      throw new AppError(400, SHARE_MIN === SHARE_MAX ? `Each share sends exactly ${SHARE_MIN} points` : `Share between ${SHARE_MIN} and ${SHARE_MAX} whole points at a time`);
     }
     const me = await prisma.user.findUnique({ where: { phoneNumber: userId }, select: { name: true } });
     const from = (me?.name ?? "").trim().split(/\s+/)[0] || "A friend";
@@ -101,6 +101,10 @@ export class LoyaltyService {
         throw new AppError(429, `You can share points up to ${SHARE_PER_DAY} times a day. Please try again tomorrow.`);
       }
       const ledger = await this.ledger(userId, tx);
+      const have = summarize(ledger, today).remaining;
+      if (have < SHARE_MIN_BALANCE) {
+        throw new AppError(409, `You need at least ${SHARE_MIN_BALANCE} points to share points. You have ${have}.`);
+      }
       const parts = planShare(ledger, today, points);
       if (parts.length === 0) {
         throw new AppError(409, `Not enough points. You have ${summarize(ledger, today).remaining} and tried to share ${points}.`);
@@ -167,7 +171,7 @@ export class LoyaltyService {
     }
   }
 
-  // A completed, paid regular game earns price/100 points. A free-game booking earns none.
+  // A completed, paid regular game earns price/10 points. A free-game booking earns none.
   async awardForCompletedBooking(b: { id: string; userId: string | null; totalPrice: number; paymentStatus: string; notes: string | null; voucherId?: string | null; date: string; startTime: string; source?: string }) {
     if (!b.userId) return false; // guests earn nothing
     if (b.paymentStatus !== "completed") return false;
@@ -234,11 +238,14 @@ export class LoyaltyService {
 
     return prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${"loyalty:" + userId}))`;
-      const summary = summarize(await this.ledger(userId, tx), today);
+      const ledger = await this.ledger(userId, tx);
+      const summary = summarize(ledger, today);
       if (summary.remaining < cost) {
         throw new AppError(409, `Not enough points. This free game costs ${cost} points and you have ${summary.remaining}.`);
       }
-      const voucher = await tx.freeGameVoucher.create({ data: { userId, period, cost: new Prisma.Decimal(cost.toFixed(1)) } });
+      // remember which points (and their expiry dates) were spent, so a cancel gives each part back exactly
+      const spent = planShare(ledger, today, cost).map((p) => ({ expiresOn: p.expiresOn, points: p.points }));
+      const voucher = await tx.freeGameVoucher.create({ data: { userId, period, cost: new Prisma.Decimal(cost.toFixed(1)), spent: JSON.stringify(spent) } });
       await tx.loyaltyEntry.create({
         data: {
           userId,
@@ -252,6 +259,40 @@ export class LoyaltyService {
         },
       });
       return { id: voucher.id, period, cost };
+    });
+  }
+
+  // Cancels an unused voucher the customer claimed by mistake: it is voided and its points come back. A voucher already used
+  // for a booking cannot be cancelled (cancel the booking, which gives the voucher back, first).
+  async cancelVoucher(userId: string, voucherId: string) {
+    const today = todayKey();
+    return prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${"loyalty:" + userId}))`;
+      const v = await tx.freeGameVoucher.findFirst({ where: { id: voucherId, userId } });
+      if (!v) throw new AppError(404, "That voucher was not found");
+      if (v.status !== "unused") throw new AppError(409, "This voucher is already used and cannot be cancelled");
+      const r = await tx.freeGameVoucher.updateMany({ where: { id: voucherId, userId, status: "unused" }, data: { status: "void" } });
+      if (r.count !== 1) throw new AppError(409, "This voucher is already used and cannot be cancelled");
+      // each part goes back with the expiry it had when it was spent. Vouchers claimed before this was recorded get
+      // game-points expiry from today (3 months), so nothing is refunded as never-expiring by mistake.
+      const parts: { expiresOn: string | null; points: number }[] = v.spent
+        ? JSON.parse(v.spent)
+        : [{ expiresOn: expiryFor("game", today) ?? null, points: Number(v.cost) }];
+      for (const [i, part] of parts.entries()) {
+        await tx.loyaltyEntry.create({
+          data: {
+            userId,
+            kind: "free_game",
+            points: new Prisma.Decimal(Number(part.points).toFixed(1)),
+            earnedOn: today,
+            expiresOn: part.expiresOn,
+            sourceType: "voucher_void",
+            sourceId: `${v.id}:${i}`,
+            detail: `Free ${v.period} game cancelled, points returned`,
+          },
+        });
+      }
+      return { id: v.id, period: v.period, refunded: Number(v.cost) };
     });
   }
 

@@ -8,7 +8,7 @@ import { mediaUrl } from "@/lib/content";
 import { fmtDay } from "@/lib/promos";
 import { ORG_LABEL, verifyCode, type Verified, type VerifyResult } from "@/lib/verify";
 
-// Verify Documents: anyone (no account needed) types the 4-digit code printed on a Unique Futsal bill or document.
+// Verify Documents: anyone (no account needed) types the 5-character code (like 1234A) printed on a Unique Futsal bill or document.
 // Genuine: the bill or document details are shown. Not genuine: a clear "fake" warning.
 const when = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
@@ -94,7 +94,7 @@ export default function VerifyPage() {
 
   // /verify?code=4821 opens with the code filled in and checked (for a link or QR on a bill)
   useEffect(() => {
-    const c = new URLSearchParams(window.location.search).get("code")?.replace(/\D/g, "").slice(0, 6);
+    const c = new URLSearchParams(window.location.search).get("code")?.replace(/[^0-9a-z]/gi, "").toUpperCase().slice(0, 6);
     if (c && c.length >= 4) {
       setCode(c);
       setBusy(true);
@@ -126,11 +126,11 @@ export default function VerifyPage() {
         <input
           id="verify-code"
           value={code}
-          inputMode="numeric"
+          autoCapitalize="characters"
           autoComplete="off"
           maxLength={6}
           placeholder="• • • •"
-          onChange={(e) => { setCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setResult(null); }}
+          onChange={(e) => { setCode(e.target.value.replace(/[^0-9a-z]/gi, "").toUpperCase().slice(0, 6)); setResult(null); }}
           className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-center text-3xl font-bold tracking-[0.5em] tabular-nums text-[#0c0b5d] outline-none focus:border-brand focus:bg-white"
         />
         <button type="submit" disabled={busy || code.length < 4} className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-[#0c0b5d] py-3.5 text-sm font-semibold text-white disabled:opacity-50">

@@ -7,6 +7,7 @@ import CompanyHeader from "@/components/CompanyHeader";
 import SwRegister from "@/components/SwRegister";
 import InstallPrompt from "@/components/InstallPrompt";
 import ArrivalPrompt from "@/components/ArrivalPrompt";
+import ForcePasswordChange from "@/components/ForcePasswordChange";
 import WinPrompt from "@/components/captain/WinPrompt";
 import AdPopup from "@/components/ads/AdPopup";
 import VisitTracker from "@/components/VisitTracker";
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <SwRegister />
         <InstallPrompt />
         <ArrivalPrompt />
+        <ForcePasswordChange />
         <WinPrompt />
         <AdPopup />
         <VisitTracker />

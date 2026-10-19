@@ -5,7 +5,7 @@
 
 import { EXPIRY_NOTICE_DAYS } from "@/lib/membership";
 import { MAX_ADVANCE_DAYS } from "@/lib/booking";
-import { GAME_POINTS_MONTHS, GZ_POINTS_PER_HOUR, MEMBERSHIP_POINTS, POINTS_CAPTAIN_WIN, RS_PER_POINT } from "@/lib/points";
+import { GAME_POINTS_MONTHS, GAME_RS_PER_POINT, GZ_POINTS_PER_HOUR, MEMBERSHIP_POINTS, POINTS_CAPTAIN_WIN, RS_PER_POINT } from "@/lib/points";
 
 export type HelpIcon = "book" | "pay" | "rebook" | "member" | "points" | "promo" | "bell" | "captain" | "profile" | "trophy" | "install" | "guest" | "wifi" | "chat" | "players" | "language";
 
@@ -26,9 +26,9 @@ export const helpTopics: HelpTopic[] = [
     summary: "The bottom bar, Quick Access and the buttons at the top.",
     points: [
       "The bottom bar has Home, Gamezone, Book Now, Chat and Profile.",
-      "Quick Access on Home opens everything else: Opponent, Find Player, Unique Club, Membership, Points, My stats, Tournaments, Promos, Complaints, Children's Academy, Refer & Earn and Help.",
+      "Quick Access on Home opens everything else: Opponent, Find Player, Unique Club, Membership, Points, My stats, Tournaments, Promos, Complaints, Wheelchair Request, Children's Academy, Refer & Earn and Help. A small red New tag marks features you have not opened yet; it goes away once you have used the app a few times.",
       "At the top: the moon or sun switches dark mode, NP or EN switches the language, and the bell shows your notifications.",
-      "Next to Hello: your Digital ID (QR), the venue Wi-Fi and a green WhatsApp button to reach the venue.",
+      "Next to your name, the round buttons give you quick tools: your Digital ID (QR), Order drinks and snacks, the venue Wi-Fi, the Rules and Regulations, and a WhatsApp button to reach the venue. A red number appears on the Chat tab when someone messages you.",
       "Further down Home you will find our promo codes, tournaments, our corporate network, what makes us unique and a message from the founder.",
     ],
   },
@@ -58,6 +58,33 @@ export const helpTopics: HelpTopic[] = [
       "3% of what you pay goes to our Charity Fund. The exact amount is shown with the HandHeart icon while you pay, on your confirmation and on the final bill. It comes from our profit and is not added to your price.",
     ],
     href: { label: "Book now", to: "/book" },
+  },
+  {
+    id: "friend-signup",
+    icon: "players",
+    title: "Register a friend",
+    summary: "Make an account for a friend and share their sign-in details.",
+    points: [
+      "Open Refer & Earn, then Register a friend. Enter their name and mobile number.",
+      "You get a Contact No and a first password. Share them on WhatsApp (shown only once).",
+      "When your friend signs in with them, the app asks them to set their own password.",
+      "You both get 5 loyalty points at that first sign-in. You can register up to 5 friends a day.",
+    ],
+    href: { label: "Refer & Earn", to: "/refer" },
+  },
+  {
+    id: "bulk",
+    icon: "book",
+    title: "Bulk Booking",
+    summary: "Book up to 10 hours in the next 7 days and pay once.",
+    points: [
+      "On Book Now, tap the Bulk Booking card, then tick every hour you want (up to 10, from today to 7 days ahead).",
+      "Pay 50% now and the rest at the venue, or pay in full. Bulk bookings are paid online with Fonepay only.",
+      "A promo code is applied only to the hours it is valid for. The other hours keep the normal price.",
+      "If the QR is not paid in time, all the held hours are released together.",
+      "Each hour is a normal booking in My bookings. If you cancel one hour you have paid for, its share is returned by the venue.",
+    ],
+    href: { label: "Bulk booking", to: "/book/bulk" },
   },
   {
     id: "gamezone",
@@ -169,13 +196,13 @@ export const helpTopics: HelpTopic[] = [
     title: "Loyalty points and free games",
     summary: "Play, earn points, turn them into a free game.",
     points: [
-      `Each game earns its price ÷ ${RS_PER_POINT} points, and every Gamezone hour earns ${GZ_POINTS_PER_HOUR} points. A free game costs the shift price ÷ 10 in points (a Rs. 1,250 game costs 125 points).`,
+      `Each game earns its price ÷ ${GAME_RS_PER_POINT} points (a Rs. 1,250 game earns 125), and every Gamezone hour earns ${GZ_POINTS_PER_HOUR} points. A free game costs the shift price ÷ 10 in points (a Rs. 1,250 game costs 125 points).`,
       `Extra goods earn 1 point for every Rs. ${RS_PER_POINT} you spend.`,
       `Winning captains earn ${POINTS_CAPTAIN_WIN} points for a challenge game.`,
       `Game points last ${GAME_POINTS_MONTHS} months, goods points 1 year, membership points never expire. We warn you before points expire.`,
       "To use them: open Points, pick a shift and tap Claim. Then book that shift and tap \"Use a free game voucher\".",
       "Free games work for regular bookings only, not for hosting a challenge.",
-      "To share points: you need at least 300 points. Open Points, tap Share points with a friend, enter their mobile number (they need an account), choose how many whole points (up to 100 at a time) and send. Their points keep the same expiry date. Sent points can't be taken back, and you can share up to 5 times a day.",
+      "To share points: you need at least 100 points. Open Points, tap Share points with a friend, enter their mobile number (they need an account) and send. Every share is 10 points. Their points keep the same expiry date. Sent points can't be taken back, and you can share up to 3 times a day.",
     ],
     href: { label: "My points", to: "/points" },
   },
@@ -206,6 +233,29 @@ export const helpTopics: HelpTopic[] = [
       "Your slot is released for other players straight away. You cannot cancel a game that has already started.",
     ],
     href: { label: "Open profile", to: "/profile" },
+  },
+  {
+    id: "order-venue",
+    icon: "book",
+    title: "Order drinks and snacks at the venue",
+    summary: "Mineral water, Frooty and more, brought to you during your game.",
+    points: [
+      "Tap the bottle and Frooty icon next to Hello on Home. It has a green dot while your game is on.",
+      "Only the person who booked the game can order, from the start of the game until it ends.",
+      "Choose what you want and tap Order. Staff are told straight away and bring it to you.",
+      "Your order is added to your game bill. Pay it at the counter with your game, nothing is charged in the app.",
+    ],
+  },
+  {
+    id: "face-id",
+    icon: "profile",
+    title: "Sign in with Face ID",
+    summary: "Skip typing your password on this phone.",
+    points: [
+      "Once, while signed in: Profile > Settings > Face ID sign-in, then switch it on and confirm with your face, fingerprint or screen lock.",
+      "Next time, on the sign-in page, tap Sign in with Face ID. No number or password needed.",
+      "It works on the device where you turned it on. Switch it off in the same place any time. Your password always still works.",
+    ],
   },
   {
     id: "password",
@@ -428,7 +478,7 @@ export const helpTopics: HelpTopic[] = [
     title: "Digital ID card",
     summary: "Your own QR card. Show it at the venue.",
     points: [
-      "Tap the QR button next to Hello on Home, or My Digital ID in Profile. Your card shows our name, your name, your number and a QR.",
+      "Tap the QR button next to Hello on Home, or My Digital ID in Profile. Your card is dark blue and shows our name, your name, your number and a QR.",
       "Download it as a picture or send it on WhatsApp. The venue scans it to open your account, and it also marks your membership attendance.",
       "The QR has none of your details inside. Other apps cannot read it, only the Unique Futsal team can.",
       "Unique Club members get a gold \"Unique Club Member\" badge on the card. When the venue scans it, they see your club days left, Goal Rush points and games you are hosting or joined, so your 10% is given at once.",
@@ -461,7 +511,11 @@ export const helpTopics: HelpTopic[] = [
       "Tap New group to make a group: give it a name and add players by mobile number.",
       "A group admin can share an invite link, for example on WhatsApp. Anyone signed in who opens it can join.",
       "Only registered Unique Futsal players can chat. A red number on the Chat tab means new messages. Leave a group any time from its info button.",
-      "A single tick means sent and a blue double tick means seen. To delete one of your messages, press and hold it, then tap Delete message; it disappears for everyone. See Chat menu > About Chat.",
+      "Your own messages show a round Me badge on the left, so they are easy to tell from your friends' messages. The friend's name stays pinned at the top while you scroll.",
+      "To share a game with a friend, tap the calendar button next to the message box and pick one of your upcoming bookings. They see the day, time and booking code in the chat.",
+      "A single tick means sent and a blue double tick means seen. To delete one of your messages, press and hold it, then tap Delete message; it disappears for everyone.",
+      "To report a message that is rude or unsafe, press and hold a message from someone else, tap Report message and pick a reason. It goes to the venue team, who look at it in the Complaints list. The other person is not told.",
+      "To delete a whole chat, press and hold it in your chat list (or right-click it on a computer), then tap Delete entire chat. It is removed from your side only; the other people keep it. See Chat menu > About Chat.",
     ],
     href: { label: "About Chat", to: "/chat/about" },
   },

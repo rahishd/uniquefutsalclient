@@ -93,12 +93,14 @@ export class ChatService {
   }
 
   async threads(userId: string) {
-    const mine = await prisma.chatMember.findMany({
+    const all = await prisma.chatMember.findMany({
       where: { userId },
       include: { thread: { include: { members: { select: { userId: true, lastReadAt: true } } } } },
       orderBy: { thread: { lastMessageAt: "desc" } },
       take: 100,
     });
+    // a chat the member deleted stays out of their list until someone writes in it again
+    const mine = all.filter((m) => !m.clearedAt || m.thread.lastMessageAt > m.clearedAt);
     const others = mine.flatMap((m) => (m.thread.kind === "direct" ? m.thread.members.map((x) => x.userId).filter((p) => p !== userId) : []));
     const people = await peopleByPhone([...new Set(others)]);
     const senders = await peopleByPhone([...new Set(mine.map((m) => m.thread.lastSenderId).filter((s): s is string => !!s))]);
@@ -209,9 +211,10 @@ export class ChatService {
     let rows;
     const afterDate = typeof after === "string" && after ? new Date(after) : null;
     if (afterDate && !Number.isNaN(afterDate.getTime())) {
-      rows = await prisma.chatMessage.findMany({ where: { threadId, createdAt: { gt: afterDate } }, orderBy: { createdAt: "asc" }, take: 200 });
+      const from = m.clearedAt && m.clearedAt > afterDate ? m.clearedAt : afterDate;
+      rows = await prisma.chatMessage.findMany({ where: { threadId, createdAt: { gt: from } }, orderBy: { createdAt: "asc" }, take: 200 });
     } else {
-      rows = (await prisma.chatMessage.findMany({ where: { threadId }, orderBy: { createdAt: "desc" }, take: PAGE })).reverse();
+      rows = (await prisma.chatMessage.findMany({ where: { threadId, ...(m.clearedAt ? { createdAt: { gt: m.clearedAt } } : {}) }, orderBy: { createdAt: "desc" }, take: PAGE })).reverse();
     }
     const people = await peopleByPhone([...new Set(rows.map((r) => r.senderId))]);
     await prisma.chatMember.update({ where: { id: m.id }, data: { lastReadAt: new Date() } });
@@ -240,6 +243,14 @@ export class ChatService {
   }
 
   /** The sender deletes their own message for everyone: the words are erased and a "deleted" note stays in the chat. */
+  /** Delete the whole chat for me: its messages disappear from my side and it leaves my list. Everyone else keeps it. */
+  async deleteChatForMe(userId: string, threadId: string) {
+    const m = await membership(userId, threadId);
+    const now = new Date();
+    await prisma.chatMember.update({ where: { id: m.id }, data: { clearedAt: now, lastReadAt: now } });
+    return { id: threadId, deleted: true };
+  }
+
   async deleteMessage(userId: string, threadId: string, messageId: string) {
     await membership(userId, threadId);
     const msg = await prisma.chatMessage.findFirst({ where: { id: messageId, threadId } });

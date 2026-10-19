@@ -32,6 +32,7 @@ export interface AuthResponse {
     avatar?: string;
     freeMatchesAvailable?: number;
     isVerified?: boolean;
+    mustChangePassword?: boolean; // a friend's first sign-in with the shared password: the app asks for a new one
   };
 }
 
@@ -46,6 +47,7 @@ export interface MeResponse {
   isVerified?: boolean;
   loginCount?: number;
   hasEmergencyContact?: boolean; // false: the app reminds the customer to add one
+  mustChangePassword?: boolean;
 }
 
 export interface UpdateMeDTO {
