@@ -476,3 +476,14 @@ html.dark img.uf-hdr-logo { filter: none; }
   background-color: #ffffff !important;
   color: #0c0b5d !important;
 }
+
+/* The Chat button in the desktop header: white frosted glass (components/HeaderChat.tsx), beating the soft-tile rule above. */
+.uf-navy-header a.uf-header-chat {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+  color: #0c0b5d !important;
+  box-shadow: 0 4px 16px -4px rgba(255, 255, 255, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+.uf-navy-header a.uf-header-chat:hover,
+.uf-navy-header a.uf-header-chat[aria-current="page"] {
+  background-color: #ffffff !important;
+}

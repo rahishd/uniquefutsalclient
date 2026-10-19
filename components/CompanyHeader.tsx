@@ -7,6 +7,7 @@ import AdStrip from "@/components/ads/AdStrip";
 import DeskNav from "@/components/DeskNav";
 import NotificationBell from "@/components/NotificationBell";
 import HeaderPoints from "@/components/HeaderPoints";
+import HeaderChat from "@/components/HeaderChat";
 import PageInfoBar from "@/components/PageInfoBar";
 
 // Top bar: transparent over the page. Once the page scrolls it turns into a frosted white strip, so the name and buttons stay readable over anything.
@@ -33,7 +34,7 @@ export default function CompanyHeader() {
             <span className={`hidden`}>{site.name}</span>
           </Link>
           <DeskNav />
-          <div className="-mr-2 ml-auto flex shrink-0 items-center gap-2 desk:ml-0"><HeaderPoints /><NotificationBell /></div>
+          <div className="-mr-2 ml-auto flex shrink-0 items-center gap-2 desk:ml-0"><HeaderPoints /><HeaderChat /><NotificationBell /></div>
         </div>
         <div className="empty:hidden pb-2"><AdStrip placement="header" /></div>
       </div>
