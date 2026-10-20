@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Ban, CalendarPlus, Check, CheckCheck, Flag, Info, Send, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Ban, CalendarPlus, Check, CheckCheck, Flag, Info, Reply, Send, Trash2, Users, X } from "lucide-react";
 import ShareBookingSheet from "@/components/chat/ShareBookingSheet";
 import { errorText } from "@/lib/api";
 import { BODY_MAX, chatTime, FALLBACK_REPORT_REASONS, deleteMessage, loadMessages, reportMessage, loadStatus, loadThread, sendMessage, threadsStore, unreadStore, type ChatInfo, type ChatMessage } from "@/lib/chat";
@@ -25,6 +25,8 @@ export default function ThreadView({ id }: { id: string }) {
   const [reads, setReads] = useState<string[]>([]); // when each other member last opened the chat
   const [gone, setGone] = useState<Set<string>>(new Set()); // ids of messages deleted since they were loaded
   const [menuFor, setMenuFor] = useState<ChatMessage | null>(null);
+  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null); // the message my next one answers
+  const [flash, setFlash] = useState<string | null>(null); // a message briefly highlighted after tapping its quote
   const [deleting, setDeleting] = useState(false);
   const [sharing, setSharing] = useState(false); // the share-a-booking sheet is open
   const [reporting, setReporting] = useState(false); // the sheet is on its report step
@@ -57,6 +59,19 @@ export default function ThreadView({ id }: { id: string }) {
   const movePress = (e: React.PointerEvent) => {
     const s = pressAt.current;
     if (s && Math.hypot(e.clientX - s.x, e.clientY - s.y) > 12) stopPress();
+  };
+  const startReply = (m: ChatMessage) => {
+    setReplyingTo(m);
+    setMenuFor(null);
+    setTimeout(() => document.getElementById("chat-box")?.focus(), 50);
+  };
+  // tapping a quote jumps to the original and lights it up for a moment
+  const jumpTo = (messageId: string) => {
+    const el = document.getElementById(`msg-${messageId}`);
+    if (!el) return;
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    setFlash(messageId);
+    setTimeout(() => setFlash((f) => (f === messageId ? null : f)), 1400);
   };
   const openMenu = (m: ChatMessage) => {
     setReporting(false);
@@ -167,8 +182,9 @@ export default function ThreadView({ id }: { id: string }) {
     setSending(true);
     setError(null);
     try {
-      const m = await sendMessage(id, body);
+      const m = await sendMessage(id, body, replyingTo?.id);
       if (override === undefined) setText("");
+      setReplyingTo(null);
       merge([m]);
     } catch (e) {
       setError(errorText(e));
@@ -248,8 +264,13 @@ export default function ThreadView({ id }: { id: string }) {
           const everyone = reads.length > 0 && seen === reads.length;
           const canAct = !removed; // yours to delete, someone else's to report
           return (
-            <div key={m.id} className={`flex items-end gap-2 ${m.mine ? "justify-end" : "justify-start"}`}>
+            <div key={m.id} id={`msg-${m.id}`} className={`flex items-end gap-1.5 rounded-2xl transition-colors duration-500 ${flash === m.id ? "bg-amber-100/70" : ""} ${m.mine ? "justify-end" : "justify-start"}`}>
               {m.mine && <span aria-hidden className="order-first mb-1 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#0c0b5d] text-[10px] font-bold text-white ring-2 ring-white">Me</span>}
+              {m.mine && canAct && (
+                <button type="button" onClick={() => startReply(m)} aria-label="Reply" title="Reply" className="mb-1 grid h-7 w-7 shrink-0 place-items-center rounded-full text-slate-400 active:bg-slate-100">
+                  <Reply size={15} />
+                </button>
+              )}
               <div
                 onPointerDown={canAct ? (e) => startPress(m, e) : undefined}
                 onPointerUp={canAct ? stopPress : undefined}
@@ -260,6 +281,12 @@ export default function ThreadView({ id }: { id: string }) {
                 className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm ${canAct ? "select-none [-webkit-touch-callout:none]" : ""} ${removed ? "bg-slate-50 text-slate-400 ring-1 ring-slate-100" : m.mine ? "bg-[#dbeafe] text-[#0c0b5d]" : "bg-slate-100 text-slate-800"}`}
               >
                 {showName && <p className="mb-0.5 text-[11px] font-semibold text-brand">{m.senderName}</p>}
+                {!removed && m.replyTo && (
+                  <button type="button" onClick={() => jumpTo(m.replyTo!.id)} className="mb-1 block w-full rounded-lg border-l-4 border-[#0c0b5d]/60 bg-white/60 px-2 py-1 text-left">
+                    <span className="block truncate text-[11px] font-semibold text-brand">{m.replyTo.senderName}</span>
+                    <span className="block truncate text-xs text-slate-500">{m.replyTo.deleted ? "This message was deleted" : m.replyTo.body}</span>
+                  </button>
+                )}
                 {removed ? (
                   <p className="flex items-center gap-1.5 italic"><Ban size={13} /> This message was deleted</p>
                 ) : (
@@ -270,6 +297,11 @@ export default function ThreadView({ id }: { id: string }) {
                   {m.mine && !removed && (everyone ? <CheckCheck size={14} className="text-blue-600" aria-label="Seen" /> : <Check size={14} aria-label="Sent" />)}
                 </p>
               </div>
+              {!m.mine && canAct && (
+                <button type="button" onClick={() => startReply(m)} aria-label="Reply" title="Reply" className="mb-1 grid h-7 w-7 shrink-0 place-items-center rounded-full text-slate-400 active:bg-slate-100">
+                  <Reply size={15} />
+                </button>
+              )}
             </div>
           );
         })}
@@ -301,8 +333,18 @@ export default function ThreadView({ id }: { id: string }) {
           e.preventDefault();
           void submit();
         }}
-        className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+3.75rem)] z-10 mx-auto flex w-full max-w-md items-end gap-2 border-t border-slate-100 bg-white px-5 py-3 tab:max-w-2xl desk:bottom-0 desk:max-w-2xl"
+        className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+3.75rem)] z-10 mx-auto flex w-full max-w-md flex-wrap items-end gap-2 border-t border-slate-100 bg-white px-5 py-3 tab:max-w-2xl desk:bottom-0 desk:max-w-2xl"
       >
+        {replyingTo && (
+          <div className="flex w-full items-center gap-2 rounded-xl border-l-4 border-[#0c0b5d] bg-slate-100 px-3 py-1.5">
+            <Reply size={14} className="shrink-0 text-brand" aria-hidden />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[11px] font-semibold text-brand">Replying to {replyingTo.mine ? "yourself" : replyingTo.senderName}</span>
+              <span className="block truncate text-xs text-slate-500">{replyingTo.body}</span>
+            </span>
+            <button type="button" onClick={() => setReplyingTo(null)} aria-label="Cancel reply" className="shrink-0 rounded-full p-1 text-slate-400"><X size={16} /></button>
+          </div>
+        )}
         <button type="button" onClick={() => setSharing(true)} aria-label="Share a booking" title="Share a booking" className="glass-active flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#0c0b5d]">
           <CalendarPlus size={19} />
         </button>
@@ -319,6 +361,7 @@ export default function ThreadView({ id }: { id: string }) {
           }}
           placeholder="Write a message"
           aria-label="Message"
+          id="chat-box"
           className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl px-4 py-2.5 text-sm outline-none"
         />
         <button type="submit" disabled={sending || !text.trim()} aria-label="Send" className="glass-btn flex h-11 w-11 shrink-0 items-center justify-center rounded-full disabled:opacity-50">
@@ -335,9 +378,13 @@ export default function ThreadView({ id }: { id: string }) {
           <div role="dialog" aria-modal="true" aria-label="Message options" onClick={(e) => e.stopPropagation()} className="max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-5 pb-8">
             <p className={`line-clamp-2 rounded-2xl px-3.5 py-2.5 text-sm ${menuFor.mine ? "bg-[#dbeafe] text-[#0c0b5d]" : "bg-slate-100 text-slate-800"}`}>{menuFor.body}</p>
 
+            <button type="button" onClick={() => startReply(menuFor)} className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-100 py-3.5 text-sm font-semibold text-[#0c0b5d]">
+              <Reply size={17} /> Reply
+            </button>
+
             {menuFor.mine ? (
               <>
-                <button type="button" onClick={removeMessage} disabled={deleting} className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-red-50 py-3.5 text-sm font-semibold text-red-600 disabled:opacity-60">
+                <button type="button" onClick={removeMessage} disabled={deleting} className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-red-50 py-3.5 text-sm font-semibold text-red-600 disabled:opacity-60">
                   <Trash2 size={17} /> {deleting ? "Deleting…" : "Delete message"}
                 </button>
                 <p className="mt-2 text-center text-xs text-slate-400">It will be deleted for everyone in this chat.</p>
@@ -371,7 +418,7 @@ export default function ThreadView({ id }: { id: string }) {
               </div>
             ) : (
               <>
-                <button type="button" onClick={() => setReporting(true)} className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-amber-50 py-3.5 text-sm font-semibold text-amber-700">
+                <button type="button" onClick={() => setReporting(true)} className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-amber-50 py-3.5 text-sm font-semibold text-amber-700">
                   <Flag size={17} /> Report message
                 </button>
                 <p className="mt-2 text-center text-xs text-slate-400">Tell the venue if this message is abusive, a scam or makes you feel unsafe.</p>

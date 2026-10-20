@@ -91,8 +91,8 @@ chatRouter.post("/threads/:id/messages/:messageId/report", [body("reason").isStr
   ok(res, "Report received", await chatService.reportMessage(req.user!.id, req.params.id, req.params.messageId, req.body), 201);
 }));
 
-chatRouter.post("/threads/:id/messages", [body("body").isString()], validateRequest, asyncHandler(async (req: AuthRequest, res: Response) => {
-  ok(res, "Sent", await chatService.send(req.user!.id, req.params.id, req.body.body), 201);
+chatRouter.post("/threads/:id/messages", [body("body").isString(), body("replyTo").optional({ values: "null" }).isString()], validateRequest, asyncHandler(async (req: AuthRequest, res: Response) => {
+  ok(res, "Sent", await chatService.send(req.user!.id, req.params.id, req.body.body, req.body.replyTo), 201);
 }));
 
 chatRouter.patch("/threads/:id", [body("name").isString()], validateRequest, asyncHandler(async (req: AuthRequest, res: Response) => {

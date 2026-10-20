@@ -46,6 +46,14 @@ export interface ChatMessage {
   createdAt: string;
   mine: boolean;
   deleted: boolean; // the sender deleted it: no words, only a note
+  replyTo?: ChatReplyPreview | null; // the earlier message this one answers
+}
+
+export interface ChatReplyPreview {
+  id: string;
+  senderName: string;
+  body: string;
+  deleted: boolean;
 }
 
 // What changed in messages already on screen: when each other member last opened the chat, and which messages were deleted.
@@ -89,7 +97,7 @@ export const FALLBACK_REPORT_REASONS: ReportReason[] = [
 export const loadReportReasons = () => api<{ reasons: ReportReason[]; noteMax: number }>("/chat/report-reasons");
 export const reportMessage = (id: string, messageId: string, reason: string, note?: string) =>
   api<{ reported: true; code: string }>(`/chat/threads/${id}/messages/${messageId}/report`, { method: "POST", body: { reason, note } });
-export const sendMessage = (id: string, body: string) => api<ChatMessage>(`/chat/threads/${id}/messages`, { method: "POST", body: { body } });
+export const sendMessage = (id: string, body: string, replyTo?: string) => api<ChatMessage>(`/chat/threads/${id}/messages`, { method: "POST", body: { body, replyTo } });
 export const addMembers = (id: string, phones: string[]) => api<ChatInfo>(`/chat/threads/${id}/members`, { method: "POST", body: { phones } });
 export const removeMember = (id: string, phone: string) => api<{ left: boolean }>(`/chat/threads/${id}/members/${phone}`, { method: "DELETE" });
 export const renameGroup = (id: string, name: string) => api<ChatInfo>(`/chat/threads/${id}`, { method: "PATCH", body: { name } });

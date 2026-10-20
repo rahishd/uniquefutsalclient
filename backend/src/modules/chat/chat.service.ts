@@ -3,6 +3,7 @@ import { ChatMember, ChatThread } from "@prisma/client";
 import { prisma } from "../../config/db";
 import { AppError } from "../../middlewares/error.middleware";
 import complaintService from "../complaint/complaint.service";
+import pushService from "../push/push.service";
 
 // Chat between registered customers: one to one and groups. Text only. Everything is decided here: who may read a
 // thread (its members only), who may add or remove people (group admins), and how fast one person may send.
@@ -46,6 +47,30 @@ async function peopleByPhone(phones: string[]): Promise<Map<string, Person>> {
   );
 }
 const personOf = (map: Map<string, Person>, phone: string): Person => map.get(phone) ?? { phone, name: "Former member", avatar: null };
+
+export const REPLY_PREVIEW = 100;
+export const PUSH_QUIET_MS = 10_000; // someone who read the chat this recently has it open: no push
+
+interface ReplyPreview {
+  id: string;
+  senderName: string;
+  body: string;
+  deleted: boolean;
+}
+
+// The messages that others in `rows` reply to, as short previews (looked up in the same chat only).
+async function replyPreviews(userId: string, threadId: string, rows: { replyToId: string | null }[]): Promise<Map<string, ReplyPreview>> {
+  const ids = [...new Set(rows.map((r) => r.replyToId).filter((x): x is string => !!x))];
+  if (!ids.length) return new Map();
+  const originals = await prisma.chatMessage.findMany({ where: { id: { in: ids }, threadId } });
+  const people = await peopleByPhone([...new Set(originals.map((o) => o.senderId))]);
+  return new Map(
+    originals.map((o) => [
+      o.id,
+      { id: o.id, senderName: o.senderId === userId ? "You" : personOf(people, o.senderId).name, body: o.deletedAt ? "" : o.body.slice(0, REPLY_PREVIEW), deleted: !!o.deletedAt },
+    ]),
+  );
+}
 
 async function membership(userId: string, threadId: string) {
   const m = await prisma.chatMember.findUnique({ where: { threadId_userId: { threadId, userId } }, include: { thread: true } });
@@ -217,6 +242,7 @@ export class ChatService {
       rows = (await prisma.chatMessage.findMany({ where: { threadId, ...(m.clearedAt ? { createdAt: { gt: m.clearedAt } } : {}) }, orderBy: { createdAt: "desc" }, take: PAGE })).reverse();
     }
     const people = await peopleByPhone([...new Set(rows.map((r) => r.senderId))]);
+    const replies = await replyPreviews(userId, threadId, rows);
     await prisma.chatMember.update({ where: { id: m.id }, data: { lastReadAt: new Date() } });
     return rows.map((r) => ({
       id: r.id,
@@ -226,6 +252,7 @@ export class ChatService {
       createdAt: r.createdAt,
       mine: r.senderId === userId,
       deleted: !!r.deletedAt,
+      replyTo: r.replyToId ? (replies.get(r.replyToId) ?? null) : null,
     }));
   }
 
@@ -299,7 +326,7 @@ export class ChatService {
     return { reported: true, code: c.code };
   }
 
-  async send(userId: string, threadId: string, bodyInput: unknown) {
+  async send(userId: string, threadId: string, bodyInput: unknown, replyToInput?: unknown) {
     const m = await membership(userId, threadId);
     const body = typeof bodyInput === "string" ? bodyInput.trim() : "";
     if (!body) throw new AppError(400, "Write a message first.");
@@ -310,13 +337,39 @@ export class ChatService {
       throw new AppError(429, "You are sending messages too quickly. Please wait a moment.");
     }
 
-    const msg = await prisma.chatMessage.create({ data: { threadId, senderId: userId, body } });
+    // a reply must point at a message of this same chat
+    const replyToId = typeof replyToInput === "string" && replyToInput ? replyToInput : null;
+    if (replyToId && !(await prisma.chatMessage.findFirst({ where: { id: replyToId, threadId }, select: { id: true } }))) {
+      throw new AppError(404, "The message you are replying to was not found.");
+    }
+
+    const msg = await prisma.chatMessage.create({ data: { threadId, senderId: userId, body, replyToId } });
     await prisma.chatThread.update({
       where: { id: threadId },
       data: { lastMessage: body.slice(0, 120), lastSenderId: userId, lastMessageAt: msg.createdAt },
     });
     await prisma.chatMember.update({ where: { id: m.id }, data: { lastReadAt: msg.createdAt } });
-    return { id: msg.id, senderId: userId, senderName: "You", body: msg.body, createdAt: msg.createdAt, mine: true, deleted: false };
+    const replies = await replyPreviews(userId, threadId, [msg]);
+    void this.notifyMembers(userId, m.thread, msg.id, body);
+    return { id: msg.id, senderId: userId, senderName: "You", body: msg.body, createdAt: msg.createdAt, mine: true, deleted: false, replyTo: replyToId ? (replies.get(replyToId) ?? null) : null };
+  }
+
+  /** Push alert to every other member's phone for a new message (even when the app is closed). Never throws; skips anyone with the chat open. */
+  private async notifyMembers(senderId: string, thread: ChatThread, messageId: string, body: string) {
+    try {
+      const quiet = new Date(Date.now() - PUSH_QUIET_MS);
+      const others = await prisma.chatMember.findMany({ where: { threadId: thread.id, NOT: { userId: senderId } }, select: { userId: true, lastReadAt: true } });
+      const targets = others.filter((o) => o.lastReadAt < quiet).map((o) => o.userId);
+      if (!targets.length) return;
+      const sender = personOf(await peopleByPhone([senderId]), senderId).name;
+      const preview = body.length > 120 ? `${body.slice(0, 117)}...` : body;
+      const payload = thread.kind === "group"
+        ? { title: thread.name ?? "Group chat", body: `${sender}: ${preview}` }
+        : { title: sender, body: preview };
+      await Promise.all(targets.map((userId) => pushService.sendToUser(userId, "chat", { ...payload, href: `/chat/${thread.id}`, tag: `chat-${thread.id}-${messageId}` })));
+    } catch {
+      // a failed alert must never break sending a message
+    }
   }
 
   async addMembers(userId: string, threadId: string, phones: unknown) {

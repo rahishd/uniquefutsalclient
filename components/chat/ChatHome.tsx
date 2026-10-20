@@ -10,6 +10,7 @@ import { askConfirm } from "@/lib/confirm";
 import ProfileAvatar from "@/components/captain/ProfileAvatar";
 import NewChatSheet from "@/components/chat/NewChatSheet";
 import FriendsSheet from "@/components/chat/FriendsSheet";
+import ChatAlertsBanner from "@/components/chat/ChatAlertsBanner";
 import FullScreenPanel from "@/components/chat/FullScreenPanel";
 import TeamPage from "@/components/captain/TeamPage";
 
@@ -117,6 +118,7 @@ export default function ChatHome() {
         </section>
       ) : (
         <>
+          <ChatAlertsBanner />
           {friends.length > 0 && (
           <section aria-label="Friends">
             <div className="mb-3 flex items-center justify-between">
