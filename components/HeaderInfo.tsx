@@ -31,7 +31,7 @@ export default function HeaderInfo() {
         <WeatherIcon code={weather ? weather.code : 3} />
         <div className="leading-tight text-right">
           <p className="text-sm font-medium">{weather ? `${weather.temp}°C` : "--"}</p>
-          <p className="text-[11px] text-slate-400">{PLACE}</p>
+          <p className="text-[11px] text-slate-400">{weather?.place ?? PLACE}</p>
         </div>
       </div>
     </div>

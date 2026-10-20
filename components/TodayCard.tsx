@@ -72,7 +72,7 @@ export default function TodayCard() {
       </div>
       <div className="relative mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold">
         <span className="flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5"><CalendarDays size={13} className="shrink-0" />{today.en || " "}</span>
-        <span className="flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-[#1e3a8a]"><MapPin size={13} className="shrink-0" />{PLACE}</span>
+        <span className="flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-[#1e3a8a]"><MapPin size={13} className="shrink-0" />{weather?.place ?? PLACE}</span>
       </div>
       <LastPlayed embedded />
     </section>
