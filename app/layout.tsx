@@ -16,6 +16,7 @@ import PageTranslator from "@/components/PageTranslator";
 import ConfirmHost from "@/components/ConfirmHost";
 import LoginSplash from "@/components/LoginSplash";
 import BackToTop from "@/components/BackToTop";
+import CallHost from "@/components/chat/CallHost";
 import ChatPopup from "@/components/chat/ChatPopup";
 
 const poppins = Poppins({ variable: "--font-poppins", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
@@ -27,7 +28,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  // navy like the home header, so the phone's status bar strip above it is not white
+  themeColor: "#0c0b5d",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -51,6 +53,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <FooterGate />
         <BottomNav />
         <BackToTop />
+        <CallHost />
         <ChatPopup />
         <SwRegister />
         <InstallPrompt />

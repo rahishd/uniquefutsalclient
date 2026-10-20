@@ -2,17 +2,19 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Ban, CalendarPlus, Check, CheckCheck, Flag, Info, Reply, Send, Trash2, Users, X } from "lucide-react";
+import { ArrowLeft, Ban, CalendarPlus, Check, CheckCheck, Flag, Info, Phone, Reply, Send, Trash2, Users, X } from "lucide-react";
 import ShareBookingSheet from "@/components/chat/ShareBookingSheet";
 import { errorText } from "@/lib/api";
 import { BODY_MAX, chatTime, FALLBACK_REPORT_REASONS, deleteMessage, loadMessages, reportMessage, loadStatus, loadThread, sendMessage, threadsStore, unreadStore, type ChatInfo, type ChatMessage } from "@/lib/chat";
 import { openSignIn, useSession } from "@/lib/session";
+import { startCall, supported as callsSupported, useCall } from "@/lib/call";
 import ProfileAvatar from "@/components/captain/ProfileAvatar";
 import GroupInfoSheet from "@/components/chat/GroupInfoSheet";
 
 // One conversation. New messages, read receipts and deletions are fetched every few seconds while the page is open.
 export default function ThreadView({ id }: { id: string }) {
   const session = useSession();
+  const call = useCall();
   const registered = session?.registered === true;
   const [info, setInfo] = useState<ChatInfo | null>(null);
   const [missing, setMissing] = useState(false);
@@ -250,6 +252,11 @@ export default function ThreadView({ id }: { id: string }) {
           <span className="block truncate text-sm font-semibold">{info?.title ?? "Chat"}</span>
           {isGroup && <span className="block text-xs text-slate-500">{info?.members.length} people</span>}
         </span>
+        {info && !isGroup && callsSupported() && (
+          <button type="button" onClick={() => void startCall(id, info.title, info.avatar)} disabled={call.phase !== "idle"} aria-label="Voice call" title="Voice call" className="rounded-full p-2 text-brand disabled:opacity-40">
+            <Phone size={20} />
+          </button>
+        )}
         {isGroup && (
           <button type="button" onClick={() => setShowInfo(true)} aria-label="Group info" className="rounded-full p-2 text-brand"><Info size={20} /></button>
         )}

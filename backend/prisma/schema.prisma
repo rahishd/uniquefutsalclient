@@ -1324,3 +1324,21 @@ model GoodsDue {
 
   @@index([userId, status])
 }
+
+// A one-to-one voice call in a direct chat. `offer` and `answer` are the two phones' connection set-up (WebRTC); the audio itself
+// goes straight between the phones. status: ringing | active | ended | declined | missed.
+model ChatCall {
+  id         String    @id @default(cuid())
+  threadId   String
+  callerId   String
+  calleeId   String
+  status     String    @default("ringing")
+  offer      String
+  answer     String?
+  createdAt  DateTime  @default(now())
+  answeredAt DateTime?
+  endedAt    DateTime?
+
+  @@index([calleeId, status])
+  @@index([callerId, status])
+}

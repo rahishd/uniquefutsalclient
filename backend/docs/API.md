@@ -303,6 +303,19 @@ Registered customers can chat one to one or in groups (text only). Every route n
 | POST | `/chat/friends/:id/accept` | Receiver | accepts a request sent to you (404 for anyone else). The sender gets a notice |
 | DELETE | `/chat/friends/:id` | Either side | declines a request, cancels one you sent, or removes a friend |
 
+### Voice calls (one-to-one, audio only)
+
+The audio goes straight between the two phones (WebRTC). The server only carries the call set-up and state and decides who may call whom. Set `ICE_SERVERS` (JSON list of STUN/TURN servers) to add a TURN relay for networks where phones cannot reach each other directly; without it only free STUN is used.
+
+| Method | Path | Who | What |
+|---|---|---|---|
+| GET | `/chat/calls/ice` | User | `{iceServers}` for the phone's connection |
+| POST | `/chat/calls` | Member of a direct chat | `{threadId, offer}` rings the other person and sends them a phone alert (`type: "call"`, opens `/chat/<id>`) -> `{id, status}`. 400 for a group chat or a bad offer, 409 if either person is already ringing or on a call, 429 over 6 calls a minute |
+| GET | `/chat/calls/incoming` | User | the call ringing for me now (`{id, threadId, from, avatar, offer}`) or `null`. A call rings for 45 seconds, then becomes `missed` |
+| GET | `/chat/calls/:id` | Caller or callee | `{id, status, answer, answeredAt}`; `status` is ringing, active, ended, declined or missed. Only the caller receives the `answer`, once the other person picks up. 404 for anyone else |
+| POST | `/chat/calls/:id/answer` | Callee | `{answer}` picks up a ringing call (403 for the caller, 409 if it was answered or is over) |
+| POST | `/chat/calls/:id/end` | Caller or callee | hangs up. The callee refusing a ringing call is `declined`, the caller giving up before an answer is `missed`, otherwise `ended`. Hanging up twice is harmless |
+
 ## Find Player: "I need N players"
 
 Any registered customer (the host) can ask for more players for a **friendly** game: up to **11** players, on a day from tomorrow, within the next **6** days (never today). Every other registered customer gets an in-app notice (type `players`, and a push to devices unless they switched promotional notifications off): "<name> needs 6 Players for Upcoming Game. View the deal" linking to `/find-player/<id>`. Every route needs a signed-in customer.

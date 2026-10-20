@@ -5,6 +5,7 @@ import { ApiResponseUtil } from "../../utils/apiResponse";
 import { authMiddleware, AuthRequest } from "../../middlewares/auth.middleware";
 import validateRequest from "../../middlewares/validate.middleware";
 import friendsService from "./friends.service";
+import callService from "./call.service";
 import chatService, { BODY_MAX, GROUP_MAX_MEMBERS, GROUP_NAME_MAX, GROUP_NAME_MIN, REPORT_NOTE_MAX, REPORT_REASONS } from "./chat.service";
 
 const ok = (res: Response, message: string, data?: unknown, status = 200) => res.status(status).json(ApiResponseUtil.success(status, message, data));
@@ -16,6 +17,26 @@ chatRouter.use(authMiddleware);
 chatRouter.get("/rules", (_req, res: Response) => {
   ok(res, "Chat rules", { bodyMax: BODY_MAX, groupMax: GROUP_MAX_MEMBERS, groupNameMin: GROUP_NAME_MIN, groupNameMax: GROUP_NAME_MAX });
 });
+
+// voice calls (declared before the /threads routes): one-to-one, audio only
+chatRouter.get("/calls/ice", (_req, res: Response) => {
+  ok(res, "Call servers", { iceServers: callService.iceServers() });
+});
+chatRouter.get("/calls/incoming", asyncHandler(async (req: AuthRequest, res: Response) => {
+  ok(res, "Incoming call", await callService.incoming(req.user!.id));
+}));
+chatRouter.post("/calls", [body("threadId").isString(), body("offer").isString()], validateRequest, asyncHandler(async (req: AuthRequest, res: Response) => {
+  ok(res, "Calling", await callService.start(req.user!.id, req.body.threadId, req.body.offer), 201);
+}));
+chatRouter.get("/calls/:id", asyncHandler(async (req: AuthRequest, res: Response) => {
+  ok(res, "Call", await callService.state(req.user!.id, req.params.id));
+}));
+chatRouter.post("/calls/:id/answer", [body("answer").isString()], validateRequest, asyncHandler(async (req: AuthRequest, res: Response) => {
+  ok(res, "Answered", await callService.answer(req.user!.id, req.params.id, req.body.answer));
+}));
+chatRouter.post("/calls/:id/end", asyncHandler(async (req: AuthRequest, res: Response) => {
+  ok(res, "Call ended", await callService.end(req.user!.id, req.params.id));
+}));
 
 // friends (declared before the /threads routes)
 chatRouter.get("/friends", asyncHandler(async (req: AuthRequest, res: Response) => {

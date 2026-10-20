@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, CheckCheck, Inbox, Info, Menu, Plus, Shield, Trash2, UserPlus, Users } from "lucide-react";
 import { openSignIn, useSession } from "@/lib/session";
+import { useTeams } from "@/lib/teams";
 import { chatTime, deleteChat, friendsStore, openDirect, threadsStore, type ChatPerson, type ChatThreadRow } from "@/lib/chat";
 import { askConfirm } from "@/lib/confirm";
 import ProfileAvatar from "@/components/captain/ProfileAvatar";
@@ -39,6 +40,8 @@ export default function ChatHome() {
   const [sheet, setSheet] = useState<"group" | "teams" | null>(null);
   const [friendsTab, setFriendsTab] = useState<"add" | "requests" | "friends" | null>(null);
   const [opening, setOpening] = useState<string | null>(null);
+  const [section, setSection] = useState<"friends" | "groups" | "team">("friends"); // which heading of the top block is showing
+  const teams = useTeams();
   const [menu, setMenu] = useState(false);
   const [target, setTarget] = useState<ChatThreadRow | null>(null); // the chat that was pressed and held (or right-clicked)
   const holdTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -46,6 +49,11 @@ export default function ChatHome() {
   const threads = data ?? [];
   const friends = social?.friends ?? [];
   const requests = social?.incoming.length ?? 0;
+  const groups = threads.filter((t) => t.kind === "group");
+  const groupUnread = groups.reduce((n, g) => n + g.unread, 0);
+  const team = teams?.team ?? null;
+  const me = session?.registered === true ? session.phone : "";
+  const teammates = (team?.members ?? []).filter((m) => m.phone !== me);
 
   async function chatWith(p: ChatPerson) {
     setOpening(p.phone);
@@ -119,30 +127,102 @@ export default function ChatHome() {
       ) : (
         <>
           <ChatAlertsBanner />
-          {friends.length > 0 && (
-          <section aria-label="Friends">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400">Friends</h2>
-              <button type="button" onClick={() => setFriendsTab("friends")} className="text-xs font-semibold text-brand">See all</button>
-            </div>
-            <ul className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <li className="shrink-0">
-                <button type="button" onClick={() => setFriendsTab("add")} className="flex w-[68px] flex-col items-center gap-2" aria-label="Add a friend">
-                  <span className="flex h-14 w-14 items-center justify-center rounded-full border border-dashed border-brand/30 bg-white text-brand transition active:scale-95"><Plus size={22} /></span>
-                  <span className="w-full truncate text-center text-[11px] font-medium text-slate-500">Add</span>
+          <section aria-label="Friends, groups and my team">
+            <div role="tablist" aria-label="Show" className="mb-3 grid grid-cols-3 gap-1 rounded-2xl bg-slate-100 p-1">
+              {([
+                ["friends", "Friends", requests],
+                ["groups", "Groups", groupUnread],
+                ["team", "My Team", 0],
+              ] as const).map(([id, label, badge]) => (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={section === id}
+                  onClick={() => setSection(id)}
+                  className={`relative rounded-xl py-2 text-sm font-semibold transition ${section === id ? "glass-active text-[#0c0b5d]" : "text-slate-500"}`}
+                >
+                  {label}
+                  {badge > 0 && <span className="absolute -right-0.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">{badge > 9 ? "9+" : badge}</span>}
                 </button>
-              </li>
-              {friends.map((f) => (
-                <li key={f.id} className="shrink-0">
-                  <button type="button" disabled={opening !== null} onClick={() => chatWith(f)} className="flex w-[68px] flex-col items-center gap-2 transition active:scale-95 disabled:opacity-60" aria-label={`Chat with ${f.name}`}>
-                    <ProfileAvatar name={f.name} captain={false} size={56} src={f.avatar} />
-                    <span className="w-full truncate text-center text-[11px] font-medium text-slate-600">{f.name.split(" ")[0]}</span>
+              ))}
+            </div>
+
+            {section === "friends" && (
+              <>
+                <div className="mb-2 flex items-center justify-end">
+                  <button type="button" onClick={() => setFriendsTab("friends")} className="text-xs font-semibold text-brand">See all</button>
+                </div>
+                <ul className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  <li className="shrink-0">
+                    <button type="button" onClick={() => setFriendsTab("add")} className="flex w-[68px] flex-col items-center gap-2" aria-label="Add a friend">
+                      <span className="flex h-14 w-14 items-center justify-center rounded-full border border-dashed border-brand/30 bg-white text-brand transition active:scale-95"><Plus size={22} /></span>
+                      <span className="w-full truncate text-center text-[11px] font-medium text-slate-500">Add</span>
+                    </button>
+                  </li>
+                  {friends.map((f) => (
+                    <li key={f.id} className="shrink-0">
+                      <button type="button" disabled={opening !== null} onClick={() => chatWith(f)} className="flex w-[68px] flex-col items-center gap-2 transition active:scale-95 disabled:opacity-60" aria-label={`Chat with ${f.name}`}>
+                        <ProfileAvatar name={f.name} captain={false} size={56} src={f.avatar} />
+                        <span className="w-full truncate text-center text-[11px] font-medium text-slate-600">{f.name.split(" ")[0]}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+
+            {section === "groups" && (
+              <ul className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <li className="shrink-0">
+                  <button type="button" onClick={() => setSheet("group")} className="flex w-[68px] flex-col items-center gap-2" aria-label="Create a group">
+                    <span className="flex h-14 w-14 items-center justify-center rounded-full border border-dashed border-brand/30 bg-white text-brand transition active:scale-95"><Plus size={22} /></span>
+                    <span className="w-full truncate text-center text-[11px] font-medium text-slate-500">New</span>
                   </button>
                 </li>
-              ))}
-            </ul>
+                {groups.map((g) => (
+                  <li key={g.id} className="shrink-0">
+                    <Link href={`/chat/${g.id}`} className="relative flex w-[68px] flex-col items-center gap-2 transition active:scale-95" aria-label={`Open group ${g.title}`}>
+                      <span className="relative flex h-14 w-14 items-center justify-center rounded-full bg-brand/10 text-brand">
+                        <Users size={22} />
+                        {g.unread > 0 && <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-bold text-white ring-2 ring-white">{g.unread > 9 ? "9+" : g.unread}</span>}
+                      </span>
+                      <span className="w-full truncate text-center text-[11px] font-medium text-slate-600">{g.title}</span>
+                    </Link>
+                  </li>
+                ))}
+                {groups.length === 0 && <li className="self-center pl-1 text-xs text-slate-400">No groups yet. Tap New to start one.</li>}
+              </ul>
+            )}
+
+            {section === "team" && (
+              team ? (
+                <>
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="truncate text-xs font-semibold text-slate-500">{team.name}</span>
+                    <button type="button" onClick={() => setSheet("teams")} className="text-xs font-semibold text-brand">Open team</button>
+                  </div>
+                  <ul className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {teammates.map((m) => (
+                      <li key={m.userId} className="shrink-0">
+                        <button type="button" disabled={opening !== null} onClick={() => chatWith({ phone: m.phone, name: m.name, avatar: null })} className="flex w-[68px] flex-col items-center gap-2 transition active:scale-95 disabled:opacity-60" aria-label={`Chat with ${m.name}`}>
+                          <ProfileAvatar name={m.name} captain={m.isCaptain} size={56} src={null} />
+                          <span className="w-full truncate text-center text-[11px] font-medium text-slate-600">{m.name.split(" ")[0]}</span>
+                        </button>
+                      </li>
+                    ))}
+                    {teammates.length === 0 && <li className="self-center pl-1 text-xs text-slate-400">No teammates yet. Add players from Open team.</li>}
+                  </ul>
+                </>
+              ) : (
+                <div className="rounded-3xl bg-white p-4 text-center shadow-sm ring-1 ring-slate-100">
+                  <p className="text-sm font-semibold">{teams === undefined ? "Loading your team…" : "No team to show"}</p>
+                  {teams !== undefined && <p className="mt-1 text-xs text-slate-500">Switch to Captain mode and create or join a team to chat with your teammates here.</p>}
+                  {teams !== undefined && <button type="button" onClick={() => setSheet("teams")} className="glass-btn mt-3 rounded-full px-5 py-2 text-xs font-semibold">My Teams</button>}
+                </div>
+              )
+            )}
           </section>
-          )}
 
           <section aria-label="Chats">
             <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-slate-400">Chats</h2>

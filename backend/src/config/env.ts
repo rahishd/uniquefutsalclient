@@ -65,6 +65,8 @@ export const env = {
   VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || "",
   VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY || "",
   VAPID_SUBJECT: process.env.VAPID_SUBJECT || "mailto:admin@example.com",
+  // Optional: STUN/TURN servers for voice calls, as JSON, e.g. [{"urls":"turn:turn.example.com:3478","username":"u","credential":"p"}]. Without it only free STUN is used and a few networks cannot connect.
+  ICE_SERVERS: process.env.ICE_SERVERS || "",
   // Google sign-in used as the second factor for password reset. Empty = reset is unavailable.
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "",
   // Face ID / fingerprint sign-in (passkeys). RP ID = the site domain without a port (localhost in development); origins = the exact site addresses.
