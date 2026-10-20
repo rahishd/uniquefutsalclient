@@ -24,7 +24,7 @@ function ago(b: Booking, nowMs: number) {
 const shortDay = (k: string) => parseKey(k).toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" });
 
 // Home: the customer's last played game, and the two before it, so they can see their history at a glance.
-export default function LastPlayed() {
+export default function LastPlayed({ embedded = false }: { embedded?: boolean }) {
   const session = useSession();
   const tick = useSyncExternalStore(noop, dayKey, () => "");
   const bookings = myBookingsStore.use().data ?? [];
@@ -36,7 +36,7 @@ export default function LastPlayed() {
   const [last, ...before] = games;
 
   return (
-    <section aria-label="Last played" className="order-1 mx-0 mt-3 rounded-3xl bg-[#dcebff] p-4 text-[#0c0b5d] desk:mt-4 desk:p-5">
+    <section aria-label="Last played" className={embedded ? "relative mt-3 rounded-2xl bg-white/60 p-3 text-[#0c0b5d]" : "order-1 mx-0 mt-3 rounded-3xl bg-[#dcebff] p-4 text-[#0c0b5d] desk:mt-4 desk:p-5"}>
       <div className="flex items-center justify-between gap-3">
         <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider"><History size={14} /> Last played</p>
         <Link href="/profile" className="flex items-center gap-0.5 text-xs font-semibold">All games <ChevronRight size={14} /></Link>
