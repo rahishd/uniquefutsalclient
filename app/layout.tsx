@@ -24,7 +24,7 @@ const poppins = Poppins({ variable: "--font-poppins", subsets: ["latin"], weight
 export const metadata: Metadata = {
   title: "Unique Futsal",
   description: "Book courts, find opponents and earn rewards at Unique Futsal.",
-  appleWebApp: { capable: true, title: "Unique Futsal", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "Unique Futsal", statusBarStyle: "black-translucent" },
 };
 
 export const viewport: Viewport = {
@@ -44,6 +44,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem("uf-theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}` }} />
       </head>
       <body className="min-h-full">
+        {/* iPhone home-screen app: the status bar is see-through, so this navy strip (as tall as the status bar, nothing in a normal browser) sits behind the clock on every page */}
+        <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 z-[200] bg-[#0c0b5d]" style={{ height: "env(safe-area-inset-top)" }} />
         <LoginSplash />
         <LangSync />
         <PageTranslator />
