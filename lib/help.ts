@@ -54,7 +54,7 @@ export const helpTopics: HelpTopic[] = [
       "Choose a court, add a promo code if you have one, then pay.",
       "Every game includes 2 complimentary mineral water bottles. A game booked with a promo code or a VIP discount does not include them, and the booking screen tells you as soon as you apply one.",
       "Your booking ID appears at the end. Find it later in Profile > My bookings.",
-      "On the confirmation, tap WhatsApp or Chat or Group to share the booking (date, time and booking ID) with your team. Gamezone bookings can be shared the same way.",
+      "On the confirmation, tap WhatsApp (PDF), Chat or Group to share the booking (date, time and booking ID) with your team; WhatsApp sends it as a branded Unique Futsal PDF page. Gamezone bookings can be shared the same way.",
       "3% of what you pay goes to our Charity Fund. The exact amount is shown with the HandHeart icon while you pay, on your confirmation and on the final bill. It comes from our profit and is not added to your price.",
     ],
     href: { label: "Book now", to: "/book" },
@@ -66,7 +66,7 @@ export const helpTopics: HelpTopic[] = [
     summary: "Make an account for a friend and share their sign-in details.",
     points: [
       "Open Refer & Earn, then Register a friend. Enter their name and mobile number.",
-      "You get a Contact No and a first password. Share them on WhatsApp (shown only once).",
+      "You get a Contact No and a first password. Send them on WhatsApp as a PDF page with the Unique Futsal logo (shown only once).",
       "When your friend signs in with them, the app asks them to set their own password.",
       "You both get 5 loyalty points at that first sign-in. You can register up to 5 friends a day.",
     ],
@@ -481,7 +481,7 @@ export const helpTopics: HelpTopic[] = [
     summary: "Your own QR card. Show it at the venue.",
     points: [
       "Tap the QR button next to Hello on Home, or My Digital ID in Profile. Your card is dark blue and shows our name, your name, your number and a QR.",
-      "Download it as a picture or send it on WhatsApp. The venue scans it to open your account, and it also marks your membership attendance.",
+      "Download it or send it on WhatsApp as a branded PDF page. The venue scans it to open your account, and it also marks your membership attendance.",
       "The QR has none of your details inside. Other apps cannot read it, only the Unique Futsal team can.",
       "Unique Club members get a gold \"Unique Club Member\" badge on the card. When the venue scans it, they see your club days left, Goal Rush points and games you are hosting or joined, so your 10% is given at once.",
       "Lost it or sent it to the wrong person? Tap Make a new QR. The old card stops working at once.",

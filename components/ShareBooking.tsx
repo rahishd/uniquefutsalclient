@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { FaWhatsapp } from "react-icons/fa6";
 import { Check, Loader2, MessageCircle, Search, Share2, Users, X } from "lucide-react";
 import { errorText } from "@/lib/api";
 import { sendMessage, threadsStore, type ChatThreadRow } from "@/lib/chat";
 import { site } from "@/lib/site";
+import SendPdfButton from "@/components/SendPdfButton";
+import { pdfFileName, type PdfSpec } from "@/lib/branded-pdf";
 
 // "Share" on a booking confirmation: to WhatsApp (any contact or group there), to a chat or group inside this app, or
 // through the phone's own share sheet. The message holds only what the customer sees on the confirmation.
@@ -16,32 +17,46 @@ export function bookingShareText(title: string, lines: [string, string][], code:
   return [`${title} at ${site.name}`, ...lines.map(([k, v]) => `${k}: ${v}`), `Booking ID: ${code}`, `📍 ${site.address}`].join("\n");
 }
 
-const noopSubscribe = () => () => {};
-const canNativeShare = () => typeof navigator !== "undefined" && typeof navigator.share === "function";
+// The same text turned back into its parts (title, the "Key: Value" lines, the booking id) so it can be printed as a branded PDF page.
+// The format is the one bookingShareText writes just above: keep the two together.
+function bookingPdf(text: string): PdfSpec & { code: string } {
+  const lines = text.split("\n");
+  const title = (lines[0] ?? "Booking").replace(new RegExp(` at ${site.name}$`), "").replace(/^[^A-Za-z0-9]+/, "").trim();
+  const rows: { label: string; value: string }[] = [];
+  let code = "";
+  for (const l of lines.slice(1)) {
+    const i = l.indexOf(": ");
+    if (i < 1 || l.startsWith("📍")) continue;
+    const k = l.slice(0, i), v = l.slice(i + 2);
+    if (k === "Booking ID") code = v; else rows.push({ label: k, value: v });
+  }
+  return {
+    purpose: "BOOKING DETAILS", title, subtitle: `Your game at ${site.name}`, ref: code, code,
+    rows: [...rows, { label: "Where", value: site.address }, { label: "Booking ID", value: code, big: true }],
+    note: "Show this page or your Booking ID at the venue. To change or cancel, open My bookings in the Unique Futsal app.",
+  };
+}
 
 export default function ShareBooking({ text, registered }: { text: string; registered: boolean }) {
   const [picking, setPicking] = useState(false);
-  const native = useSyncExternalStore(noopSubscribe, canNativeShare, () => false);
-  const wa = `https://wa.me/?text=${encodeURIComponent(text)}`;
 
   return (
     <section className="glass space-y-3 rounded-3xl p-5" aria-label="Share this booking">
       <p className="flex items-center gap-2 text-sm font-medium"><Share2 size={16} className="text-brand" /> Share with your team</p>
       <div className={`grid gap-2 ${registered ? "grid-cols-2" : "grid-cols-1"}`}>
-        <a href={wa} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 rounded-full bg-[#25D366] py-3 text-sm font-semibold" style={{ color: "#ffffff" }}>
-          <FaWhatsapp size={18} aria-hidden /> WhatsApp
-        </a>
+        <SendPdfButton
+          label="WhatsApp (PDF)"
+          build={() => bookingPdf(text)}
+          filename={(spec) => pdfFileName("booking", bookingPdf(text).code || spec.title)}
+          message={() => `${bookingPdf(text).title} at ${site.name}. Booking ID ${bookingPdf(text).code}. The details are in the attached PDF.`}
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] py-3 text-sm font-semibold text-white"
+        />
         {registered && (
           <button type="button" onClick={() => setPicking(true)} className="flex items-center justify-center gap-2 rounded-full bg-[#0c0b5d] py-3 text-sm font-semibold" style={{ color: "#ffffff" }}>
             <MessageCircle size={18} aria-hidden /> Chat or Group
           </button>
         )}
       </div>
-      {native && (
-        <button type="button" onClick={() => navigator.share({ text }).catch(() => {})} className="w-full text-center text-xs font-medium text-brand">
-          More ways to share…
-        </button>
-      )}
       {picking && <ChatPicker text={text} onClose={() => setPicking(false)} />}
     </section>
   );

@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Check, ChevronDown, Copy, Loader2, MessageCircle, UserPlus } from "lucide-react";
+import { Check, ChevronDown, Copy, Loader2, UserPlus } from "lucide-react";
+import SendPdfButton from "@/components/SendPdfButton";
+import { pdfFileName, type PdfSpec } from "@/lib/branded-pdf";
+import { useSession } from "@/lib/session";
 import { errorText } from "@/lib/api";
 import { loadFriends, registerFriend, type MyFriend, type RegisteredFriend } from "@/lib/refer";
 
@@ -38,8 +41,20 @@ export default function FriendRegister({ enabled, open, onToggle }: { enabled: b
   }
 
   const details = (f: RegisteredFriend) => `Contact No: ${f.phone}\nPassword: ${f.password}`;
-  const message = (f: RegisteredFriend) =>
-    `Hi ${f.name}! I made you a Unique Futsal account.\n\n${details(f)}\n\nSign in at ${typeof window !== "undefined" ? window.location.origin : "uniquefutsal.com"} and set your own password when asked. We both get ${f.points} loyalty points when you sign in.`;
+  const session = useSession();
+  const from = session?.registered ? session.name : "";
+  // the login details as a branded PDF page (what is sent on WhatsApp), with a short note saying what it is
+  const loginPdf = (f: RegisteredFriend): PdfSpec => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    return {
+      purpose: "LOGIN DETAILS", title: "Your Unique Futsal account is ready", subtitle: from ? `Created for you by ${from}.` : "Created for you by a friend at Unique Futsal.",
+      ref: `ACCOUNT-${f.phone}`, to: { name: f.name, phone: f.phone },
+      rows: [{ label: "Contact No", value: f.phone, big: true }, { label: "First password", value: f.password, big: true }],
+      stepsTitle: "How to sign in", steps: [`Open ${origin || "the Unique Futsal app"} and tap Sign in.`, "Enter the Contact No and first password above.", "Choose your own new password when asked."],
+      note: `This password is shown only once. Do not share this page with anyone else. You and your friend both get ${f.points} loyalty points when you sign in.`,
+      ...(origin ? { qr: { data: origin, label: "Scan to open Unique Futsal" } } : {}),
+    };
+  };
 
   async function copy(f: RegisteredFriend) {
     try { await navigator.clipboard.writeText(details(f)); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* the text is on screen to copy by hand */ }
@@ -64,7 +79,7 @@ export default function FriendRegister({ enabled, open, onToggle }: { enabled: b
           </dl>
           <p className="mt-2 text-xs text-slate-500">Share these now: the password is not shown again. Your friend will be asked to set a new password at the first sign-in.</p>
           <div className="mt-3 flex gap-2">
-            <a href={`https://wa.me/?text=${encodeURIComponent(message(made))}`} target="_blank" rel="noopener noreferrer" className="flex flex-1 items-center justify-center gap-2 rounded-full bg-[#25D366] py-3 text-sm font-semibold text-white"><MessageCircle size={16} /> Share on WhatsApp</a>
+            <SendPdfButton wrapperClassName="flex-1" label="Send login details (PDF)" build={() => loginPdf(made)} filename={() => pdfFileName("login-details", made.phone)} phone={made.phone} message={`Hi ${made.name}! Your Unique Futsal login details are in the attached PDF. Sign in and choose your own password.`} className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] py-3 text-sm font-semibold text-white" />
             <button type="button" onClick={() => copy(made)} className="flex items-center justify-center gap-2 rounded-full bg-[#0c0b5d] px-5 py-3 text-sm font-semibold text-white">{copied ? <Check size={16} /> : <Copy size={16} />}{copied ? "Copied" : "Copy"}</button>
           </div>
           <button type="button" onClick={() => setMade(null)} className="mt-3 w-full text-center text-sm font-medium text-brand">Register another friend</button>

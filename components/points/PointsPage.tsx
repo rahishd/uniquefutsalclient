@@ -5,6 +5,8 @@ import { useHighlight } from "@/lib/highlight";
 import Link from "next/link";
 import { Gift, Star, Trophy, ShoppingBag, Gamepad2, UserRound, ChevronDown, Crown, HeartHandshake, Check, Clock, TriangleAlert, Loader2, Goal, Clapperboard, Send, Info, CalendarDays, ChevronRight } from "lucide-react";
 import SharePoints from "@/components/points/SharePoints";
+import SendPdfButton from "@/components/SendPdfButton";
+import { pdfFileName, type PdfSpec } from "@/lib/branded-pdf";
 import { useSession, openSignIn } from "@/lib/session";
 import { errorText } from "@/lib/api";
 import { GAME_RS_PER_POINT, GZ_POINTS_PER_HOUR, GAME_POINTS_MONTHS, MEMBERSHIP_POINTS, POINTS_CAPTAIN_WIN, RS_PER_POINT, SHIFT_HOURS, WATCH_POINTS_MONTHS, fmtPts } from "@/lib/points";
@@ -152,15 +154,20 @@ export default function PointsPage() {
         <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Ways to earn more points</p>
         {(() => {
           const me = session.registered ? session.phone : "";
-          // a friend can only top you up by sharing from their own account, so this opens WhatsApp with the ask already written
-          const askFriend = `https://wa.me/?text=${encodeURIComponent(`Hi! Could you share some Unique Futsal loyalty points with me? My number in the app is ${me}.`)}`;
+          // a friend can only top you up by sharing from their own account, so this sends them a branded PDF page with the ask and how to do it
+          const askFriendPdf = (): PdfSpec => ({
+            purpose: "POINTS REQUEST", title: "Could you share some loyalty points?", subtitle: `A friendly request from ${session.registered ? session.name : "a Unique Futsal player"}.`,
+            ref: `POINTS-${me}`, rows: [{ label: "Please send them to", value: me, big: true }],
+            stepsTitle: "How to share points", steps: ["Open the Unique Futsal app and go to Points.", "Tap Share points with a friend.", "Enter the number above and send."],
+            note: "Points are only ever shared from your own account. Nothing is taken from you without your tap.",
+          });
           const ways = [
             { Icon: Clapperboard, title: "Watch ads", sub: "Earn points in Watch & Earn", to: "/watch-earn" },
             { Icon: Goal, title: "Play games", sub: "Score goals in Goal Rush", to: "/goal-rush" },
             { Icon: CalendarDays, title: "Book courts", sub: "Earn on every futsal game", to: "/book" },
             { Icon: Gamepad2, title: "GameZone", sub: "Earn for every hour you play", to: "/gamezone" },
             { Icon: Gift, title: "Gift cards", sub: "Receive points as a gift", to: "/gift-card" },
-            { Icon: Send, title: "Friends top-up", sub: "Ask a friend to share points", to: askFriend, external: true },
+            { Icon: Send, title: "Friends top-up", sub: "Ask a friend to share points", to: "", external: true },
           ];
           const tile = "group flex items-center gap-3 rounded-2xl bg-white/60 px-3.5 py-3 ring-1 ring-black/5 transition hover:bg-white/90 hover:ring-brand/30 active:scale-[0.99]";
           return (
@@ -176,7 +183,7 @@ export default function PointsPage() {
                 return (
                   <li key={title}>
                     {external ? (
-                      <a href={to} target="_blank" rel="noopener noreferrer" className={tile} aria-label={`${title}: ${sub} (opens WhatsApp)`}>{body}</a>
+                      <SendPdfButton label="Friends top-up" build={askFriendPdf} filename={() => pdfFileName("points-request", me)} message="Hi! Could you share some Unique Futsal loyalty points with me? How to do it is in the attached PDF." className={tile + " w-full text-left"} wrapperClassName="">{body}</SendPdfButton>
                     ) : (
                       <Link href={to} className={tile} aria-label={`${title}: ${sub}`}>{body}</Link>
                     )}

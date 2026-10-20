@@ -1,5 +1,9 @@
-// Simple table-to-PDF export for the Profile page (bookings, games, payments).
+// Table-to-PDF export for the Profile page (bookings, games, payments) and the tournament tie-sheet, on the branded Unique Futsal page (lib/branded-pdf.ts).
 import { api } from "@/lib/api";
+import { downloadPdf as downloadBrandedPdf, type PdfSpec } from "@/lib/branded-pdf";
+
+const W_MM = 148; // the branded page (A5) and its side margins, see lib/branded-pdf.ts
+const M_MM = 12;
 // jsPDF is loaded only when a customer taps "Download PDF", so it doesn't weigh down the page.
 
 export interface PdfColumn {
@@ -25,65 +29,20 @@ async function issueCode(title: string, details: string): Promise<string | null>
   }
 }
 
+// The chip in the header: the title itself when it is short, otherwise the part after the colon ("Kala Cup: Tie-sheet" -> "TIE-SHEET").
+const chipOf = (title: string) => (title.length <= 22 ? title : title.split(":").pop()!.trim().slice(0, 22)).toUpperCase();
+
 export async function downloadPdf(t: PdfTable) {
   const code = await issueCode(t.title, (t.lines ?? []).join("\n"));
-  const { jsPDF } = await import("jspdf");
-  const doc = new jsPDF({ unit: "pt", format: "a4" });
-  const M = 40;
-  const pageH = doc.internal.pageSize.getHeight();
-  const lineH = 13;
-  let y = M;
-
-  doc.setFont("helvetica", "bold").setFontSize(18).setTextColor(12, 11, 93);
-  doc.text("Unique Futsal", M, y);
-  y += 22;
-  doc.setFontSize(13).setTextColor(30, 41, 59);
-  doc.text(t.title, M, y);
-  y += 16;
-  doc.setFont("helvetica", "normal").setFontSize(9).setTextColor(100, 116, 139);
-  for (const l of [...(t.lines ?? []), `Generated ${new Date().toLocaleString("en-GB")}`]) {
-    doc.text(l, M, y);
-    y += 12;
-  }
-  y += 8;
-
-  const xs = t.columns.reduce<number[]>((acc, c, i) => [...acc, i === 0 ? M : acc[i - 1] + t.columns[i - 1].width], []);
-
-  const header = () => {
-    doc.setFont("helvetica", "bold").setFontSize(8).setTextColor(100, 116, 139);
-    t.columns.forEach((c, i) => doc.text(c.header.toUpperCase(), xs[i], y));
-    y += 5;
-    doc.setDrawColor(203, 213, 225).line(M, y, 555, y);
-    y += 12;
+  const total = t.columns.reduce((n, c) => n + c.width, 0);
+  const mm = t.columns.map((c) => (c.width / total) * (W_MM - 2 * M_MM)); // the table fills the A5 page
+  const spec: PdfSpec = {
+    purpose: chipOf(t.title),
+    title: t.title,
+    subtitle: (t.lines ?? []).filter(Boolean).join("\n") || undefined,
+    ref: code ?? undefined,
+    table: { head: t.columns.map((c) => c.header), rows: t.rows, widths: mm.slice(1) },
+    note: code ? `Verification number: ${code}. Verify this document at Verify Documents in the Unique Futsal app (uniquefutsal.com/verify).` : undefined,
   };
-  header();
-
-  doc.setFont("helvetica", "normal").setFontSize(9).setTextColor(30, 41, 59);
-  for (const row of t.rows) {
-    const cells = row.map((cell, i) => doc.splitTextToSize(cell, t.columns[i].width - 8) as string[]);
-    const h = Math.max(...cells.map((c) => c.length)) * lineH;
-    if (y + h > pageH - M - 36) {
-      doc.addPage();
-      y = M;
-      header();
-      doc.setFont("helvetica", "normal").setFontSize(9).setTextColor(30, 41, 59);
-    }
-    cells.forEach((c, i) => doc.text(c, xs[i], y));
-    y += h + 4;
-    doc.setDrawColor(241, 245, 249).line(M, y - 2, 555, y - 2);
-  }
-
-  if (code) {
-    const pages = doc.getNumberOfPages();
-    for (let p = 1; p <= pages; p++) {
-      doc.setPage(p);
-      doc.setDrawColor(203, 213, 225).line(M, pageH - 44, 555, pageH - 44);
-      doc.setFont("helvetica", "bold").setFontSize(10).setTextColor(12, 11, 93);
-      doc.text(`Verification number: ${code}`, M, pageH - 30);
-      doc.setFont("helvetica", "normal").setFontSize(8.5).setTextColor(100, 116, 139);
-      doc.text("Verify this document at Verify Documents in uniquefutsal.com/verify", M, pageH - 18);
-    }
-  }
-
-  doc.save(t.filename);
+  await downloadBrandedPdf(spec, t.filename);
 }

@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Copy, LogOut, RefreshCw, Search, UserMinus, X } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa6";
+import SendPdfButton from "@/components/SendPdfButton";
+import { pdfFileName, type PdfSpec } from "@/lib/branded-pdf";
 import { errorText } from "@/lib/api";
 import { askConfirm } from "@/lib/confirm";
 import { MIN_SEARCH_DIGITS, addMembers, inviteLink, removeMember, resetInvite, searchPeople, threadsStore, type ChatInfo, type ChatPerson } from "@/lib/chat";
@@ -111,14 +112,18 @@ export default function GroupInfoSheet({ info, onClose, onChanged }: { info: Cha
               <button type="button" onClick={copy} className="glass-btn flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold">
                 {copied ? <Check size={14} /> : <Copy size={14} />} {copied ? "Copied" : "Copy"}
               </button>
-              <a
-                href={`https://wa.me/?text=${encodeURIComponent(`Join our group "${info.title}" on Unique Futsal: ${link}`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <SendPdfButton
+                label="Share (PDF)"
+                build={(): PdfSpec => ({
+                  purpose: "GROUP INVITE", title: `Join "${info.title}" on Unique Futsal`, subtitle: "You are invited to a chat group.", ref: "GROUP INVITATION",
+                  rows: [{ label: "Group", value: info.title }, { label: "Invite link", value: link, link }],
+                  stepsTitle: "How to join", steps: ["Open the link, or scan the QR code with your phone.", "Sign in to Unique Futsal (or create an account).", "Tap Join to enter the group."],
+                  qr: { data: link, label: "Scan to join the group" }, note: "Only registered Unique Futsal players can join and chat.",
+                })}
+                filename={pdfFileName("group-invite", info.title)}
+                message={`Join our group "${info.title}" on Unique Futsal. The invitation and a QR code are in the attached PDF.`}
                 className="flex items-center gap-1.5 rounded-full bg-[#25D366] px-4 py-2 text-xs font-semibold text-white"
-              >
-                <FaWhatsapp size={14} /> Share
-              </a>
+              />
               <button type="button" onClick={newLink} className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600">
                 <RefreshCw size={13} /> New link
               </button>

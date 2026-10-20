@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, Loader2, MessageCircle, RefreshCw, X } from "lucide-react";
+import { Loader2, RefreshCw, X } from "lucide-react";
+import SendPdfButton from "@/components/SendPdfButton";
+import { blobToDataUrl, pdfFileName, type PdfSpec } from "@/lib/branded-pdf";
 import { errorText } from "@/lib/api";
 import { loadDigitalId, replaceDigitalId, type DigitalId } from "@/lib/digitalid";
-import { cardToBlob, drawIdCard } from "@/lib/idcard";
+import { CARD_H, CARD_W, cardToBlob, drawIdCard } from "@/lib/idcard";
 import { useSession } from "@/lib/session";
 
 import { askConfirm } from "@/lib/confirm";
@@ -49,32 +51,12 @@ export default function DigitalIdSheet({ onClose }: { onClose: () => void }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const file = blob && id ? new File([blob], `unique-futsal-id-${id.phone}.png`, { type: "image/png" }) : null;
-
-  function download() {
-    if (!file) return;
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(file);
-    a.download = file.name;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-  }
-
-  async function share() {
-    if (!file || !id) return;
-    setNote(null);
-    try {
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], text: "My Unique Futsal Digital ID" });
-      } else {
-        download();
-        window.open(`https://wa.me/?text=${encodeURIComponent("My Unique Futsal Digital ID (attach the downloaded picture)")}`, "_blank", "noopener");
-        setNote("The card was saved. Attach it in the WhatsApp chat that opened.");
-      }
-    } catch (e) {
-      if (!(e instanceof DOMException && e.name === "AbortError")) setNote("Could not share. Use Download instead.");
-    }
-  }
+  // the card picture on a branded PDF page (what is downloaded and what is sent on WhatsApp)
+  const cardPdf = async (): Promise<PdfSpec> => ({
+    purpose: "DIGITAL ID", title: "Your Unique Futsal Digital ID", subtitle: "Show the QR at the venue.", ref: id ? `ID-${id.phone}` : undefined,
+    image: { dataUrl: await blobToDataUrl(blob!), width: CARD_W, height: CARD_H },
+    note: "The QR holds none of your details: only Unique Futsal staff can read it. If you lose it or sent it by mistake, make a new QR in the app and this one stops working.",
+  });
 
   async function replace() {
     if (!(await askConfirm("Make a new QR? Your old card will stop working and any copy you sent will no longer be accepted."))) return;
@@ -112,8 +94,8 @@ export default function DigitalIdSheet({ onClose }: { onClose: () => void }) {
 
         {image && (
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <button type="button" onClick={download} className="flex items-center justify-center gap-2 rounded-full bg-white py-3 text-sm font-medium"><Download size={16} /> Download</button>
-            <button type="button" onClick={share} className="flex items-center justify-center gap-2 rounded-full bg-emerald-600 py-3 text-sm font-medium text-white"><MessageCircle size={16} /> WhatsApp</button>
+            <SendPdfButton mode="download" label="Download PDF" build={cardPdf} filename={pdfFileName("digital-id", id?.phone)} message="" className="flex w-full items-center justify-center gap-2 rounded-full bg-white py-3 text-sm font-medium" />
+            <SendPdfButton label="WhatsApp (PDF)" build={cardPdf} filename={pdfFileName("digital-id", id?.phone)} message="My Unique Futsal Digital ID is in the attached PDF." className="flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 py-3 text-sm font-medium text-white" />
           </div>
         )}
         {note && <p role="status" className="mt-3 rounded-2xl bg-white/70 px-4 py-3 text-sm text-slate-600">{note}</p>}
