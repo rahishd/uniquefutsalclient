@@ -34,7 +34,7 @@ export default function HomeScreen() {
         {/* Who is signed in. The bell lives in the page header (components/CompanyHeader.tsx). */}
         <header className="uf-navy-card order-1 -mx-5 -mt-5 overflow-hidden rounded-b-[2rem] bg-[#0c0b5d] tab:mx-0 tab:mt-0 tab:rounded-3xl text-white shadow-[0_10px_30px_rgba(12,11,93,0.35)]">
           {/* phone: the logo, points and bell sit on the top row of this one card (on desktop the bar above does this) */}
-          <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+3.5rem)] desk:hidden">
+          <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-[calc(max(env(safe-area-inset-top),2.75rem)+0.5rem)] desk:hidden">
             <div className="flex min-w-0 items-center gap-2.5">
               <img src="/logo-mark-white.png" alt="" aria-hidden className="h-9 w-auto shrink-0" />
               <span className="whitespace-nowrap text-sm font-extrabold uppercase tracking-wide">{site.name}</span>

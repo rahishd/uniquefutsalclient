@@ -260,7 +260,7 @@ export default function ThreadView({ id }: { id: string }) {
           e.preventDefault();
           void submit();
         }}
-        className="fixed inset-x-0 bottom-20 z-10 mx-auto flex w-full max-w-md items-end gap-2 border-t border-slate-100 bg-white px-5 py-3 tab:max-w-2xl desk:bottom-0 desk:max-w-2xl"
+        className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+3.75rem)] z-10 mx-auto flex w-full max-w-md items-end gap-2 border-t border-slate-100 bg-white px-5 py-3 tab:max-w-2xl desk:bottom-0 desk:max-w-2xl"
       >
         <button type="button" onClick={() => setSharing(true)} aria-label="Share a booking" title="Share a booking" className="glass-active flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#0c0b5d]">
           <CalendarPlus size={19} />

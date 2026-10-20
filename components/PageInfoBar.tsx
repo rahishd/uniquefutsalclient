@@ -18,7 +18,7 @@ export default function PageInfoBar() {
   const name = session?.registered ? (session.name ?? "").trim().split(/\s+/)[0] || "Player" : "Guest";
 
   return (
-    <div className="glass sticky top-0 z-30 rounded-none border-0 shadow-md short:static desk:hidden" style={{ paddingTop: "calc(env(safe-area-inset-top) + 40px)" }}>
+    <div className="glass sticky top-0 z-30 rounded-none border-0 shadow-md short:static desk:hidden" style={{ paddingTop: "max(env(safe-area-inset-top), 2.75rem)" }}>
       <div className="flex items-center gap-2 px-5 py-2">
         <div className="min-w-0 flex-1 leading-tight">
           <p className="truncate text-sm font-semibold">

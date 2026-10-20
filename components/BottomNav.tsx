@@ -26,8 +26,8 @@ export default function BottomNav() {
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/"));
 
   return (
-    <nav aria-label="Primary" className="pointer-events-none fixed inset-x-0 bottom-0 z-50 px-0 pb-[env(safe-area-inset-bottom)] short:pb-[calc(env(safe-area-inset-bottom)+4px)] desk:hidden">
-      <div className="pointer-events-auto mx-auto flex w-full items-center justify-between gap-1 rounded-t-[28px] bg-[rgba(255,255,255,0.86)] px-3 pb-[calc(env(safe-area-inset-bottom)+22px)] pt-2 tab:max-w-xl short:rounded-t-[22px] short:pb-[calc(env(safe-area-inset-bottom)+14px)] short:pt-1 shadow-[0_14px_34px_-12px_rgba(15,23,42,0.28)] ring-1 ring-sky-100 backdrop-blur-xl">
+    <nav aria-label="Primary" className="pointer-events-none fixed inset-x-0 bottom-0 z-50 px-0 desk:hidden">
+      <div className="pointer-events-auto flex w-full items-center justify-between gap-1 border-t border-sky-100 bg-white px-2 pb-[calc(env(safe-area-inset-bottom)+2px)] pt-1.5 short:pt-1 shadow-[0_-8px_24px_-14px_rgba(15,23,42,0.25)]">
         {TABS.map(({ label, href, icon: Icon }) => {
           const active = isActive(href);
           return (
