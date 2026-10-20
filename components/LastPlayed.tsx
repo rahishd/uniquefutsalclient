@@ -36,7 +36,7 @@ export default function LastPlayed({ embedded = false }: { embedded?: boolean })
   const [last, ...before] = games;
 
   return (
-    <section aria-label="Last played" className={embedded ? "relative mt-3 rounded-2xl bg-white/60 p-3 text-[#0c0b5d]" : "order-1 mx-0 mt-3 rounded-3xl bg-[#dcebff] p-4 text-[#0c0b5d] desk:mt-4 desk:p-5"}>
+    <section aria-label="Last played" className={embedded ? "relative mt-2.5 rounded-2xl bg-white/60 px-3 py-2 text-[#0c0b5d]" : "order-1 mx-0 mt-3 rounded-3xl bg-[#dcebff] p-4 text-[#0c0b5d] desk:mt-4 desk:p-5"}>
       <div className="flex items-center justify-between gap-3">
         <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider"><History size={14} /> Last played</p>
         <Link href="/profile" className="flex items-center gap-0.5 text-xs font-semibold">All games <ChevronRight size={14} /></Link>
