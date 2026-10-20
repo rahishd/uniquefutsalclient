@@ -1,5 +1,6 @@
 "use client";
 
+import { startLoginSplash } from "@/lib/splash";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Cake, CheckCircle2, Eye, EyeOff, HeartPulse, Loader2, Lock, Phone, ScanFace, User } from "lucide-react";
@@ -100,6 +101,7 @@ export default function AuthForm() {
     setError(null);
     try {
       await signInWithPasskey();
+      startLoginSplash(); // the splash screen plays once on the next page, only after a sign-in
       window.location.assign(nextPath());
     } catch (err) {
       if (!passkeyCancelled(err)) setError(errorText(err));
@@ -115,6 +117,7 @@ export default function AuthForm() {
     try {
       if (mode === "in") await signIn(phone, password);
       else await signUp({ name: name.trim(), phone, password, dateOfBirth: dob, emergencyName: emName.trim(), emergencyPhone: emPhone, emergencyRelation: emRelation.trim() });
+      startLoginSplash(); // the splash screen plays once on the next page, only after a sign-in
       window.location.assign(nextPath());
     } catch (err) {
       setError(errorText(err));

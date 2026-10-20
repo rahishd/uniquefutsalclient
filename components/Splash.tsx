@@ -1,7 +1,6 @@
-// Splash screen shown when the site is opened (typing the address, a new tab, the installed app), on phones and desktops.
-// Pure HTML and CSS (see .uf-splash in globals.css): it is in the first HTML the server sends, so it shows before any script
-// runs, plays for about 5 seconds and fades out by itself. It plays on every full page load (opening the site, refreshing);
-// moving between pages inside the app does not reload the page, so it does not replay then. "Reduce motion" gets a short, still version.
+// Splash screen shown ONLY while someone signs in (components/LoginSplash.tsx mounts it when lib/session.ts finishes a sign-in).
+// It does not play when the site is opened, refreshed or opened in a new tab. Pure HTML and CSS (see .uf-splash in globals.css):
+// it plays for about 5.75 seconds and fades out by itself. "Reduce motion" gets a short, still version.
 // Dark blue screen: the white player lights up from the feet to the head, then kicks the ball. The ball flies up and fills
 // as the progress to opening the home screen, comes back to the player's foot and spins with a loading ring until the splash ends.
 const NAME = "UNIQUE FUTSAL";
