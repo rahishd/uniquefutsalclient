@@ -1,10 +1,12 @@
 "use client";
 
+import { useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Home, CalendarDays, User, Gamepad2, MessageCircle } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Home, CalendarDays, User, Gamepad2, MessageCircle, Check, RefreshCw } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { unreadStore } from "@/lib/chat";
+import { refreshAllStores } from "@/lib/remote-store";
 
 const TABS = [
   { label: "Home", href: "/", icon: Home },
@@ -19,7 +21,28 @@ const TABS = [
 // (the name is still read out by screen readers and shown as a tooltip).
 export default function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const t = useT();
+  const [refresh, setRefresh] = useState<"refreshing" | "done" | null>(null);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // tapping the tab you are already on reloads that page: back to the top, fresh data, with a short "Refreshing / Refreshed" note
+  async function reload() {
+    if (refresh === "refreshing") return;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    setRefresh("refreshing");
+    const started = Date.now();
+    try {
+      router.refresh();
+      await refreshAllStores();
+    } catch {
+      // a failed reload still ends the note; the page keeps what it had
+    }
+    await new Promise((r) => setTimeout(r, Math.max(0, 700 - (Date.now() - started)))); // long enough to be seen
+    setRefresh("done");
+    hideTimer.current = setTimeout(() => setRefresh(null), 1400);
+  }
   const unread = unreadStore.use().data ?? 0;
   // the sign-in page is a clean card on its own
   if (pathname === "/login" || pathname.startsWith("/login/")) return null;
@@ -27,6 +50,14 @@ export default function BottomNav() {
 
   return (
     <nav aria-label="Primary" className="pointer-events-none fixed inset-x-0 bottom-0 z-50 px-0 desk:hidden">
+      {refresh && (
+        <div role="status" aria-live="polite" className="pointer-events-none absolute inset-x-0 bottom-[calc(100%+0.5rem)] flex justify-center">
+          <span className="flex items-center gap-2 rounded-full bg-[#0c0b5d] px-4 py-2 text-xs font-semibold text-white shadow-lg">
+            {refresh === "refreshing" ? <RefreshCw size={14} className="animate-spin" aria-hidden /> : <Check size={14} aria-hidden />}
+            {refresh === "refreshing" ? "Refreshing…" : "Refreshed"}
+          </span>
+        </div>
+      )}
       <div className="pointer-events-auto flex w-full items-center justify-between gap-1 border-t border-sky-100 bg-white px-2 pb-[calc(env(safe-area-inset-bottom)+2px)] pt-1.5 short:pt-1 shadow-[0_-8px_24px_-14px_rgba(15,23,42,0.25)]">
         {TABS.map(({ label, href, icon: Icon }) => {
           const active = isActive(href);
@@ -37,6 +68,12 @@ export default function BottomNav() {
               aria-current={active ? "page" : undefined}
               aria-label={t(label)}
               title={t(label)}
+              onClick={(e) => {
+                if (pathname === href) {
+                  e.preventDefault();
+                  void reload();
+                }
+              }}
               className={`relative flex h-12 short:h-10 items-center justify-center gap-2 rounded-[20px] transition-all duration-300 ${
                 active
                   ? "glass-active flex-[1.9] px-4 text-[#0c0b5d]"

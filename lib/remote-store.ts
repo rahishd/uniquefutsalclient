@@ -13,6 +13,14 @@ export interface RemoteState<T> {
 
 const IDLE = { status: "idle" } as const;
 
+// every store, so "refresh this page" can reload whatever is on screen in one go
+const registry: { refresh: () => Promise<void>; active: () => boolean }[] = [];
+
+/** Reload every store that a component is showing right now. Resolves when they have all finished (or failed). */
+export async function refreshAllStores(): Promise<void> {
+  await Promise.allSettled(registry.filter((s) => s.active()).map((s) => s.refresh()));
+}
+
 export function createRemoteStore<T>(fetcher: () => Promise<T>, opts: { pollMs?: number; signedOut?: T } = {}) {
   let state: RemoteState<T> = IDLE;
   const listeners = new Set<() => void>();
@@ -79,6 +87,8 @@ export function createRemoteStore<T>(fetcher: () => Promise<T>, opts: { pollMs?:
       if (listeners.size > 0) void refresh();
     });
   }
+
+  registry.push({ refresh, active: () => listeners.size > 0 });
 
   return {
     use: (): RemoteState<T> => useSyncExternalStore(subscribe, () => state, () => IDLE),
