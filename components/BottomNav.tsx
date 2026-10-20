@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Home, CalendarDays, User, Gamepad2, MessageCircle, Check, RefreshCw } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { unreadStore } from "@/lib/chat";
-import { refreshAllStores } from "@/lib/remote-store";
+
+const REFRESHED_KEY = "uf-refreshed";
 
 const TABS = [
   { label: "Home", href: "/", icon: Home },
@@ -21,27 +22,32 @@ const TABS = [
 // (the name is still read out by screen readers and shown as a tooltip).
 export default function BottomNav() {
   const pathname = usePathname();
-  const router = useRouter();
   const t = useT();
   const [refresh, setRefresh] = useState<"refreshing" | "done" | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // tapping the tab you are already on reloads that page: back to the top, fresh data, with a short "Refreshing / Refreshed" note
-  async function reload() {
+  // After a refresh the page has started over, so show "Refreshed" for a moment on the new page.
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(REFRESHED_KEY) !== "1") return;
+      sessionStorage.removeItem(REFRESHED_KEY);
+    } catch {
+      return;
+    }
+    const show = setTimeout(() => setRefresh("done"), 0);
+    hideTimer.current = setTimeout(() => setRefresh(null), 1400);
+    return () => { clearTimeout(show); if (hideTimer.current) clearTimeout(hideTimer.current); };
+  }, []);
+
+  // Tapping the tab you are already on reloads this whole page, like the browser refresh button: the latest version of the app,
+  // fresh data, back at the top. "Refreshing" shows for a moment, then "Refreshed" on the new page.
+  function reload() {
     if (refresh === "refreshing") return;
-    window.scrollTo({ top: 0, behavior: "smooth" });
     if (hideTimer.current) clearTimeout(hideTimer.current);
     setRefresh("refreshing");
-    const started = Date.now();
-    try {
-      router.refresh();
-      await refreshAllStores();
-    } catch {
-      // a failed reload still ends the note; the page keeps what it had
-    }
-    await new Promise((r) => setTimeout(r, Math.max(0, 700 - (Date.now() - started)))); // long enough to be seen
-    setRefresh("done");
-    hideTimer.current = setTimeout(() => setRefresh(null), 1400);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    try { sessionStorage.setItem(REFRESHED_KEY, "1"); } catch { /* the page still reloads, just without the note */ }
+    setTimeout(() => window.location.reload(), 500);
   }
   const unread = unreadStore.use().data ?? 0;
   // the sign-in page is a clean card on its own
