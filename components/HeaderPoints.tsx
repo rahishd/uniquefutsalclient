@@ -15,7 +15,7 @@ export default function HeaderPoints() {
     <Link
       href="/points"
       aria-label={points === null ? "Loyalty points" : `${fmtPts(points)} loyalty points available`}
-      className="inline-flex items-center gap-1.5 rounded-full bg-white py-1.5 pl-2.5 pr-3 font-extrabold text-[#0c0b5d] shadow-md ring-2 ring-white/30"
+      className="inline-flex items-center gap-1.5 rounded-full bg-white py-1.5 pl-2.5 pr-3 font-extrabold text-[#0c0b5d]"
     >
       <Star size={15} className="fill-[#f5822a] text-[#f5822a]" />
       <span className="text-sm leading-none tabular-nums">{points === null ? "--" : fmtPts(points)}</span>
