@@ -474,3 +474,15 @@ html.dark img.uf-hdr-logo { filter: none; }
     font-size: 16px;
   }
 }
+
+
+/* Home, desktop mode: when the right-hand sidebar has nothing to show (a guest, no offers yet), the main column takes the full width instead of leaving a blank third. */
+@media (min-width: 1024px) and ((orientation: landscape) or ((hover: hover) and (pointer: fine))) {
+  .uf-home:not(:has(> .uf-home-side > div:not(:empty))) .uf-home-main { grid-column: span 12 / span 12; }
+  .uf-home:not(:has(> .uf-home-side > div:not(:empty))) .uf-home-side { display: none; }
+}
+/* Same on a tablet: no sidebar content, so the left column takes the full width. */
+@media (min-width: 640px) {
+  .uf-home:not(:has(> .uf-home-side > div:not(:empty))) > .uf-home-left { grid-column: span 12 / span 12; }
+  .uf-home:not(:has(> .uf-home-side > div:not(:empty))) > .uf-home-side { display: none; }
+}

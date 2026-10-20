@@ -51,7 +51,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <PageTranslator />
         <ConfirmHost />
         <CompanyHeader />
-        <main className="mx-auto w-full max-w-md px-5 pb-6 pt-5 min-h-[60vh] tab:max-w-3xl tab:px-8 desk:max-w-none desk:px-10 desk:pb-8 desk:pt-8">{children}</main>
+        <main className="mx-auto w-full max-w-md px-5 pb-6 pt-5 min-h-[60vh] tab:max-w-3xl tab:px-8 desk:max-w-[1320px] desk:px-10 desk:pb-8 desk:pt-8">{children}</main>
         <FooterGate />
         <BottomNav />
         <BackToTop />

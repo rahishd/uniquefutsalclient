@@ -25,7 +25,7 @@ export default function CompanyHeader() {
     <>
       {!home && !signIn && <PageInfoBar />}
       <div className={`hidden desk:block uf-navy-header sticky top-0 z-30 pt-[calc(env(safe-area-inset-top)+1.5rem)] desk:pt-[env(safe-area-inset-top)] shadow-[0_8px_24px_-14px_rgba(12,11,93,0.45)]`}>
-      <div className="mx-auto w-full max-w-md px-5 tab:max-w-3xl tab:px-8 desk:max-w-none desk:px-10">
+      <div className="mx-auto w-full max-w-md px-5 tab:max-w-3xl tab:px-8 desk:max-w-[1320px] desk:px-10">
         <div className="flex min-h-11 items-center gap-3 py-2 tab:gap-4 pr-1 desk:gap-3 2xl:gap-6">
           <Link href="/" aria-label={`${site.name} home`} className="flex min-w-0 items-center gap-2.5 desk:shrink-0">
             {/* The kicking player alone, in white on the navy bar, with no tile behind it (public/logo-mark-white.png) */}

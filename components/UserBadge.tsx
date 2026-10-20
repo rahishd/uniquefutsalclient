@@ -26,7 +26,7 @@ export default function UserBadge() {
   const clubMember = Boolean(session?.registered && club?.member); // active Unique Club member
 
   return (
-    <div className={`order-1 mt-3 flex w-full min-w-0 items-center gap-3 rounded-3xl border p-3 text-[#0c0b5d] desk:mt-4 desk:p-4 ${vip
+    <div className={`order-1 mt-3 flex w-full min-w-0 items-center gap-3 rounded-3xl border p-3 text-[#0c0b5d] desk:col-span-6 desk:mt-0 desk:p-4 ${vip
       ? "border-rose-300 bg-gradient-to-br from-[#ffe9ec] via-[#ffd0d6] to-[#ffb3be] shadow-[0_8px_22px_-12px_rgba(225,29,72,0.6)]"
       : "border-emerald-300 bg-gradient-to-br from-[#e6fbed] via-[#ccf5d9] to-[#a9ecc0] shadow-[0_8px_22px_-12px_rgba(16,185,129,0.55)]"}`}>
       <Link href="/profile" className="flex min-w-0 flex-1 items-center gap-3">

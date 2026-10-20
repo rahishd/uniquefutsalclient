@@ -24,7 +24,7 @@ export default function TodayCard() {
   const code = weather ? weather.code : 2;
 
   return (
-    <section aria-label="Today at the venue" className="uf-keep relative order-1 mt-3 overflow-hidden rounded-3xl border border-white/10 p-3.5 shadow-[0_10px_26px_-8px_rgba(5,10,43,0.7)] desk:mt-4 desk:p-4"
+    <section aria-label="Today at the venue" className="uf-keep relative order-1 mt-3 overflow-hidden rounded-3xl border border-white/10 p-3.5 shadow-[0_10px_26px_-8px_rgba(5,10,43,0.7)] desk:col-span-6 desk:mt-0 desk:p-4"
       style={{ background: "linear-gradient(135deg, #0c0b5d 0%, #08084a 55%, #050a2b 100%)", color: "#ffffff" }}>
       {/* soft glow in the corner */}
       <span aria-hidden className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-[#3b4bd8] opacity-40 blur-3xl" />
