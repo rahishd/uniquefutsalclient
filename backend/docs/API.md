@@ -104,7 +104,7 @@ Sharing: the sender gets one `shared_out` row (negative, source `share`), the fr
 | GET | `/gamezone/catalog` | Guest | consoles, games, plans, rules |
 | GET | `/gamezone/slots?date=&hours=&consoleId=` | Guest | free start hours for that console |
 | POST | `/gamezone/bookings` | Guest or User | `{date,hour,hours,players(1/2/4),consoleId,game,method,guest?}`; total = rate x players x hours (server) |
-| GET | `/gamezone/bookings/me` | User | |
+| GET | `/gamezone/bookings/me` | User | each session has `clock` (null until staff press Start in the admin portal): `{startedAt,endedAt,bookedMinutes,hourlyRate,extraMinutes,extraCharge,now}`. `now` is the server time so the countdown is right on any phone. Minutes past the booked time are charged at `hourlyRate / 60` per started minute and added to `total` when staff stop the session. Read from the admin-owned table `GzClock` (the app keeps working without it). The minute job (`sendGamezoneClockNotices`) sends "Your PS5 session ends in N minutes" (about 5 minutes before the end) and "Your PS5 time is up", once each |
 | POST | `/gamezone/bookings/:code/cancel` | Owner | before the session starts |
 | POST | `/gamezone/bookings/:code/arrival` | Owner | check-in window like court bookings |
 | GET/POST | `/gamezone/admin/bookings`, `/admin/bookings/:code/mark-paid` | Staff | |

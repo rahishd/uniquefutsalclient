@@ -5,6 +5,7 @@ import { AppError } from "../../middlewares/error.middleware";
 import paymentService, { QR_HOLD_MS } from "../payment/payment.service";
 import notificationService from "../notification/notification.service";
 import { addDaysKey, currentHour, startsAtMs, todayKey } from "../../utils/dates";
+import { clockView, loadClocks } from "./gamezone.clock";
 
 // Gamezone (PS5) rules for the customer app. Values here are the defaults the owner gave; the consoles, games
 // and per-person rates live in the database and staff can change them.
@@ -196,7 +197,10 @@ export class GamezoneCustomerService {
   async mine(userId: string) {
     const consoles = new Map((await prisma.gzConsole.findMany()).map((c) => [c.id, c.name]));
     const rows = await prisma.gzBooking.findMany({ where: { userId }, orderBy: [{ date: "desc" }, { startHour: "desc" }], take: 200 });
-    return rows.map((b) => this.view(b, consoles.get(b.consoleId)));
+    // clock: null until staff press Start; then the countdown, and any extra minutes billed per minute (see gamezone.clock.ts)
+    const clocks = await loadClocks(rows.map((b) => b.code));
+    const now = new Date();
+    return rows.map((b) => ({ ...this.view(b, consoles.get(b.consoleId)), clock: clocks.has(b.code) ? clockView(clocks.get(b.code)!, now) : null }));
   }
 
   // The owner of a session may cancel it before it starts. The record is kept.

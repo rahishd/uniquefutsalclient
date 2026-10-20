@@ -9,6 +9,7 @@ import clubService from "../modules/club/club.service";
 import goalRushService from "../modules/goalrush/goalrush.service";
 import watchEarnService from "../modules/watchearn/watchearn.service";
 import { addDaysKey, startsAtMs, todayKey } from "../utils/dates";
+import { perMinute, runningClocks } from "../modules/gamezone/gamezone.clock";
 
 // Jobs for the customer app. Each one is safe to run twice: notices carry a dedupe key and every state change is guarded.
 
@@ -44,6 +45,35 @@ export async function sendAppReminders(now = Date.now()): Promise<number> {
   return sent;
 }
 
+// A started Gamezone session: about 5 minutes before the booked time ends the customer is warned that extra time will be charged per
+// minute, and once it has ended they are told the per-minute charge has started. Each notice is sent once (dedupe key), so running this
+// every minute is safe. Needs the minute job: the warning window is only 5 minutes wide.
+export const GZ_WARN_MS = 5 * 60000;
+export async function sendGamezoneClockNotices(now = Date.now()): Promise<number> {
+  let sent = 0;
+  for (const c of await runningClocks()) {
+    const g = await prisma.gzBooking.findUnique({ where: { code: c.bookingCode } });
+    if (!g?.userId || g.status !== "confirmed") continue; // guests have no inbox
+    const remaining = c.startedAt.getTime() + c.bookedMinutes * 60000 - now;
+    const rate = perMinute(c.hourlyRate);
+    if (remaining <= 0) {
+      await notificationService.notify({
+        userId: g.userId, type: "gamezone", title: "Your PS5 time is up",
+        message: `Extra time is now charged at Rs. ${rate} per minute until the session is stopped. Session ${g.code}.`, href: `/booking/${g.code}`, dedupeKey: `gz-over-${g.code}`,
+      });
+      sent++;
+    } else if (remaining <= GZ_WARN_MS) {
+      const mins = Math.max(1, Math.ceil(remaining / 60000));
+      await notificationService.notify({
+        userId: g.userId, type: "gamezone", title: `Your PS5 session ends in ${mins} ${mins === 1 ? "minute" : "minutes"}`,
+        message: `Please wrap up. After that, extra time is charged at Rs. ${rate} per minute until the session is stopped. Session ${g.code}.`, href: `/booking/${g.code}`, dedupeKey: `gz-warn-${g.code}`,
+      });
+      sent++;
+    }
+  }
+  return sent;
+}
+
 // Challenges nobody answered before the game time are closed.
 export async function expireChallenges(now = Date.now()): Promise<number> {
   const open = await prisma.challenge.findMany({ where: { status: "pending", date: { lte: todayKey(new Date(now)) } } });
@@ -62,6 +92,7 @@ export async function runAppJobs(which: "minute" | "tenMinutes" | "daily") {
     if (which === "minute") {
       const n = await paymentService.expireDue();
       if (n) logger.info(`Expired ${n} unpaid payment holds`);
+      await sendGamezoneClockNotices();
       const pr = await playerRequestService.sweep();
       if (pr) logger.info(`Settled ${pr} Find Player requests`);
     } else if (which === "tenMinutes") {

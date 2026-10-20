@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CalendarCheck, Check, Clock, Loader2, X } from "lucide-react";
+import { CalendarCheck, Check, Clock, Gamepad2, Loader2, X } from "lucide-react";
 import CharityLine from "@/components/CharityLine";
+import SessionClock from "@/components/gamezone/SessionClock";
 import ShareBooking, { bookingShareText } from "@/components/ShareBooking";
 import { cancelBooking, formatHour, formatRs, myBookingsStore, parseKey, startsAtMs, type Booking } from "@/lib/booking";
 import { cancelGz, myGzStore, type GzBooking } from "@/lib/gamezone";
+import { clockAt, useNow } from "@/lib/gz-clock";
 import { METHOD_LABEL } from "@/lib/payment";
 import { errorText } from "@/lib/api";
 import { askConfirm } from "@/lib/confirm";
@@ -15,11 +17,12 @@ import { openSignIn, useSession } from "@/lib/session";
 const longDate = (key: string) => parseKey(key).toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 const hourOf = (t: string) => parseInt(t.split(":")[0], 10);
 
-type State = "confirmed" | "reserved" | "waiting" | "done" | "cancelled";
+type State = "confirmed" | "reserved" | "waiting" | "playing" | "done" | "cancelled";
 const STATE: Record<State, { title: string; note: string; tone: string }> = {
   confirmed: { title: "Booking confirmed", note: "Payment received. See you there!", tone: "bg-emerald-500/15 text-emerald-600" },
   reserved: { title: "Booking reserved", note: "Please pay at the venue when you arrive.", tone: "bg-emerald-500/15 text-emerald-600" },
   waiting: { title: "Waiting for payment", note: "Your slot is held until the payment is verified.", tone: "bg-amber-400/20 text-amber-600" },
+  playing: { title: "Session in progress", note: "Your time is running. Extra minutes are charged per minute once it ends.", tone: "bg-emerald-500/15 text-emerald-600" },
   done: { title: "Completed", note: "Thanks for playing with us.", tone: "bg-sky-400/20 text-sky-600" },
   cancelled: { title: "Cancelled", note: "This booking was cancelled.", tone: "bg-rose-400/20 text-rose-600" },
 };
@@ -63,7 +66,7 @@ function Shell({ state, id, rows, total, children }: { state: State; id: string;
     <div className="space-y-5 pb-4 desk:mx-auto desk:max-w-2xl">
       <div className="glass rounded-3xl p-6 text-center">
         <span className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${s.tone}`}>
-          {state === "cancelled" ? <X size={34} /> : state === "waiting" ? <Clock size={32} /> : state === "done" ? <CalendarCheck size={32} /> : <Check size={34} />}
+          {state === "cancelled" ? <X size={34} /> : state === "waiting" ? <Clock size={32} /> : state === "playing" ? <Gamepad2 size={32} /> : state === "done" ? <CalendarCheck size={32} /> : <Check size={34} />}
         </span>
         <h1 className="mt-4 text-2xl font-semibold">{s.title}</h1>
         <p className="mt-1 text-sm text-slate-500">{s.note}</p>
@@ -113,10 +116,13 @@ function Back() {
 
 function GamezoneDetail({ g }: { g: GzBooking }) {
   const [now] = useState(() => Date.now()); // when the page opened
+  const tick = useNow();
   const startsMs = startsAtMs({ date: g.date, startTime: `${g.startHour}:00` });
   const gone = g.status === "cancelled" || g.status === "expired";
   const paid = g.paymentStatus === "paid";
-  const state: State = gone ? "cancelled" : startsMs + g.hours * 3600000 < now ? "done" : paid ? "confirmed" : g.paymentStatus === "pending" ? "waiting" : "reserved";
+  // A started session shows its live clock, and its total grows with the extra minutes (the final bill is made by the venue when it is stopped)
+  const live = g.clock && !g.clock.endedAt && !gone ? clockAt(g.clock, tick) : null;
+  const state: State = gone ? "cancelled" : live ? "playing" : g.status === "completed" || startsMs + g.hours * 3600000 < now ? "done" : paid ? "confirmed" : g.paymentStatus === "pending" ? "waiting" : "reserved";
   const rows: [string, string][] = [
     ["Date", longDate(g.date)],
     ["Time", `${formatHour(g.startHour)} – ${formatHour(g.startHour + g.hours)} (${g.hours} hr)`],
@@ -124,12 +130,15 @@ function GamezoneDetail({ g }: { g: GzBooking }) {
     ["Game", g.game],
     ["Players", g.players === 1 ? "Solo" : `${g.players} Players`],
     ["Payment", paid ? `Paid via ${METHOD_LABEL[g.paymentMethod] ?? "online"}` : g.paymentStatus === "pay_at_venue" ? "Pay at venue" : "Awaiting payment"],
+    ...(g.clock?.endedAt && g.clock.extraMinutes > 0 ? [["Extra time", `${g.clock.extraMinutes} min · ${formatRs(g.clock.extraCharge)}`] as [string, string]] : []),
+    ...(live && live.extraMinutes > 0 ? [["Extra time so far", `${live.extraMinutes} min · ${formatRs(live.extraCharge)}`] as [string, string]] : []),
   ];
   const share = bookingShareText(paid ? "🎮 Gamezone booked" : "🎮 Gamezone reserved", rows.slice(0, 4), g.code);
   return (
-    <Shell state={state} id={g.code} rows={rows} total={g.total}>
+    <Shell state={state} id={g.code} rows={rows} total={g.total + (live?.extraCharge ?? 0)}>
+      <SessionClock g={g} />
       {!gone && <ShareBooking registered text={share} />}
-      {state !== "cancelled" && state !== "done" && startsMs > now && <CancelButton label="Gamezone session" onCancel={() => cancelGz(g.code)} />}
+      {state !== "cancelled" && state !== "done" && state !== "playing" && !g.clock && startsMs > now && <CancelButton label="Gamezone session" onCancel={() => cancelGz(g.code)} />}
       <Back />
     </Shell>
   );

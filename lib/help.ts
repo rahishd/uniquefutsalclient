@@ -99,6 +99,8 @@ export const helpTopics: HelpTopic[] = [
       "Choose your game: GTA 5, Forza Horizon, Red Dead Redemption or FIFA 26.",
       "Choose a day and a start time, then pay the same way as a game booking (Fonepay or at the venue).",
       "Guests pay online in full. Signed-in customers can also pay at the venue.",
+      "When you arrive, the staff press Start and your booked time begins. Open your booking to watch the time left. About 5 minutes before it ends you get a notice: finish up, or extra time is charged per minute (your hourly price ÷ 60).",
+      "After your time ends, the extra minutes and the extra price count up live on your booking, the same as the staff see. The staff stop your session when you finish and the extra is added to your final bill.",
     ],
     href: { label: "Book Gamezone", to: "/gamezone" },
   },
