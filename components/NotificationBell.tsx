@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import { HIGHLIGHT_EVENT, hlOf } from "@/lib/highlight";
 import { Accessibility, AlarmClock, ShieldPlus, Bell, BellRing, CalendarCheck, CreditCard, Crown, Gamepad2, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, UserSearch, X } from "lucide-react";
 import {
@@ -55,6 +56,7 @@ export default function NotificationBell() {
   const unread = notices.filter((n) => !n.read).length;
 
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ top: 64, right: 20 }); // where the panel sits: just under the bell
   // While the panel is open the page behind must not scroll: lock it, and let the list scroll on its own.
   useEffect(() => {
     if (!open) return;
@@ -115,6 +117,8 @@ export default function NotificationBell() {
         ref={btnRef}
         type="button"
         onClick={() => {
+          const r = btnRef.current?.getBoundingClientRect();
+          if (r) setPos({ top: r.bottom + 8, right: Math.max(window.innerWidth - r.right, 8) });
           setPerm(notificationSupport()); // read the browser's current permission each time it opens
           setOpen((o) => !o);
         }}
@@ -139,17 +143,18 @@ export default function NotificationBell() {
       {/* Screen-reader announcements for new notifications */}
       <p className="sr-only" role="status" aria-live="polite">{announce}</p>
 
-      {open && (
+      {/* Rendered on document.body: the page header clips anything inside it (overflow-hidden), which cut the panel into a white box. */}
+      {open && createPortal(
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden />
+          <div className="fixed inset-0 z-[90]" onClick={() => setOpen(false)} aria-hidden />
           <div
             ref={panelRef}
             id={panelId}
             role="dialog"
             aria-label="Notifications"
             tabIndex={-1}
-            className="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2.5rem))] overscroll-contain rounded-3xl p-4 outline-none shadow-[0_20px_50px_rgba(12,11,93,0.25)] ring-1 ring-white/80"
-            style={{ background: "#ffffff" }}
+            className="fixed z-[91] w-[min(22rem,calc(100vw-2.5rem))] overscroll-contain rounded-3xl p-4 outline-none shadow-[0_20px_50px_rgba(12,11,93,0.25)] ring-1 ring-white/80"
+            style={{ background: "#ffffff", top: pos.top, right: pos.right }}
           >
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold">Notifications</h2>
@@ -217,7 +222,8 @@ export default function NotificationBell() {
               </>
             )}
           </div>
-        </>
+        </>,
+        document.body,
       )}
     </div>
   );
