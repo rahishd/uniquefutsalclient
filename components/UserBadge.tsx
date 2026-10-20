@@ -26,17 +26,17 @@ export default function UserBadge() {
   const clubMember = Boolean(session?.registered && club?.member); // active Unique Club member
 
   return (
-    <div className={`order-1 mt-3 flex w-full min-w-0 items-center gap-3 rounded-3xl border p-3 text-[#0c0b5d] desk:col-span-6 desk:mt-0 desk:p-4 ${vip
-      ? "border-rose-300 bg-gradient-to-br from-[#ffe9ec] via-[#ffd0d6] to-[#ffb3be] shadow-[0_8px_22px_-12px_rgba(225,29,72,0.6)]"
-      : "border-emerald-300 bg-gradient-to-br from-[#e6fbed] via-[#ccf5d9] to-[#a9ecc0] shadow-[0_8px_22px_-12px_rgba(16,185,129,0.55)]"}`}>
+    <div className={`order-1 mt-3 flex w-full min-w-0 items-center gap-3 rounded-3xl border p-3 desk:col-span-6 desk:mt-0 desk:p-4 ${vip
+      ? "text-[#0c0b5d] border-rose-300 bg-gradient-to-br from-[#ffe9ec] via-[#ffd0d6] to-[#ffb3be] shadow-[0_8px_22px_-12px_rgba(225,29,72,0.6)]"
+      : "text-white border-emerald-700 bg-gradient-to-br from-[#06402b] via-[#0a5a3c] to-[#0f7a50] shadow-[0_8px_22px_-12px_rgba(6,64,43,0.7)]"}`}>
       <Link href="/profile" className="flex min-w-0 flex-1 items-center gap-3">
         {session ? <ProfileAvatar name={name} captain={captain} size={56} src={session.registered ? session.avatar : null} /> : <span className="block h-14 w-14 shrink-0 rounded-full bg-white/60" />}
         <span className="min-w-0">
-          <span className={`block text-sm ${vip ? "text-rose-900/70" : "text-emerald-900/70"}`}>
+          <span className={`block text-sm ${vip ? "text-rose-900/70" : "text-emerald-100/80"}`}>
             {captain ? t("Captain") : t("Hello")} <span aria-hidden>👋</span>
           </span>
           <span className="block min-h-8 truncate text-xl font-medium leading-tight tab:text-2xl">{session ? name : ""}</span>
-          {clubMember && <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-[#0c0b5d] px-2.5 py-0.5 text-[11px] font-semibold text-white"><BadgeCheck size={13} aria-hidden /> Club Member</span>}
+          {clubMember && <span className={`mt-1 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${vip ? "bg-[#0c0b5d] text-white" : "bg-white text-emerald-900"}`}><BadgeCheck size={13} aria-hidden /> Club Member</span>}
         </span>
       </Link>
       {/* the quick icons: a 2 x 2 block of white round buttons on phones and tablets; one big row on desktop */}
