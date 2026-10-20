@@ -513,6 +513,7 @@ export const helpTopics: HelpTopic[] = [
       "Only registered Unique Futsal players can chat. A red number on the Chat tab means new messages. Leave a group any time from its info button.",
       "Your own messages show a round Me badge on the left, so they are easy to tell from your friends' messages. The friend's name stays pinned at the top while you scroll.",
       "To share a game with a friend, tap the calendar button next to the message box and pick one of your upcoming bookings. They see the day, time and booking code in the chat.",
+      "When a friend writes to you, a pop-up appears at the top of the screen with their name and message. Tap it to open the chat. It does not appear for the chat you already have open. After you send a message the chat scrolls so your newest message is always in view; if a friend writes while you are reading older messages, a New message button appears so the screen does not jump.",
       "A single tick means sent and a blue double tick means seen. To delete one of your messages, press and hold it, then tap Delete message; it disappears for everyone.",
       "To report a message that is rude or unsafe, press and hold a message from someone else, tap Report message and pick a reason. It goes to the venue team, who look at it in the Complaints list. The other person is not told.",
       "To delete a whole chat, press and hold it in your chat list (or right-click it on a computer), then tap Delete entire chat. It is removed from your side only; the other people keep it. See Chat menu > About Chat.",

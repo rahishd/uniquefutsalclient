@@ -449,6 +449,11 @@ html.dark img.uf-hdr-logo { filter: none; }
   color: #0c0b5d !important;
 }
 
+/* The pop-up for a new chat message (components/chat/ChatPopup.tsx) slides down from the top. */
+@keyframes uf-chat-popup-in { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: none; } }
+.uf-chat-popup { animation: uf-chat-popup-in 0.28s ease-out; }
+@media (prefers-reduced-motion: reduce) { .uf-chat-popup { animation: none; } }
+
 /* The Chat button in the desktop header: white frosted glass (components/HeaderChat.tsx), beating the soft-tile rule above. */
 .uf-navy-header a.uf-header-chat {
   background-color: rgba(255, 255, 255, 0.88) !important;

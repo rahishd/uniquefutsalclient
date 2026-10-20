@@ -16,6 +16,7 @@ import PageTranslator from "@/components/PageTranslator";
 import ConfirmHost from "@/components/ConfirmHost";
 import LoginSplash from "@/components/LoginSplash";
 import BackToTop from "@/components/BackToTop";
+import ChatPopup from "@/components/chat/ChatPopup";
 
 const poppins = Poppins({ variable: "--font-poppins", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <FooterGate />
         <BottomNav />
         <BackToTop />
+        <ChatPopup />
         <SwRegister />
         <InstallPrompt />
         <ArrivalPrompt />

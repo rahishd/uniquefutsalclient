@@ -35,6 +35,11 @@ export default function ThreadView({ id }: { id: string }) {
   const pressAt = useRef<{ x: number; y: number } | null>(null);
   const last = useRef<string | undefined>(undefined);
   const bottom = useRef<HTMLDivElement>(null);
+  const stick = useRef(true); // am I at the bottom of the chat (so a new message should scroll into view)?
+  const scrollNext = useRef<"auto" | "smooth" | null>(null); // scroll to the latest message once the new ones are on screen
+  const started = useRef(false); // the first messages have been shown
+  const shown = useRef<ChatMessage[]>([]); // what is on screen, to tell new messages from ones I already have
+  const [newBelow, setNewBelow] = useState(false); // someone wrote while I was reading older messages
   const press = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const startPress = (m: ChatMessage, e: React.PointerEvent) => {
@@ -91,11 +96,19 @@ export default function ThreadView({ id }: { id: string }) {
   const merge = useCallback((fresh: ChatMessage[]) => {
     if (!fresh.length) return;
     last.current = fresh[fresh.length - 1].createdAt;
+    const have = new Set(shown.current.map((m) => m.id));
+    const added = fresh.filter((m) => !have.has(m.id));
+    if (added.length === 0) return;
+    // the first messages and anything I just sent scroll into view; someone else's message does too when I am already at the bottom,
+    // otherwise a "New message" button says it arrived without moving what I am reading
+    if (!started.current) { started.current = true; scrollNext.current = "auto"; }
+    else if (added.some((m) => m.mine) || stick.current) scrollNext.current = "smooth";
+    else setNewBelow(true);
     setMessages((cur) => {
       const have = new Set(cur.map((m) => m.id));
       return [...cur, ...fresh.filter((m) => !have.has(m.id))];
     });
-  }, []);
+  }, [setNewBelow]);
 
   useEffect(() => {
     if (!registered || missing) return;
@@ -126,9 +139,27 @@ export default function ThreadView({ id }: { id: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, registered, missing, merge]);
 
+  // bring the latest message into view, above the message box and the bottom bar (the sentinel has a scroll margin for them)
   useEffect(() => {
-    bottom.current?.scrollIntoView({ block: "end" });
-  }, [messages.length]);
+    shown.current = messages;
+    const how = scrollNext.current;
+    if (!how) return;
+    scrollNext.current = null;
+    bottom.current?.scrollIntoView({ block: "end", behavior: how });
+  }, [messages]);
+
+  // am I at the bottom? (decides whether a friend's new message scrolls into view or shows the "New message" button)
+  useEffect(() => {
+    const onScroll = () => {
+      const d = document.documentElement;
+      const near = d.scrollHeight - (window.scrollY + window.innerHeight) < 260;
+      stick.current = near;
+      if (near) setNewBelow(false);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); };
+  }, []);
 
   async function submit(override?: string) {
     const body = (override ?? text).trim();
@@ -251,8 +282,18 @@ export default function ThreadView({ id }: { id: string }) {
                 : "Unseen"}
           </p>
         )}
-        <div ref={bottom} />
+        <div ref={bottom} className="scroll-mb-[calc(env(safe-area-inset-bottom)+9.5rem)] desk:scroll-mb-28" />
       </div>
+
+      {newBelow && (
+        <button
+          type="button"
+          onClick={() => { bottom.current?.scrollIntoView({ block: "end", behavior: "smooth" }); setNewBelow(false); }}
+          className="fixed bottom-[calc(env(safe-area-inset-bottom)+9.25rem)] left-1/2 z-10 -translate-x-1/2 rounded-full bg-[#0c0b5d] px-4 py-2 text-xs font-semibold text-white shadow-lg desk:bottom-24"
+        >
+          New message ↓
+        </button>
+      )}
 
       {error && <p role="alert" className="mb-2 rounded-xl bg-red-500/10 p-2.5 text-sm text-red-600">{error}</p>}
       <form

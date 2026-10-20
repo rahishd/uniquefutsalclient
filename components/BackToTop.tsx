@@ -7,7 +7,7 @@ import { useT } from "@/lib/i18n";
 
 // A round "back to top" button on the right. It only appears once the page has been scrolled to its end (and only on a page
 // long enough to scroll), and takes the visitor smoothly back to the top. On the phone it sits well above the bottom bar, clear of the footer text.
-// Not shown on the Profile page itself (it would sit over the Settings rows).
+// Shown on the Home page only: every other page (Chat, Profile, Book, ...) has no back-to-top button.
 export default function BackToTop() {
   const t = useT();
   const pathname = usePathname();
@@ -38,7 +38,7 @@ export default function BackToTop() {
     window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
   };
 
-  if (pathname === "/profile") return null;
+  if (pathname !== "/") return null;
 
   return (
     <button
