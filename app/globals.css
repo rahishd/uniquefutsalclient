@@ -459,3 +459,13 @@ html.dark img.uf-hdr-logo { filter: none; }
 .uf-navy-header a.uf-header-chat[aria-current="page"] {
   background-color: #ffffff !important;
 }
+
+/* iPhone zooms the whole page when a field with text smaller than 16px gets focus (chat box, search, forms) and does not
+   zoom back. Fields are 16px on phones and tablets so the page keeps its size. */
+@media (max-width: 1023.98px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}

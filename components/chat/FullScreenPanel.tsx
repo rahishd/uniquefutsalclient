@@ -18,7 +18,7 @@ export default function FullScreenPanel({ title, onClose, children }: { title: s
 
   return (
     <div role="dialog" aria-modal="true" aria-label={title} className="fixed inset-0 z-[90] flex flex-col bg-white">
-      <header className="grid shrink-0 grid-cols-[1fr_auto_1fr] items-center border-b border-slate-100 px-3 pb-3 pt-[calc(max(env(safe-area-inset-top),2.75rem)+0.75rem)]">
+      <header className="grid shrink-0 grid-cols-[1fr_auto_1fr] items-center border-b border-slate-100 px-3 pb-3 pt-[max(calc(env(safe-area-inset-top)_-_0.625rem),0.5rem)]">
         <button type="button" onClick={onClose} className="flex items-center gap-0.5 justify-self-start rounded-full py-2 pl-1 pr-3 text-sm font-semibold text-brand transition active:bg-slate-100">
           <ChevronLeft size={22} /> Back
         </button>

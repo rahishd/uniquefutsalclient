@@ -23,7 +23,7 @@ export default function StickyHomeBar() {
       className={`uf-navy-header fixed inset-x-0 top-0 z-40 bg-[#0c0b5d] text-white shadow-[0_10px_24px_-12px_rgba(12,11,93,0.6)] transition-all duration-300 ease-out desk:hidden ${
         shown ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-full opacity-0"
       }`}
-      style={{ paddingTop: "max(env(safe-area-inset-top), 2.75rem)" }}
+      style={{ paddingTop: "max(calc(env(safe-area-inset-top) - 0.625rem), 0.5rem)" }}
     >
       <div className="flex items-center justify-between gap-3 px-4 py-2.5">
         <div className="flex min-w-0 items-center gap-2.5">

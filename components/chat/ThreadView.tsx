@@ -192,7 +192,7 @@ export default function ThreadView({ id }: { id: string }) {
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-col px-5 pb-40 pt-20 tab:max-w-2xl desk:max-w-2xl desk:pb-28 desk:pt-24" style={{ minHeight: "calc(100dvh - 9rem)" }}>
-      <header className="fixed inset-x-0 top-[calc(env(safe-area-inset-top)+6.5rem)] desk:top-16 z-10 mx-auto flex w-full max-w-md items-center gap-3 border-b border-slate-100 bg-white px-5 py-3 tab:max-w-2xl desk:max-w-2xl">
+      <header className="fixed inset-x-0 top-[calc(max(calc(env(safe-area-inset-top)_-_0.625rem),0.5rem)_+_3.85rem)] desk:top-16 z-10 mx-auto flex w-full max-w-md items-center gap-3 border-b border-slate-100 bg-white px-5 py-3 tab:max-w-2xl desk:max-w-2xl">
         <Link href="/chat" aria-label="Back to chats" className="rounded-full p-1.5 text-brand"><ArrowLeft size={20} /></Link>
         {isGroup ? (
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-brand"><Users size={20} /></span>
