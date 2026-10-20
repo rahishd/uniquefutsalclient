@@ -46,10 +46,8 @@ export default function HomeScreen() {
           </div>
 </header>
 
-        {/* the captain card: its own sky-blue box under the header */}
-        <div className="order-1 mt-3 flex items-center justify-between rounded-3xl border border-[#bfd7ff] bg-gradient-to-br from-[#e3f0ff] via-[#d3e6ff] to-[#bcd8ff] p-3 text-[#0c0b5d] shadow-[0_8px_22px_-12px_rgba(59,130,246,0.55)] desk:mx-0 desk:mt-4 desk:p-4">
-          <UserBadge />
-        </div>
+        {/* the profile card: green for a regular customer, red for a VIP (see components/UserBadge.tsx) */}
+        <UserBadge />
 
         <TodayCard />
 

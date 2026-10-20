@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { BadgeCheck } from "lucide-react";
 import { clubStore } from "@/lib/club";
+import { profileStore } from "@/lib/profile";
 import ProfileAvatar from "@/components/captain/ProfileAvatar";
 import { useSession } from "@/lib/session";
 import { useTeams } from "@/lib/teams";
@@ -21,14 +22,17 @@ export default function UserBadge() {
   const name = session?.registered ? session.name : "Guest";
   const captain = Boolean(session?.registered && teams?.mode === "captain");
   const club = clubStore.use().data;
+  const vip = Boolean(session?.registered && profileStore.use().data?.vip); // staff gave this customer a VIP code
   const clubMember = Boolean(session?.registered && club?.member); // active Unique Club member
 
   return (
-    <div className="flex w-full min-w-0 items-center gap-3">
+    <div className={`order-1 mt-3 flex w-full min-w-0 items-center gap-3 rounded-3xl border p-3 text-[#0c0b5d] desk:mt-4 desk:p-4 ${vip
+      ? "border-rose-300 bg-gradient-to-br from-[#ffe9ec] via-[#ffd0d6] to-[#ffb3be] shadow-[0_8px_22px_-12px_rgba(225,29,72,0.6)]"
+      : "border-emerald-300 bg-gradient-to-br from-[#e6fbed] via-[#ccf5d9] to-[#a9ecc0] shadow-[0_8px_22px_-12px_rgba(16,185,129,0.55)]"}`}>
       <Link href="/profile" className="flex min-w-0 flex-1 items-center gap-3">
         {session ? <ProfileAvatar name={name} captain={captain} size={56} src={session.registered ? session.avatar : null} /> : <span className="block h-14 w-14 shrink-0 rounded-full bg-white/60" />}
         <span className="min-w-0">
-          <span className="block text-sm text-[#1e3a8a]/70">
+          <span className={`block text-sm ${vip ? "text-rose-900/70" : "text-emerald-900/70"}`}>
             {captain ? t("Captain") : t("Hello")} <span aria-hidden>👋</span>
           </span>
           <span className="block min-h-8 truncate text-xl font-medium leading-tight tab:text-2xl">{session ? name : ""}</span>
