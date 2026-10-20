@@ -40,9 +40,13 @@ const DATABASE_URL = process.env.DATABASE_URL || "";
 if (!DATABASE_URL) throw new Error("DATABASE_URL is required.");
 assertSafeDatabaseUrl(DATABASE_URL, NODE_ENV);
 
-if (NODE_ENV === "production" && (process.env.PAYMENT_GATEWAY || "test") === "test") {
-  throw new Error("PAYMENT_GATEWAY=test is not allowed in production. Configure a real payment gateway first.");
+// A demo or test deployment (no real money, no real customers) may keep the test gateway in production by setting ALLOW_TEST_PAYMENTS=true.
+// Without it, production refuses the test gateway, because /payments/:order/test-pay lets a signed-in customer mark an order as paid.
+const ALLOW_TEST_PAYMENTS = process.env.ALLOW_TEST_PAYMENTS === "true";
+if (NODE_ENV === "production" && (process.env.PAYMENT_GATEWAY || "test") === "test" && !ALLOW_TEST_PAYMENTS) {
+  throw new Error("PAYMENT_GATEWAY=test is not allowed in production. Configure a real payment gateway first, or for a demo with no real money set ALLOW_TEST_PAYMENTS=true.");
 }
+if (ALLOW_TEST_PAYMENTS && (process.env.PAYMENT_GATEWAY || "test") !== "test") throw new Error("ALLOW_TEST_PAYMENTS=true needs PAYMENT_GATEWAY=test.");
 
 export const env = {
   NODE_ENV,
@@ -56,6 +60,7 @@ export const env = {
   OTP_ENABLED: process.env.OTP_ENABLED === "true",
   // Which payment gateway adapter to use: "test" (local fake) until the real Fonepay keys exist.
   PAYMENT_GATEWAY: process.env.PAYMENT_GATEWAY || "test",
+  ALLOW_TEST_PAYMENTS,
   // Web Push (closed-app alerts). Keys come from `npx web-push generate-vapid-keys`; empty = push is off.
   VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || "",
   VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY || "",

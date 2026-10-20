@@ -5,7 +5,7 @@ import env from "../config/env";
 //
 // A REAL Fonepay dynamic QR can only be created by this server with the venue's merchant account.
 // Until those keys exist, the "test" gateway makes a clearly fake QR and a test endpoint can simulate
-// the payment. The test gateway is refused in production (see config/env.ts).
+// the payment. The test gateway is refused in production unless a demo deployment opts in with ALLOW_TEST_PAYMENTS=true (see config/env.ts).
 
 export type OnlineMethod = "fonepay";
 
@@ -45,4 +45,4 @@ export function getGateway(): PaymentGateway {
   return env.PAYMENT_GATEWAY === "test" ? new TestGateway() : new NotConfiguredGateway();
 }
 
-export const isTestGateway = () => env.PAYMENT_GATEWAY === "test" && env.NODE_ENV !== "production";
+export const isTestGateway = () => env.PAYMENT_GATEWAY === "test" && (env.NODE_ENV !== "production" || env.ALLOW_TEST_PAYMENTS);

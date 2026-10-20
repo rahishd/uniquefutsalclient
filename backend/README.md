@@ -31,7 +31,8 @@ npm test                        # 150+ tests, against the local "unique_test" da
 
 `OTP_ENABLED=false` (default): signup and login are phone + password only; no SMS is sent. Payments use the local
 **test gateway** (`PAYMENT_GATEWAY=test`): the QR is clearly fake and `POST /api/payments/:order/test-pay` simulates
-the payment. The test gateway is refused in production.
+the payment. The test gateway is refused in production, unless a DEMO deployment (no real money, no real customers) sets
+`ALLOW_TEST_PAYMENTS=true`. With that switch on, anyone signed in can mark an order paid, so turn it off before real customers pay.
 
 ## What the new customer app uses
 
@@ -74,6 +75,7 @@ Things the developer's code still does that you should know about:
    `npx tsx scripts/legacy-bridge.ts loyalty --voucher-period=Day` (dry run) and review the numbers with the owner, then `--apply`.
 7. Set production env: `NODE_ENV=production`, real `DATABASE_URL`, strong secrets, `OTP_ENABLED=false` until chosen,
    a real `PAYMENT_GATEWAY` once Fonepay keys exist (the server will not start in production with the test gateway).
+   For a demo or test deployment, keep `PAYMENT_GATEWAY=test` and add `ALLOW_TEST_PAYMENTS=true` (see above).
 8. Repeat steps 5 and 6 on the live database with `--i-have-a-backup`, smoke-test, and keep the backup.
 
 ## Open decisions (see docs/API.md for details)
