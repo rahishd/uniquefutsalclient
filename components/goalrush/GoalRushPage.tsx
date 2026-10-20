@@ -29,7 +29,7 @@ function Pips({ shots }: { shots: GRShot[] }) {
         const s = shots[i];
         return (
           <li key={i} aria-label={s ? `Shot ${i + 1}: ${OUTCOME_TEXT[s.outcome]}` : `Shot ${i + 1}: to come`}
-            className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold desk:h-6 desk:w-6 desk:text-[11px] ${s ? PIP[s.outcome] : "border-2 border-white/40 text-white/50"}`}>
+            className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold desk:h-6 desk:w-6 desk:text-[11px] ${s ? PIP[s.outcome] : "border-2 border-white/80 text-white"}`}>
             {s ? PIP_ICON[s.outcome] : i + 1}
           </li>
         );
@@ -149,15 +149,15 @@ export default function GoalRushPage() {
     // A full-screen window of its own: nothing of the app shows behind it, and Back returns to where the player came from.
     <div className="uf-keep fixed inset-0 z-[100] flex flex-col overflow-hidden text-white" style={{ background: "radial-gradient(120% 80% at 50% 0%, #1b2a8f 0%, #0c0b5d 45%, #050a2b 100%)" }}>
       <header className="flex shrink-0 items-center gap-2 px-3 pb-2 pt-[max(env(safe-area-inset-top),0.75rem)]">
-        <button type="button" onClick={goBack} aria-label="Back" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-white active:scale-95">
+        <button type="button" onClick={goBack} aria-label="Back" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full active:scale-95" style={{ background: "#ffffff", color: "#0c0b5d" }}>
           <ArrowLeft size={20} />
         </button>
         <div className="min-w-0 flex-1 text-center">
           <h1 className="flex items-center justify-center gap-1.5 text-base font-bold text-white"><Goal size={16} aria-hidden /> Unique Goal Rush</h1>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-sky-200">{mode === "practice" ? "Practice · no points" : mode === "reward" ? "Playing for points" : "Play. Score. Earn."}</p>
         </div>
-        <button type="button" onClick={() => setInfoOpen(true)} aria-label="Rules and today" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-white active:scale-95"><Info size={19} /></button>
-        <button type="button" onClick={toggleMute} aria-label={muted ? "Turn sound on" : "Turn sound off"} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-white active:scale-95">
+        <button type="button" onClick={() => setInfoOpen(true)} aria-label="Rules and today" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full active:scale-95" style={{ background: "#ffffff", color: "#0c0b5d" }}><Info size={19} /></button>
+        <button type="button" onClick={toggleMute} aria-label={muted ? "Turn sound on" : "Turn sound off"} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full active:scale-95" style={{ background: "#ffffff", color: "#0c0b5d" }}>
           {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
         </button>
       </header>
