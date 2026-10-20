@@ -2,7 +2,9 @@
 
 import { useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { CalendarDays, Crosshair, Gauge, Goal, Loader2, Play, RotateCcw, Star, Trophy, Volume2, VolumeX } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { ArrowLeft, CalendarDays, Crosshair, Info, X, Gauge, Goal, Loader2, Play, RotateCcw, Star, Trophy, Volume2, VolumeX } from "lucide-react";
 import { errorText } from "@/lib/api";
 import { openSignIn, useSession } from "@/lib/session";
 import { resolveShot, type ShotInput, type ShotResult } from "@/lib/goalrush-sim";
@@ -54,6 +56,19 @@ export default function GoalRushPage() {
   const [practice, setPractice] = useState<GRShot[]>([]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [infoOpen, setInfoOpen] = useState(false);
+  const router = useRouter();
+  // the window is fixed, so the page behind it must not scroll
+  useEffect(() => {
+    const html = document.documentElement;
+    const prev = html.style.overflow;
+    html.style.overflow = "hidden";
+    return () => { html.style.overflow = prev; };
+  }, []);
+  function goBack() {
+    if (window.history.length > 1) router.back();
+    else router.push("/");
+  }
   const [announce, setAnnounce] = useState("");
   const pending = useRef<GRGame | null>(null); // the server's answer, shown once the kick has been played back
   const gameRef = useRef<PenaltyGameHandle>(null);
@@ -131,34 +146,31 @@ export default function GoalRushPage() {
   const toCome = mode === "idle" ? "" : `Shot ${Math.min(shots.length + 1, RULES.shotsPerGame)} of ${RULES.shotsPerGame}`;
 
   return (
-    <main className="mx-auto w-full max-w-md space-y-5 px-5 pb-32 pt-6 tab:max-w-2xl desk:max-w-5xl desk:pb-16">
-      {/* heading, in the brand's light-blue style */}
-      <section className="overflow-hidden rounded-3xl border border-[#d6e4fb] p-5 desk:p-8" style={{ background: "linear-gradient(180deg,#f5f9ff 0%,#e3eeff 100%)" }}>
-        <span className="inline-block rounded-full bg-sky-100 px-3 py-1 text-[11px] font-semibold text-[#0c0b5d]">Mini game · Loyalty points</span>
-        <h1 className="mt-2 flex items-center gap-2 text-2xl font-semibold text-[#0c0b5d] desk:text-4xl"><Goal size={26} aria-hidden /> Unique Goal Rush</h1>
-        <p className="mt-0.5 text-base font-medium text-slate-600 desk:text-lg">Play &amp; Earn · Play. Score. Earn.</p>
-        <ul className="mt-4 flex flex-wrap gap-2 text-xs font-medium">
-          {[`${RULES.shotsPerGame} penalties a game`, `${RULES.goalsToQualify} goals = +${RULES.pointsPerGame} point`, `${RULES.gamesPerDay} games a day`].map((t) => (
-            <li key={t} className="rounded-full border border-[#d6e4fb] bg-white px-3 py-1.5 text-[#0c0b5d]">{t}</li>
-          ))}
-        </ul>
-      </section>
+    // A full-screen window of its own: nothing of the app shows behind it, and Back returns to where the player came from.
+    <div className="uf-keep fixed inset-0 z-[100] flex flex-col overflow-hidden text-white" style={{ background: "radial-gradient(120% 80% at 50% 0%, #1b2a8f 0%, #0c0b5d 45%, #050a2b 100%)" }}>
+      <header className="flex shrink-0 items-center gap-2 px-3 pb-2 pt-[max(env(safe-area-inset-top),0.75rem)]">
+        <button type="button" onClick={goBack} aria-label="Back" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-white active:scale-95">
+          <ArrowLeft size={20} />
+        </button>
+        <div className="min-w-0 flex-1 text-center">
+          <h1 className="flex items-center justify-center gap-1.5 text-base font-bold text-white"><Goal size={16} aria-hidden /> Unique Goal Rush</h1>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-sky-200">{mode === "practice" ? "Practice · no points" : mode === "reward" ? "Playing for points" : "Play. Score. Earn."}</p>
+        </div>
+        <button type="button" onClick={() => setInfoOpen(true)} aria-label="Rules and today" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-white active:scale-95"><Info size={19} /></button>
+        <button type="button" onClick={toggleMute} aria-label={muted ? "Turn sound on" : "Turn sound off"} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-white active:scale-95">
+          {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+        </button>
+      </header>
 
-      <div className="grid gap-5 desk:grid-cols-[minmax(0,1fr)_340px]">
-        {/* the game */}
-        <section aria-label="Penalty game" className="space-y-3">
-          <div className="uf-keep flex items-center justify-between gap-2 rounded-2xl px-3 py-3 desk:gap-3 desk:px-4" style={{ background: "#030a1f", color: "#ffffff" }}>
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#94a3b8" }}>{mode === "practice" ? "Practice · no points" : mode === "reward" ? "Playing for points" : "Ready"}</p>
-              <p className="whitespace-nowrap text-base font-black desk:text-lg" style={{ color: "#ffffff" }}>{goals} Goal{goals === 1 ? "" : "s"} / {shots.length} Shot{shots.length === 1 ? "" : "s"}</p>
-            </div>
-            <Pips shots={shots} />
-            <button type="button" onClick={toggleMute} aria-label={muted ? "Turn sound on" : "Turn sound off"} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ background: "rgba(255,255,255,0.12)", color: "#ffffff" }}>
-              {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-            </button>
-          </div>
+      <div className="mx-auto flex w-full max-w-md shrink-0 items-center justify-between gap-3 px-4 pb-2">
+        <p className="whitespace-nowrap text-lg font-black text-white">{goals} Goal{goals === 1 ? "" : "s"} <span className="text-sm font-semibold text-sky-200">/ {shots.length} shot{shots.length === 1 ? "" : "s"}</span></p>
+        <Pips shots={shots} />
+      </div>
 
-          <div className="relative">
+      {/* the pitch: as big as fits between the bars, never cropped */}
+      <section aria-label="Penalty game" className="flex min-h-0 flex-1 items-center justify-center px-3">
+        <div className="relative" style={{ width: "min(100%, 34rem, calc((100dvh - 12.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 0.75))" }}>
+          <div className="overflow-hidden rounded-3xl shadow-[0_24px_60px_-12px_rgba(0,0,0,0.7)] ring-1 ring-white/20">
             <PenaltyGame
               key={mode === "reward" ? game?.id ?? "r" : mode}
               ref={gameRef}
@@ -169,10 +181,10 @@ export default function GoalRushPage() {
               onError={(m) => setMessage(m)}
               caption={toCome || "Not started"}
             />
-
+          </div>
             {/* start screen */}
             {mode === "idle" && (
-              <div className="uf-keep absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-3xl p-6 text-center" style={{ background: "rgba(3,10,31,0.72)", color: "#ffffff" }}>
+              <div className="uf-keep absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-3xl overflow-y-auto p-6 text-center" style={{ background: "rgba(3,10,31,0.72)", color: "#ffffff" }}>
                 <Trophy size={40} style={{ color: "#facc15" }} aria-hidden />
                 <p className="text-2xl font-black italic" style={{ color: "#ffffff" }}>Beat the keeper</p>
                 <p className="max-w-xs text-sm" style={{ color: "#cbd5e1" }}>Five penalties. Score {RULES.goalsToQualify} or more and win {pts(RULES.pointsPerGame)}.</p>
@@ -201,7 +213,7 @@ export default function GoalRushPage() {
 
             {/* first-time tutorial */}
             {showTutorial && (
-              <div className="uf-keep absolute inset-0 flex flex-col justify-center gap-3 rounded-3xl p-6" style={{ background: "rgba(3,10,31,0.85)", color: "#ffffff" }}>
+              <div className="uf-keep absolute inset-0 flex flex-col justify-center gap-3 rounded-3xl overflow-y-auto p-6" style={{ background: "rgba(3,10,31,0.85)", color: "#ffffff" }}>
                 <p className="text-center text-xl font-black italic" style={{ color: "#facc15" }}>How to play</p>
                 {[
                   { icon: Crosshair, title: "Aim", text: "Move the mouse over the goal, or drag with your finger. Arrow keys work too." },
@@ -219,7 +231,7 @@ export default function GoalRushPage() {
 
             {/* full time */}
             {mode !== "idle" && finished && (
-              <div className="uf-keep absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-3xl p-6 text-center" style={{ background: "rgba(3,10,31,0.86)", color: "#ffffff" }}>
+              <div className="uf-keep absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-3xl overflow-y-auto p-6 text-center" style={{ background: "rgba(3,10,31,0.86)", color: "#ffffff" }}>
                 <p className="text-xs font-bold uppercase tracking-[0.3em]" style={{ color: "#94a3b8" }}>Full time</p>
                 <p className="text-4xl font-black italic" style={{ color: "#ffffff" }}>{goals} / {RULES.shotsPerGame}</p>
                 <p className="text-sm" style={{ color: "#cbd5e1" }}>{goals} goal{goals === 1 ? "" : "s"} · {shots.filter((s) => s.outcome === "save").length} saved · {shots.filter((s) => s.outcome !== "goal" && s.outcome !== "save").length} missed</p>
@@ -240,29 +252,32 @@ export default function GoalRushPage() {
                 </div>
               </div>
             )}
-          </div>
+        </div>
+      </section>
 
-          {mode !== "idle" && !finished && !showTutorial && (
-            <button type="button" onClick={() => gameRef.current?.shoot()} className="uf-keep flex w-full items-center justify-center gap-2 rounded-full py-4 text-lg font-black italic tracking-wide" style={{ background: "#facc15", color: "#0c0b5d", boxShadow: "0 10px 24px -8px rgba(250,204,21,0.8)" }}>
+      <footer className="shrink-0 px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-3">
+        <div className="mx-auto w-full max-w-md">
+          {message && <p role="alert" className="mb-2 rounded-2xl bg-rose-500/20 px-4 py-2 text-center text-sm text-rose-100">{message}</p>}
+          {mode !== "idle" && !finished && !showTutorial ? (
+            <button type="button" onClick={() => gameRef.current?.shoot()} className="flex w-full items-center justify-center gap-2 rounded-full py-4 text-lg font-black italic tracking-wide active:scale-[0.98]" style={{ background: "#facc15", color: "#0c0b5d", boxShadow: "0 10px 24px -8px rgba(250,204,21,0.8)" }}>
               <Goal size={22} /> SHOOT
             </button>
+          ) : (
+            <p className="py-3 text-center text-xs text-sky-200">{mode === "idle" ? "Aim with your finger, time the power bar, then shoot." : toCome}</p>
           )}
-          {message && <p role="alert" className="rounded-2xl bg-rose-500/10 px-4 py-3 text-sm text-rose-600">{message}</p>}
-          <p className="sr-only" role="status" aria-live="polite">{announce}</p>
+        </div>
+      </footer>
+      <p className="sr-only" role="status" aria-live="polite">{announce}</p>
 
-          {shots.length > 0 && (
-            <ol className="glass space-y-1.5 rounded-3xl p-4 text-sm" aria-label="This game, shot by shot">
-              {shots.map((s) => (
-                <li key={s.no} className="flex items-center justify-between">
-                  <span className="text-slate-500">Shot {s.no}</span>
-                  <span className={`font-semibold ${s.outcome === "goal" ? "text-emerald-600" : s.outcome === "save" ? "text-amber-600" : "text-slate-600"}`}>{OUTCOME_TEXT[s.outcome]}</span>
-                </li>
-              ))}
-            </ol>
-          )}
-        </section>
-
-        <aside className="space-y-4">
+      {/* rules, today and recent games */}
+      {infoOpen && (
+        <div className="absolute inset-0 z-10 flex items-end bg-black/60" onClick={() => setInfoOpen(false)}>
+          <div role="dialog" aria-label="Rules and today" className="max-h-[85dvh] w-full overflow-y-auto rounded-t-3xl bg-white p-4 text-slate-900" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-[#0c0b5d]">Unique Goal Rush</h2>
+              <button type="button" onClick={() => setInfoOpen(false)} aria-label="Close" className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100"><X size={18} /></button>
+            </div>
+        <div className="space-y-4">
           {/* today */}
           <section className="glass rounded-3xl p-5" aria-label="Today">
             <h2 className="text-base font-semibold">Today</h2>
@@ -315,8 +330,10 @@ export default function GoalRushPage() {
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-100 text-[#0c0b5d]"><CalendarDays size={20} /></span>
             <span className="text-sm"><b className="block">Play for real</b><span className="text-slate-500">Book a court at Unique Futsal</span></span>
           </Link>
-        </aside>
-      </div>
-    </main>
+        </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
