@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Download, MoreVertical, PlusSquare, Share, X } from "lucide-react";
+import { Download, MoreVertical, PlusSquare, X } from "lucide-react";
 import { useSession } from "@/lib/session";
 
 // Chrome/Android fires this event when the app is installable.
@@ -42,6 +42,7 @@ function wasDismissedThisVisit() {
 
 export default function InstallPrompt() {
   const [mode, setMode] = useState<"android" | "android-menu" | "ios" | null>(null);
+  const [iosHint, setIosHint] = useState(false);
   const deferred = useRef<BeforeInstallPromptEvent | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const session = useSession();
@@ -95,6 +96,16 @@ export default function InstallPrompt() {
       // storage blocked: popup may reappear on the next page
     }
     setMode(null);
+  }
+
+  // iPhone has no install button for websites. This opens the Share sheet in one tap, where "Add to Home Screen" is one row away.
+  async function iosDownload() {
+    setIosHint(true);
+    try {
+      await navigator.share?.({ title: "Unique Futsal", url: window.location.origin });
+    } catch {
+      // closed without choosing: the hint above stays so they can try again
+    }
   }
 
   async function install() {
@@ -154,21 +165,18 @@ export default function InstallPrompt() {
 
         {mode === "ios" && (
           <>
-            <ol className="mt-4 space-y-2 text-sm text-slate-600">
-              <li className="flex items-center gap-2">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand text-xs text-white">1</span>
-                Tap the <Share size={16} className="text-brand" aria-label="Share" /> Share button in your browser
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand text-xs text-white">2</span>
-                Choose <PlusSquare size={16} className="text-brand" aria-hidden /> <b>Add to Home Screen</b>
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand text-xs text-white">3</span>
-                Tap <b>Add</b>, and &ldquo;Unique Futsal&rdquo; appears on your home screen
-              </li>
-            </ol>
-            <button type="button" onClick={dismiss} className="mt-4 w-full rounded-full bg-slate-100 py-3 text-sm font-medium text-slate-600">Got it</button>
+            {iosHint && (
+              <p className="mt-4 flex items-center gap-2 rounded-2xl bg-blue-50 px-3 py-2.5 text-sm text-slate-700">
+                <PlusSquare size={18} className="shrink-0 text-brand" aria-hidden />
+                <span>Choose <b>Add to Home Screen</b>, then tap <b>Add</b>.</span>
+              </p>
+            )}
+            <div className="mt-4 flex gap-3">
+              <button type="button" onClick={dismiss} className="flex-1 rounded-full bg-slate-100 py-3 text-sm font-medium text-slate-600">Not now</button>
+              <button type="button" onClick={iosDownload} className="glass-btn flex flex-1 items-center justify-center gap-2 rounded-full py-3 text-sm font-semibold">
+                <Download size={16} /> Download now
+              </button>
+            </div>
           </>
         )}
       </div>
