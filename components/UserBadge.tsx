@@ -22,7 +22,8 @@ export default function UserBadge() {
   const name = session?.registered ? session.name : "Guest";
   const captain = Boolean(session?.registered && teams?.mode === "captain");
   const club = clubStore.use().data;
-  const vip = Boolean(session?.registered && profileStore.use().data?.vip); // staff gave this customer a VIP code
+  const profile = profileStore.use().data; // always called: a hook must not depend on the sign-in state
+  const vip = Boolean(session?.registered && profile?.vip); // staff gave this customer a VIP code
   const clubMember = Boolean(session?.registered && club?.member); // active Unique Club member
 
   return (
