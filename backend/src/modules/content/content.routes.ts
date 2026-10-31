@@ -45,8 +45,16 @@ contentRouter.post("/visit", optionalAuthMiddleware, asyncHandler(async (req: Re
     const userId = (req as Request & { user?: { id?: string } }).user?.id ?? null;
     const registered = Boolean(userId);
     const where = { day_visitor: { day, visitor } };
-    const bump = { pages: { increment: 1 }, lastAt: new Date(), ...(registered ? { registered: true, userId } : {}) };
-    if (await prisma.siteVisit.findUnique({ where, select: { id: true } })) {
+    // a row made before the details existed (or while they could not be read) gets them from the next page view
+    let existing: { id: string; ip?: string | null; deviceType?: string | null } | null;
+    let canHoldDetails = true;
+    try { existing = await prisma.siteVisit.findUnique({ where, select: { id: true, ip: true, deviceType: true } }); }
+    catch { canHoldDetails = false; existing = await prisma.siteVisit.findUnique({ where, select: { id: true } }); }
+    if (existing) {
+      const missing = canHoldDetails && !existing.ip && !existing.deviceType;
+      const found = missing ? { ip: clientIp(req), ...parseDevice(req.headers["user-agent"]) } : {};
+      const place = missing ? await placeOf(req, (found as { ip: string | null }).ip) : {};
+      const bump = { pages: { increment: 1 }, lastAt: new Date(), ...(registered ? { registered: true, ...(canHoldDetails ? { userId } : {}) } : {}), ...found, ...place };
       await prisma.siteVisit.update({ where, data: bump, select: { id: true } }).catch(() => prisma.siteVisit.update({ where, data: { pages: { increment: 1 }, lastAt: new Date(), ...(registered ? { registered: true } : {}) }, select: { id: true } }));
       return;
     }
