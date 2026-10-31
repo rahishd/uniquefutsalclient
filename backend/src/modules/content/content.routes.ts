@@ -47,14 +47,18 @@ contentRouter.post("/visit", optionalAuthMiddleware, asyncHandler(async (req: Re
     const where = { day_visitor: { day, visitor } };
     const bump = { pages: { increment: 1 }, lastAt: new Date(), ...(registered ? { registered: true, userId } : {}) };
     if (await prisma.siteVisit.findUnique({ where, select: { id: true } })) {
-      await prisma.siteVisit.update({ where, data: bump });
+      await prisma.siteVisit.update({ where, data: bump, select: { id: true } }).catch(() => prisma.siteVisit.update({ where, data: { pages: { increment: 1 }, lastAt: new Date(), ...(registered ? { registered: true } : {}) }, select: { id: true } }));
       return;
     }
     const ip = clientIp(req);
     const place = await placeOf(req, ip);
     const device = parseDevice(req.headers["user-agent"]);
     await prisma.siteVisit
-      .create({ data: { day, visitor, registered, userId, ip, ...place, ...device } })
-      .catch(() => prisma.siteVisit.update({ where, data: bump })); // two page views at once: the second one just counts
+      .create({ data: { day, visitor, registered, userId, ip, ...place, ...device }, select: { id: true } })
+      .catch(async () => {
+        // two page views at once (the second just counts), or the visitor-details columns are not in the database yet: keep the plain count
+        if (await prisma.siteVisit.findUnique({ where, select: { id: true } })) return prisma.siteVisit.update({ where, data: { pages: { increment: 1 }, lastAt: new Date() }, select: { id: true } });
+        return prisma.siteVisit.create({ data: { day, visitor, registered }, select: { id: true } });
+      });
   } catch { /* a counter must never break the page */ }
 }));
