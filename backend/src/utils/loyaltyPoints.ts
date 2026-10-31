@@ -1,10 +1,12 @@
 // Loyalty points rules for the new customer app (pure functions, no database).
 //
-// - A regular game earns price / 10 points, kept to one decimal (Rs. 1,250 = 125).
+// - Court and add-on items: every Rs. 100 of the bill = 1 point, kept to one decimal (court Rs. 1,000 = 10 points, items Rs. 550 = 5.5).
+//   A game booked for another team (Refer & Earn) earns the same, on the booker's own account.
 // - A free game costs the shift's price / 10 in points (Rs. 1,250 = 125 points). There is no "10 games played" rule:
 //   a customer can claim as soon as they hold that many valid points.
 // - Gamezone: every hour played earns 5 points (awarded by the admin server when the session is completed and paid).
-// - Extra goods: every full Rs. 100 = 1 point.
+// - Add-on items count only up to Rs. 1,000 a day per customer: at most 10 points a day, however much is bought.
+// - Refer & Earn: 5 points each, when staff approve and the other team has a registered account (set by staff, default 5).
 // - Membership purchase or renewal: 3 months = 30 points, 6 months = 70, monthly = 0.
 // - Challenge game: only the winning captain earns 5 points.
 // - Unique Goal Rush (penalty game): a finished game with 3+ goals out of 5 earns 1 point per 3 goals (1 a game), 3 games a day.
@@ -15,7 +17,8 @@
 import { addDaysKey, addMonthsKey } from "./dates";
 
 export const RS_PER_POINT = 100;
-export const GAME_PRICE_DIVISOR = 10; // a game earns (court price / 10) points
+export const GAME_PRICE_DIVISOR = 100; // a game earns (court price / 100) points
+export const GOODS_DAILY_MAX_POINTS = 10; // add-on items earn at most this many points a day per customer (Rs. 1,000 of items)
 export const FREE_GAME_DIVISOR = 10;
 export const GZ_POINTS_PER_HOUR = 5;
 export const POINTS_CAPTAIN_WIN = 5;
@@ -48,7 +51,7 @@ export const SHARE_PER_DAY = 3; // shares one customer can send in 24 hours
 export const r1 = (n: number) => Math.round(n * 10) / 10;
 
 export function pointsForGame(priceRs: number): number {
-  return Math.floor(Math.max(0, priceRs)) / GAME_PRICE_DIVISOR; // price / 10, cut to one decimal
+  return Math.floor((Math.max(0, priceRs) * 10) / GAME_PRICE_DIVISOR) / 10; // price / 100, cut to one decimal
 }
 
 export function freeGameCost(priceRs: number): number {
@@ -56,7 +59,12 @@ export function freeGameCost(priceRs: number): number {
 }
 
 export function pointsForGoods(amountRs: number): number {
-  return Math.floor(Math.max(0, amountRs) / RS_PER_POINT);
+  return Math.floor((Math.max(0, amountRs) * 10) / RS_PER_POINT) / 10; // amount / 100, cut to one decimal (Rs. 550 = 5.5)
+}
+
+/** How many more goods points a customer can still earn today, given what they already earned today. */
+export function goodsPointsRoom(alreadyToday: number): number {
+  return Math.max(0, r1(GOODS_DAILY_MAX_POINTS - alreadyToday));
 }
 
 export function expiryFor(kind: LoyaltyKind, earnedOn: string): string | null | undefined {

@@ -214,7 +214,8 @@ describe("free game voucher at checkout", () => {
   let voucherId = "";
   let bookingId = "";
   it("earn points, claim a Day voucher, then book a Day slot for Rs. 0", async () => {
-    await loyaltyService.recordGoodsSale({ phone: REG, amount: 10000, soldBy: "test" });
+    // items now earn at most 10 points a day, so give the customer the points for a free game directly
+    await prisma.loyaltyEntry.create({ data: { userId: REG, kind: "game", points: 200, earnedOn: "2026-10-01", expiresOn: "2099-01-01", sourceType: "adjustment", sourceId: "test-voucher-topup", detail: "Test top-up" } });
     const claim = await post("/api/loyalty/claim", { period: "Day" }, tokenFor(REG));
     expect(claim.status).toBe(201);
     voucherId = claim.body.data.id;

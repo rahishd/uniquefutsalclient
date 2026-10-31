@@ -5,7 +5,7 @@
 
 import { EXPIRY_NOTICE_DAYS } from "@/lib/membership";
 import { MAX_ADVANCE_DAYS } from "@/lib/booking";
-import { GAME_POINTS_MONTHS, GAME_RS_PER_POINT, GZ_POINTS_PER_HOUR, MEMBERSHIP_POINTS, POINTS_CAPTAIN_WIN, RS_PER_POINT } from "@/lib/points";
+import { GAME_POINTS_MONTHS, GAME_RS_PER_POINT, GOODS_DAILY_MAX_POINTS, GZ_POINTS_PER_HOUR, MEMBERSHIP_POINTS, POINTS_CAPTAIN_WIN, REFERRAL_POINTS, RS_PER_POINT } from "@/lib/points";
 
 export type HelpIcon = "book" | "pay" | "rebook" | "member" | "points" | "promo" | "bell" | "captain" | "profile" | "trophy" | "install" | "guest" | "wifi" | "chat" | "players" | "language";
 
@@ -199,8 +199,9 @@ export const helpTopics: HelpTopic[] = [
     title: "Loyalty points and free games",
     summary: "Play, earn points, turn them into a free game.",
     points: [
-      `Each game earns its price ÷ ${GAME_RS_PER_POINT} points (a Rs. 1,250 game earns 125), and every Gamezone hour earns ${GZ_POINTS_PER_HOUR} points. A free game costs the shift price ÷ 10 in points (a Rs. 1,250 game costs 125 points).`,
-      `Extra goods earn 1 point for every Rs. ${RS_PER_POINT} you spend.`,
+      `Each game earns its price ÷ ${GAME_RS_PER_POINT} points (a Rs. 1,000 game earns 10, a Rs. 1,250 game earns 12.5), and every Gamezone hour earns ${GZ_POINTS_PER_HOUR} points. A game you book for another team earns the same on your own account. A free game costs the shift price ÷ 10 in points (a Rs. 1,250 game costs 125 points).`,
+      `Add-on items earn 1 point for every Rs. ${RS_PER_POINT} you spend (Rs. 550 = 5.5 points), up to ${GOODS_DAILY_MAX_POINTS} points a day (Rs. ${(GOODS_DAILY_MAX_POINTS * RS_PER_POINT).toLocaleString("en-IN")} of items).`,
+      `Refer & Earn: you and the other team's captain get ${REFERRAL_POINTS} points each when the venue approves your referral. If the other team has no account, nobody gets points.`,
       `Winning captains earn ${POINTS_CAPTAIN_WIN} points for a challenge game.`,
       `Game points last ${GAME_POINTS_MONTHS} months, goods points 1 year, membership points never expire. We warn you before points expire.`,
       "To use them: open Points, pick a shift and tap Claim. Then book that shift and tap \"Use a free game voucher\".",
@@ -440,7 +441,7 @@ export const helpTopics: HelpTopic[] = [
       "Then type the other team's name and contact number (they need an account in the app) and tap Confirm booking.",
       "The slot is booked on your account and paid at the venue.",
       "The venue checks the referral. When it is approved, both of you get the points and a notification.",
-      "The number of points is set by the venue and shown on the page. Referral points last 12 months.",
+      `You and the other team's captain get ${REFERRAL_POINTS} points each (the page shows the exact number). If the other team has no account, nobody gets points. Referral points last 12 months. The game you booked also earns its normal game points.`,
       "You can withdraw a referral while it is still waiting. Each booking can be referred once.",
     ],
     href: { label: "Refer & Earn", to: "/refer" },

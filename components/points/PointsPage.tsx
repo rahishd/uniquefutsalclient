@@ -9,7 +9,7 @@ import SendPdfButton from "@/components/SendPdfButton";
 import { pdfFileName, type PdfSpec } from "@/lib/branded-pdf";
 import { useSession, openSignIn } from "@/lib/session";
 import { errorText } from "@/lib/api";
-import { GAME_RS_PER_POINT, GZ_POINTS_PER_HOUR, GAME_POINTS_MONTHS, MEMBERSHIP_POINTS, POINTS_CAPTAIN_WIN, RS_PER_POINT, SHIFT_HOURS, WATCH_POINTS_MONTHS, fmtPts } from "@/lib/points";
+import { GAME_RS_PER_POINT, GOODS_DAILY_MAX_POINTS, GZ_POINTS_PER_HOUR, GAME_POINTS_MONTHS, MEMBERSHIP_POINTS, POINTS_CAPTAIN_WIN, REFERRAL_POINTS, RS_PER_POINT, SHIFT_HOURS, WATCH_POINTS_MONTHS, fmtPts } from "@/lib/points";
 import { RULES as WE_RULES, watchEarnStore } from "@/lib/watchearn";
 import { RULES as GR_RULES, goalRushStore } from "@/lib/goalrush";
 import { FALLBACK_SHARE, cancelVoucher, claimFreeGame, loyaltyStore, progressPct, type LoyaltyRow, type Period } from "@/lib/loyalty";
@@ -302,10 +302,11 @@ export default function PointsPage() {
       <section className="glass rounded-3xl p-5">
         <h2 className="text-base font-semibold">How it works</h2>
         <ul className="mt-3 space-y-3 text-sm">
-          <li className="flex gap-3"><Gamepad2 size={20} className="mt-0.5 shrink-0 text-emerald-600" /><span>Every game earns <b>price ÷ {GAME_RS_PER_POINT}</b> points. A Rs. 1,250 game earns 125.</span></li>
+          <li className="flex gap-3"><Gamepad2 size={20} className="mt-0.5 shrink-0 text-emerald-600" /><span>Every game earns <b>price ÷ {GAME_RS_PER_POINT}</b> points: a Rs. 1,000 game earns 10 and a Rs. 1,250 game earns 12.5. A game you book for another team earns the same, on your own account.</span></li>
           <li className="flex gap-3"><Gift size={20} className="mt-0.5 shrink-0 text-orange-500" /><span><b>A free game costs its price ÷ 10 in points</b>. You can claim any shift you have the points for: {loy.shifts.map((s) => `${s.period} Rs. ${s.price.toLocaleString("en-IN")} = ${fmtPts(s.cost)} points`).join(" · ")}.</span></li>
           <li className="flex gap-3"><Gamepad2 size={20} className="mt-0.5 shrink-0 text-violet-500" /><span><b>Gamezone:</b> every hour you play earns {GZ_POINTS_PER_HOUR} points (1 hour = {GZ_POINTS_PER_HOUR} points).</span></li>
-          <li className="flex gap-3"><ShoppingBag size={20} className="mt-0.5 shrink-0 text-sky-600" /><span>Extra goods: every <b>Rs. {RS_PER_POINT}</b> spent = <b>1 point</b>. Rs. 10,000 = 100 points.</span></li>
+          <li className="flex gap-3"><ShoppingBag size={20} className="mt-0.5 shrink-0 text-sky-600" /><span>Add-on items: every <b>Rs. {RS_PER_POINT}</b> spent = <b>1 point</b> (Rs. 550 = 5.5 points). Items earn at most <b>{GOODS_DAILY_MAX_POINTS} points a day</b> (Rs. {(GOODS_DAILY_MAX_POINTS * RS_PER_POINT).toLocaleString("en-IN")}); anything more that day earns no extra.</span></li>
+          <li className="flex gap-3"><HeartHandshake size={20} className="mt-0.5 shrink-0 text-pink-500" /><span><b>Refer &amp; Earn:</b> book a game for another team and you both get <b>{REFERRAL_POINTS} points</b> when the venue approves it. The other team must have an account; if not, nobody gets points.</span></li>
           <li className="flex gap-3"><Crown size={20} className="mt-0.5 shrink-0 text-violet-600" /><span>Membership purchase or renewal: <b>3 months = {MEMBERSHIP_POINTS.quarterly} points</b>, <b>6 months = {MEMBERSHIP_POINTS.half} points</b>.</span></li>
           <li className="flex gap-3"><Clapperboard size={20} className="mt-0.5 shrink-0 text-sky-600" /><span><b>Watch &amp; Earn:</b> watch ads in Quick Access. Each ad is {WE_RULES.adSeconds} seconds, and <b>{WE_RULES.adsPerPoint} ads ({WE_RULES.minutesPerPoint} minutes) = 1 point</b>.</span></li>
           <li className="flex gap-3"><Goal size={20} className="mt-0.5 shrink-0 text-emerald-600" /><span><b>Unique Goal Rush:</b> score {GR_RULES.goalsToQualify} or more of {GR_RULES.shotsPerGame} penalties to win 1 point, up to {GR_RULES.gamesPerDay} games a day.</span></li>

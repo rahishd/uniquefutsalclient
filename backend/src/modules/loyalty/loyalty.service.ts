@@ -7,7 +7,7 @@ import { todayKey } from "../../utils/dates";
 import { randomUUID } from "crypto";
 import {
   EXPIRY_WARN_DAYS, LedgerRow, LoyaltyKind, MEMBERSHIP_POINTS, PERIODS, PERIOD_HOUR, POINTS_CAPTAIN_WIN, SHARE_MAX, SHARE_MIN, SHARE_MIN_BALANCE, SHARE_PER_DAY,
-  Period, expiryFor, freeGameCost, periodOfHour, planShare, pointsForGame, pointsForGoods, r1, summarize,
+  Period, expiryFor, freeGameCost, goodsPointsRoom, periodOfHour, planShare, pointsForGame, pointsForGoods, r1, summarize,
 } from "../../utils/loyaltyPoints";
 import { addDaysKey } from "../../utils/dates";
 import logger from "../../config/logger";
@@ -171,7 +171,7 @@ export class LoyaltyService {
     }
   }
 
-  // A completed, paid regular game earns price/10 points. A free-game booking earns none.
+  // A completed, paid regular game earns price/100 points. A free-game booking earns none.
   async awardForCompletedBooking(b: { id: string; userId: string | null; totalPrice: number; paymentStatus: string; notes: string | null; voucherId?: string | null; date: string; startTime: string; source?: string }) {
     if (!b.userId) return false; // guests earn nothing
     if (b.paymentStatus !== "completed") return false;
@@ -215,14 +215,18 @@ export class LoyaltyService {
     });
   }
 
-  // Staff record a goods sale; points follow Rs. 100 = 1 point.
+  // Staff record a goods sale; points follow Rs. 100 = 1 point, at most 10 points a day per customer.
   async recordGoodsSale(p: { phone: string; amount: number; items?: string; soldBy: string }) {
     if (!Number.isInteger(p.amount) || p.amount <= 0) throw new AppError(400, "Amount must be a positive whole number");
     const user = await prisma.user.findUnique({ where: { phoneNumber: p.phone }, select: { phoneNumber: true } });
     const sale = await prisma.goodsSale.create({
       data: { userId: user?.phoneNumber ?? null, phone: p.phone, amount: p.amount, items: p.items ?? null, soldBy: p.soldBy },
     });
-    const pts = pointsForGoods(p.amount);
+    let pts = pointsForGoods(p.amount);
+    if (user) {
+      const today = await prisma.loyaltyEntry.findMany({ where: { userId: user.phoneNumber, kind: "goods", earnedOn: todayKey(), points: { gt: 0 } }, select: { points: true } });
+      pts = Math.min(pts, goodsPointsRoom(today.reduce((n, e) => n + Number(e.points), 0)));
+    }
     const awarded = user && pts > 0
       ? await this.award({ userId: user.phoneNumber, kind: "goods", points: pts, sourceType: "goods", sourceId: sale.id, detail: `Extra goods (Rs. ${p.amount})` })
       : false;

@@ -24,7 +24,7 @@ describe("refer and earn", () => {
   it("shows the rules without signing in, and needs sign-in for the rest", async () => {
     const r = await api().get("/api/refer/rules");
     expect(r.status).toBe(200);
-    expect(r.body.data).toMatchObject({ enabled: true, referrerPoints: 10, friendPoints: 10, perDay: 5 });
+    expect(r.body.data).toMatchObject({ enabled: true, referrerPoints: 5, friendPoints: 5, perDay: 5 });
     expect((await api().get("/api/refer/me")).status).toBe(401);
     expect((await api().post("/api/refer").send({})).status).toBe(401);
   });
@@ -35,13 +35,13 @@ describe("refer and earn", () => {
     expect(eligible.body.data.eligibleBookings.map((x: { code: string }) => x.code)).toContain(b.code);
     const r = await send(A, { bookingCode: b.code!.toLowerCase(), friendPhone: B, teamName: "Thunder FC" });
     expect(r.status).toBe(201);
-    expect(r.body.data).toMatchObject({ status: "pending", role: "referrer", points: 10, teamName: "Thunder FC" });
+    expect(r.body.data).toMatchObject({ status: "pending", role: "referrer", points: 5, teamName: "Thunder FC" });
     expect(r.body.data.code).toMatch(/^RF-[A-Z2-9]{6}$/);
     const mineA = await api().get("/api/refer/me").set(bearer(tokenFor(A)));
     expect(mineA.body.data.referrals).toHaveLength(1);
     expect(mineA.body.data.eligibleBookings.map((x: { code: string }) => x.code)).not.toContain(b.code);
     const mineB = await api().get("/api/refer/me").set(bearer(tokenFor(B)));
-    expect(mineB.body.data.referrals[0]).toMatchObject({ role: "friend", points: 10, referrerName: "Referrer A" });
+    expect(mineB.body.data.referrals[0]).toMatchObject({ role: "friend", points: 5, referrerName: "Referrer A" });
     expect(await prisma.notification.count({ where: { userId: B, type: "referral" } })).toBe(1);
     expect((await api().get("/api/refer/me").set(bearer(tokenFor(C)))).body.data.referrals).toHaveLength(0);
   });

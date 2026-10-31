@@ -18,7 +18,7 @@ export const FRIENDS_PER_DAY = 5; // friends one customer can register in 24 hou
 export const LOOKBACK_DAYS = 30; // a game played up to 30 days ago can still be referred
 
 export interface ReferRules { enabled: boolean; referrerPoints: number; friendPoints: number }
-export const DEFAULT_RULES: ReferRules = { enabled: true, referrerPoints: 10, friendPoints: 10 };
+export const DEFAULT_RULES: ReferRules = { enabled: true, referrerPoints: 5, friendPoints: 5 }; // 5 points each, when the booked team has a registered account and staff approve
 
 export async function getRules(): Promise<ReferRules> {
   const row = await prisma.settings.findUnique({ where: { key: SETTINGS_KEY } });

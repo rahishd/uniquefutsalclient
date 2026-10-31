@@ -1,14 +1,15 @@
 import {
-  LedgerRow, expiryFor, freeGameCost, pointsForGame, pointsForGoods, summarize,
+  LedgerRow, expiryFor, freeGameCost, goodsPointsRoom, pointsForGame, pointsForGoods, summarize,
 } from "../src/utils/loyaltyPoints";
 import { addMonthsKey, daysBetweenKeys, startsAtMs } from "../src/utils/dates";
 
 describe("point rules", () => {
-  it("game points are price/10 cut to one decimal", () => {
-    expect(pointsForGame(1250)).toBe(125);
-    expect(pointsForGame(1150)).toBe(115);
-    expect(pointsForGame(1350)).toBe(135);
-    expect(pointsForGame(1275)).toBe(127.5);
+  it("game points are price/100 cut to one decimal (court Rs. 1,000 = 10)", () => {
+    expect(pointsForGame(1000)).toBe(10);
+    expect(pointsForGame(1250)).toBe(12.5);
+    expect(pointsForGame(1150)).toBe(11.5);
+    expect(pointsForGame(1350)).toBe(13.5);
+    expect(pointsForGame(1275)).toBe(12.7);
     expect(pointsForGame(0)).toBe(0);
     expect(pointsForGame(-5)).toBe(0);
   });
@@ -17,10 +18,18 @@ describe("point rules", () => {
     expect(freeGameCost(1150)).toBe(115);
     expect(freeGameCost(1350)).toBe(135);
   });
-  it("goods earn 1 point per full Rs. 100", () => {
-    expect(pointsForGoods(10000)).toBe(100);
-    expect(pointsForGoods(250)).toBe(2);
-    expect(pointsForGoods(99)).toBe(0);
+  it("items earn Rs. 100 = 1 point to one decimal (Rs. 550 = 5.5)", () => {
+    expect(pointsForGoods(10000)).toBe(100); // before the daily limit
+    expect(pointsForGoods(550)).toBe(5.5);
+    expect(pointsForGoods(250)).toBe(2.5);
+    expect(pointsForGoods(99)).toBe(0.9);
+    expect(pointsForGoods(0)).toBe(0);
+  });
+  it("items earn at most 10 points (Rs. 1,000) a day per customer", () => {
+    expect(goodsPointsRoom(0)).toBe(10);
+    expect(goodsPointsRoom(5.5)).toBe(4.5);
+    expect(goodsPointsRoom(10)).toBe(0);
+    expect(goodsPointsRoom(12)).toBe(0);
   });
   it("expiry: games 3 months, goods 1 year, membership never, spending none", () => {
     expect(expiryFor("game", "2026-10-03")).toBe("2027-01-03");

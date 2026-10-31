@@ -31,12 +31,12 @@ afterAll(async () => {
 });
 
 describe("loyalty awards", () => {
-  it("a completed, paid game earns price/10 points, once", async () => {
+  it("a completed, paid game earns price/100 points, once", async () => {
     const b = await booking();
     expect(await loyaltyService.awardForCompletedBooking(b as any)).toBe(true);
     expect(await loyaltyService.awardForCompletedBooking(b as any)).toBe(false); // replay changes nothing
     const o = await loyaltyService.overview(U, "2026-10-05");
-    expect(o.remaining).toBe(125);
+    expect(o.remaining).toBe(12.5);
     expect(o.byType.games.nextExpiry).toBe("2026-12-01");
   });
 
@@ -70,13 +70,16 @@ describe("loyalty awards", () => {
     expect(await loyaltyService.awardForCompletedBooking((await booking({ source: "challenge" })) as any)).toBe(false);
   });
 
-  it("the owner's example: games + Rs. 10,000 of goods", async () => {
-    const res = await api().post("/api/loyalty/goods-sale").set(bearer(adminToken())).send({ phone: U, amount: 10000, items: "drinks and shoes" });
-    expect(res.status).toBe(201);
-    expect(res.body.data.points).toBe(100);
+  it("items earn Rs. 100 = 1 point, but at most 10 points a day", async () => {
+    const sell = (amount: number) => api().post("/api/loyalty/goods-sale").set(bearer(adminToken())).send({ phone: U, amount, items: "drinks and shoes" });
+    const first = await sell(550);
+    expect(first.status).toBe(201);
+    expect(first.body.data.points).toBe(5.5); // Rs. 550 = 5.5 points
+    expect((await sell(10000)).body.data.points).toBe(4.5); // only the 4.5 left of today's 10
+    expect((await sell(100)).body.data.points).toBe(0); // nothing more today
     const o = await loyaltyService.overview(U, "2026-10-05");
-    expect(o.remaining).toBe(225);
-    expect(o.byType.goods.points).toBe(100);
+    expect(o.byType.goods.points).toBe(10);
+    expect(o.remaining).toBe(22.5); // the game 12.5 + the items 10
   });
 
   it("only staff can record a goods sale", async () => {
@@ -102,7 +105,8 @@ describe("claiming a free game", () => {
   });
 
   it("two simultaneous claims cannot spend the same points twice", async () => {
-    // 225 points can pay for one Evening game (150) but not two
+    // give the customer a top-up so they hold 225 points: enough for one Evening game (150) but not two
+    await prisma.loyaltyEntry.create({ data: { userId: U, kind: "game", points: 202.5, earnedOn: "2026-10-01", expiresOn: "2099-01-01", sourceType: "adjustment", sourceId: "test-topup", detail: "Test top-up" } });
     const evening = (await loyaltyService.overview(U)).shifts.find((s) => s.period === "Evening")!;
     expect(evening.cost).toBe(150); // default Evening price Rs. 1,500 / 10
     const [a, b] = await Promise.all([
