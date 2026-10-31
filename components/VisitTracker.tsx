@@ -7,8 +7,8 @@ import { getTokens } from "@/lib/auth-token";
 
 const KEY = "uf_visitor";
 
-// Tells the venue (admin Overview > Website visits) that someone opened a page. Sends only a random id this browser made for itself:
-// no name, phone or location. Failures are ignored.
+// Tells the venue (admin Overview > Website visits) that someone opened a page. Sends only a random id this browser made for itself (and the sign-in token when there is one);
+// the server adds the IP address, rough place and device from the request. Failures are ignored.
 function visitorId(): string | null {
   try {
     let id = localStorage.getItem(KEY);

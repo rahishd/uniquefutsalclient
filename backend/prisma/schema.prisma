@@ -1019,6 +1019,15 @@ model SiteVisit {
   pages      Int      @default(1)
   firstAt    DateTime @default(now())
   lastAt     DateTime @default(now())
+  userId     String? // the signed-in account (phone), when there was one
+  ip         String?
+  city       String?
+  region     String?
+  country    String?
+  deviceType String? // mobile | tablet | desktop
+  deviceName String? // for example an Android model or iPhone, when the browser says it
+  os         String?
+  browser    String?
 
   @@unique([day, visitor])
   @@index([day])

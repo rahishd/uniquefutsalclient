@@ -5,6 +5,7 @@ import contentService from "./content.service";
 import { optionalAuthMiddleware } from "../../middlewares/auth.middleware";
 import { prisma } from "../../config/db";
 import { todayKey } from "../../utils/dates";
+import { clientIp, parseDevice, placeOf } from "../../utils/visitInfo";
 
 /* ---------- /api/content (public: no sign-in needed to see gallery and ads) ---------- */
 export const contentRouter = Router();
@@ -31,21 +32,29 @@ contentRouter.post("/ads/:id/click", asyncHandler(async (req: Request, res: Resp
   res.status(204).end();
 }));
 
-// "Website visits" for the venue. The browser sends a random id it made for itself (never a name, phone or IP) once per page view.
-// Counted once per visitor per Nepal day, with how many pages they opened. Bad ids are ignored; it always answers 204.
+// "Website visits" for the venue. The browser sends a random id it made for itself once per page view. The server adds what the request
+// itself shows (IP address, roughly where, device type and name) and, when the person is signed in, which account it is.
+// Counted once per visitor per Nepal day, with how many pages they opened. Bad ids are ignored; it always answers 204 straight away.
 const VISITOR = /^[A-Za-z0-9_-]{16,64}$/;
 contentRouter.post("/visit", optionalAuthMiddleware, asyncHandler(async (req: Request, res: Response) => {
   const visitor = String((req.body as { visitor?: unknown })?.visitor ?? "");
-  if (VISITOR.test(visitor)) {
-    const day = todayKey();
-    const registered = Boolean((req as Request & { user?: unknown }).user);
-    try {
-      await prisma.siteVisit.upsert({
-        where: { day_visitor: { day, visitor } },
-        create: { day, visitor, registered },
-        update: { pages: { increment: 1 }, lastAt: new Date(), ...(registered ? { registered: true } : {}) },
-      });
-    } catch { /* a counter must never break the page */ }
-  }
   res.status(204).end();
+  if (!VISITOR.test(visitor)) return;
+  try {
+    const day = todayKey();
+    const userId = (req as Request & { user?: { id?: string } }).user?.id ?? null;
+    const registered = Boolean(userId);
+    const where = { day_visitor: { day, visitor } };
+    const bump = { pages: { increment: 1 }, lastAt: new Date(), ...(registered ? { registered: true, userId } : {}) };
+    if (await prisma.siteVisit.findUnique({ where, select: { id: true } })) {
+      await prisma.siteVisit.update({ where, data: bump });
+      return;
+    }
+    const ip = clientIp(req);
+    const place = await placeOf(req, ip);
+    const device = parseDevice(req.headers["user-agent"]);
+    await prisma.siteVisit
+      .create({ data: { day, visitor, registered, userId, ip, ...place, ...device } })
+      .catch(() => prisma.siteVisit.update({ where, data: bump })); // two page views at once: the second one just counts
+  } catch { /* a counter must never break the page */ }
 }));
