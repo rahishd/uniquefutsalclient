@@ -1351,3 +1351,33 @@ model ChatCall {
   @@index([calleeId, status])
   @@index([callerId, status])
 }
+
+// Health tracker (customer app /health): one daily check-in per customer and a play plan with reminder days (migration 20261118000001_health).
+model HealthLog {
+  id          String   @id @default(cuid())
+  userId      String // User.phoneNumber
+  day         String // YYYY-MM-DD (Nepal)
+  sleepHours  Float?
+  water       Int? // glasses
+  energy      Int? // 1 to 5
+  mood        Int? // 1 to 5
+  soreness    Int? // 1 (none) to 5 (very sore)
+  performance Int? // how the game went, 1 (played low) to 5 (played great)
+  weightKg    Float?
+  note        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, day])
+  @@index([userId, day])
+}
+
+model HealthPlan {
+  userId     String   @id // User.phoneNumber
+  playDays   Int[] // 0 (Sunday) to 6 (Saturday)
+  remindHour Int      @default(8) // hour of the day for the "book your game" reminder
+  remind     Boolean  @default(true)
+  sleepGoal  Float    @default(8)
+  waterGoal  Int      @default(8)
+  updatedAt  DateTime @updatedAt
+}

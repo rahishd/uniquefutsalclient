@@ -387,3 +387,13 @@ Drinks and snacks (Mineral Water Bottle, Frooty...) ordered from the app during 
 |---|---|---|---|
 | GET | `/venue-orders/current` | User | `{active, next, limits:{perItem, perOrder}, items:[{id,name,price,unit,left}]}`. `active` is the customer's own confirmed game that is on now (items are empty without one); `next` is their next game |
 | POST | `/venue-orders` | User | `{items:[{productId, quantity}]}` -> `{id, items, total, game}`. 403 outside the game or for someone who did not book it, 404 for a product not switched on, 409 when stock is short, 400 for more than 6 of one item or 10 items in all, 429 after 5 orders for one game |
+
+## Health tracker
+
+A signed-in customer keeps a private daily check-in (sleep, water, energy, mood, soreness, how the game went, weight) and a play plan (play days and the reminder hour). The app works out the readiness score and charts. It is mounted at `/wellness` because `/health` is the server uptime check. Tables `HealthLog` (one row per customer per day) and `HealthPlan`; tests `backend/tests/health.test.ts`.
+
+| Method | Path | Auth | Notes |
+|---|---|---|---|
+| GET | `/wellness/me?days=` | User | `{today, plan, logs[], games[]}` for the last `days` (default 30, max 90). `games` are the caller's confirmed or completed bookings in that time |
+| PUT | `/wellness/log` | User | `{day?, sleepHours?, water?, energy?, mood?, soreness?, performance?, weightKg?, note?}`. One row per day, saving again replaces it. 400 for out-of-range numbers, an empty check-in, or a day outside the last 90 |
+| PUT | `/wellness/plan` | User | `{playDays:[0-6], remindHour, remind, sleepGoal, waterGoal}` |

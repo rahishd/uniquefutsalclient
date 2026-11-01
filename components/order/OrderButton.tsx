@@ -13,7 +13,7 @@ export default function OrderButton() {
   const session = useSession();
   const { data } = orderStore.use();
   const [open, setOpen] = useState(false);
-  if (!session?.registered) return <LockedIcon label="Order drinks and snacks"><OrderIcon size={20} /></LockedIcon>;
+  if (!session?.registered) return <LockedIcon label="Order drinks and snacks" message="Sign in to order drinks and snacks."><OrderIcon size={20} /></LockedIcon>;
   const live = Boolean(data?.active);
   return (
     <>

@@ -34,6 +34,7 @@ import { goalRushRouter } from "../modules/goalrush";
 import { watchEarnRouter } from "../modules/watchearn";
 import { academyRouter } from "../modules/academy";
 import { referRouter } from "../modules/refer";
+import { healthRouter } from "../modules/health";
 import { verifyRouter } from "../modules/verify";
 import { giftRouter } from "../modules/gift";
 import { evRouter } from "../modules/ev";
@@ -82,6 +83,7 @@ router.use("/goal-rush", goalRushRouter);
 router.use("/watch-earn", watchEarnRouter);
 router.use("/academy", academyRouter);
 router.use("/refer", referRouter);
+router.use("/wellness", healthRouter); // the player health tracker (not /health, which is the server uptime check)
 router.use("/verify", verifyRouter); // public: is this bill or document genuine?
 router.use("/gifts", giftRouter);
 router.use("/ev", evRouter);

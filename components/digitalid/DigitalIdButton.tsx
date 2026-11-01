@@ -10,7 +10,7 @@ import DigitalIdSheet from "@/components/digitalid/DigitalIdSheet";
 export default function DigitalIdButton({ variant = "icon" }: { variant?: "icon" | "row" }) {
   const session = useSession();
   const [open, setOpen] = useState(false);
-  if (!session?.registered) return variant === "icon" ? <LockedIcon label="My Digital ID"><QrCode size={18} /></LockedIcon> : null;
+  if (!session?.registered) return variant === "icon" ? <LockedIcon label="My Digital ID" message="Sign in to view your Digital ID."><QrCode size={18} /></LockedIcon> : null;
   return (
     <>
       {variant === "icon" ? (

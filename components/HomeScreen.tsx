@@ -5,6 +5,7 @@ import UserBadge, { QuickIcons } from "@/components/UserBadge";
 import LastPlayed from "@/components/LastPlayed";
 import TodayCard from "@/components/TodayCard";
 import EmergencyReminder from "@/components/emergency/EmergencyReminder";
+import HealthReminder from "@/components/health/HealthReminder";
 import HeaderPoints from "@/components/HeaderPoints";
 import NotificationBell from "@/components/NotificationBell";
 import StickyHomeBar from "@/components/StickyHomeBar";
@@ -55,6 +56,7 @@ export default function HomeScreen() {
 
         {/* no emergency contact on the account yet (older or Google accounts): a reminder with a link to add it */}
         <EmergencyReminder className="order-1 mx-3 mt-3 desk:col-span-12 desk:mx-0 desk:mt-0" />
+        <HealthReminder className="order-1 mx-0 mt-2.5 desk:col-span-12 desk:mt-0" />
 
         {/* the search bar: on its own, full width on desktop */}
         <div className="order-2 tab:mt-3 tab:[&>*]:mt-0 desk:col-span-12 desk:mt-0 desk:[&>*]:mt-0"><HomeHero /></div>

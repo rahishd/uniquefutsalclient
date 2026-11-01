@@ -7,6 +7,7 @@ import { blobToDataUrl, pdfFileName, type PdfSpec } from "@/lib/branded-pdf";
 import { errorText } from "@/lib/api";
 import { loadDigitalId, replaceDigitalId, type DigitalId } from "@/lib/digitalid";
 import { CARD_H, CARD_W, cardToBlob, drawIdCard } from "@/lib/idcard";
+import { mediaUrl } from "@/lib/content";
 import { useSession } from "@/lib/session";
 
 import { askConfirm } from "@/lib/confirm";
@@ -19,7 +20,7 @@ export default function DigitalIdSheet({ onClose }: { onClose: () => void }) {
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const session = useSession();
-  const avatar = session?.registered ? session.avatar ?? null : null; // their profile picture goes in the round photo
+  const avatar = session?.registered && session.avatar ? mediaUrl(session.avatar) : null; // their profile picture goes in the round photo (the saved value is a path on the API)
 
   useEffect(() => {
     let alive = true;
