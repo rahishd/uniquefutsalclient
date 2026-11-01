@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import HomeHero from "@/components/HomeHero";
 import UserBadge, { QuickIcons } from "@/components/UserBadge";
+import LastPlayed from "@/components/LastPlayed";
 import TodayCard from "@/components/TodayCard";
 import EmergencyReminder from "@/components/emergency/EmergencyReminder";
 import HeaderPoints from "@/components/HeaderPoints";
@@ -49,6 +50,7 @@ export default function HomeScreen() {
         <UserBadge />
 
         <TodayCard />
+        <LastPlayed />
         <QuickIcons />
 
         {/* no emergency contact on the account yet (older or Google accounts): a reminder with a link to add it */}

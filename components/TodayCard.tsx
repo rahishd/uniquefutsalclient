@@ -1,7 +1,6 @@
 "use client";
 
 import { CalendarDays, MapPin } from "lucide-react";
-import LastPlayed from "@/components/LastPlayed";
 import { PLACE, useNepaliToday, useWeather } from "@/lib/today";
 import { useT } from "@/lib/i18n";
 
@@ -37,7 +36,6 @@ export default function TodayCard() {
           <p className="mt-0.5 flex items-center justify-end gap-1.5 text-xs font-semibold text-[#3345b0]"><MapPin size={14} className="shrink-0" /><span className="truncate">{weather?.place ?? PLACE}</span></p>
         </div>
       </div>
-      <LastPlayed embedded />
     </section>
   );
 }

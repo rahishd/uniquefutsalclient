@@ -36,10 +36,11 @@ export default function UserBadge() {
           <span className={`block text-xs ${vip ? "text-sky-100/85" : "text-[#3345b0]"}`}>
             {captain ? t("Captain") : t("Hello")} <span aria-hidden>👋</span>
           </span>
-          <span className="block min-h-6 truncate text-lg font-medium leading-tight tab:text-2xl">{session ? name : ""}</span>
+          <span className="block min-h-6 truncate text-lg font-medium leading-tight tab:text-2xl">{session ? name.trim().split(/\s+/)[0] : ""}</span>
           {clubMember && <span className={`mt-1 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${vip ? "bg-white text-[#0c0b5d]" : "bg-white text-[#2c3da0]"}`}><BadgeCheck size={13} aria-hidden /> Club Member</span>}
         </span>
       </Link>
+      <span className="shrink-0 [&>button]:!h-11 [&>button]:!w-11 [&>button]:!rounded-2xl [&>button]:!bg-white [&>button>svg]:!h-6 [&>button>svg]:!w-6"><DigitalIdButton /></span>
     </div>
   );
 }
@@ -48,7 +49,6 @@ export default function UserBadge() {
 export function QuickIcons() {
   return (
     <div className="order-1 mt-2.5 flex w-full min-w-0 items-center justify-between gap-2 rounded-2xl bg-white px-2.5 py-2.5 shadow-[0_8px_20px_-12px_rgba(59,130,246,0.45)] ring-1 ring-[#bfd7ff] desk:col-span-6 desk:mt-3 desk:justify-start desk:gap-5 desk:rounded-none desk:bg-transparent desk:p-0 desk:px-1 desk:shadow-none desk:ring-0 [&>a]:!h-12 [&>a]:!w-12 [&>a]:!rounded-2xl [&>a]:!bg-[#eaf1ff] [&>a]:!shadow-none [&>a>svg]:!h-6 [&>a>svg]:!w-6 [&>button]:!h-12 [&>button]:!w-12 [&>button]:!rounded-2xl [&>button]:!bg-[#eaf1ff] [&>button]:!shadow-none [&>button>svg]:!h-6 [&>button>svg]:!w-6 desk:[&>a]:!bg-white desk:[&>a]:!shadow-[0_4px_10px_-3px_rgba(12,11,93,0.3)] desk:[&>button]:!bg-white desk:[&>button]:!shadow-[0_4px_10px_-3px_rgba(12,11,93,0.3)] lg:[&>a]:!h-14 lg:[&>a]:!w-14 lg:[&>button]:!h-14 lg:[&>button]:!w-14 lg:[&>a>svg]:!h-7 lg:[&>a>svg]:!w-7 lg:[&>button>svg]:!h-7 lg:[&>button>svg]:!w-7">
-        <DigitalIdButton />
         <OrderButton />
         <WifiButton />
         <RulesButton />
