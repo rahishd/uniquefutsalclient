@@ -31,7 +31,7 @@ export default function HomeScreen() {
     <div className="uf-home flex flex-col tab:grid tab:grid-cols-12 tab:items-start tab:gap-x-6 desk:items-stretch desk:gap-x-8 desk:gap-y-6">
       <div className="uf-home-left contents tab:col-span-6 tab:block desk:contents">
         {/* Who is signed in. The bell lives in the page header (components/CompanyHeader.tsx). */}
-        <header className="uf-navy-card order-1 -mx-5 -mt-5 overflow-hidden rounded-b-[2rem] bg-[#3345b0] tab:mx-0 tab:mt-0 tab:rounded-3xl text-white shadow-[0_10px_30px_rgba(51,69,176,0.3)] desk:hidden">
+        <header className="uf-navy-card order-1 -mx-5 -mt-5 overflow-hidden rounded-b-[2rem] border-2 border-t-0 border-white/80 bg-[#0c0b5d] tab:mx-0 tab:mt-0 tab:rounded-3xl text-white shadow-[0_10px_30px_rgba(12,11,93,0.4)] desk:hidden">
           {/* phone: the logo, points and bell sit on the top row of this one card (on desktop the bar above does this) */}
           <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-[max(calc(env(safe-area-inset-top)_-_0.625rem),0.5rem)] desk:hidden">
             <div className="flex min-w-0 items-center gap-2.5">
