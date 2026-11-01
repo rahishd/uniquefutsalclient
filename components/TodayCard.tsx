@@ -16,7 +16,7 @@ export function weatherWord(code: number) {
   return "Rain";
 }
 
-// Home: one light-blue card. The venue weather and date sit on top, and the customer's last played game (when there is one) is inside the same card, underneath.
+// Home: the venue weather and date as plain text (no card), and the customer's last played game (when there is one) under them.
 export default function TodayCard() {
   const today = useNepaliToday();
   const weather = useWeather();
@@ -24,20 +24,17 @@ export default function TodayCard() {
   const code = weather ? weather.code : 2;
 
   return (
-    <section aria-label="Today at the venue" className="uf-keep relative order-1 mt-3 overflow-hidden rounded-3xl border border-white/10 p-3.5 shadow-[0_10px_26px_-8px_rgba(5,10,43,0.7)] desk:col-span-6 desk:mt-0 desk:p-4"
-      style={{ background: "linear-gradient(135deg, #0c0b5d 0%, #08084a 55%, #050a2b 100%)", color: "#ffffff" }}>
-      {/* soft glow in the corner */}
-      <span aria-hidden className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-[#3b4bd8] opacity-40 blur-3xl" />
+    <section aria-label="Today at the venue" className="uf-keep relative order-1 mt-2.5 rounded-2xl bg-white px-4 py-3 text-[#0c0b5d] shadow-[0_8px_20px_-12px_rgba(59,130,246,0.45)] ring-1 ring-[#bfd7ff] desk:col-span-6 desk:mt-0">
       <div className="relative flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="flex items-baseline gap-0.5 text-[34px] font-semibold leading-none">
-            {weather ? weather.temp : "--"}<span className="text-base font-medium">°C</span>
+          <p className="flex items-baseline gap-0.5 text-[30px] font-bold leading-none tracking-tight">
+            {weather ? weather.temp : "--"}<span className="text-base font-semibold text-[#3345b0]">°C</span>
           </p>
-          <p className="mt-1 text-xs font-medium text-sky-200">{t(weatherWord(code))}</p>
+          <p className="mt-0.5 text-xs font-semibold text-[#3345b0]">{t(weatherWord(code))}</p>
         </div>
         <div className="min-w-0 text-right">
-          <p className="flex items-center justify-end gap-1.5 text-sm font-semibold"><CalendarDays size={14} className="shrink-0" /><span className="truncate">{today.en || " "}</span></p>
-          <p className="mt-1 flex items-center justify-end gap-1.5 text-xs font-medium text-sky-200"><MapPin size={13} className="shrink-0" /><span className="truncate">{PLACE}</span></p>
+          <p className="flex items-center justify-end gap-1.5 text-sm font-bold"><CalendarDays size={15} className="shrink-0 text-[#3345b0]" /><span className="truncate">{today.en || " "}</span></p>
+          <p className="mt-0.5 flex items-center justify-end gap-1.5 text-xs font-semibold text-[#3345b0]"><MapPin size={14} className="shrink-0" /><span className="truncate">{weather?.place ?? PLACE}</span></p>
         </div>
       </div>
       <LastPlayed embedded />

@@ -9,8 +9,14 @@ export const site = {
   whatsapp: "https://wa.me/9779811940018",
   email: "info.uniquefutsal@gmail.com",
   address: "Manigram Tilottama-05, Rupandehi, Nepal",
-  // TODO: add the real profile URLs. Icons show but are not clickable while empty.
-  facebook: "",
-  tiktok: "",
+  facebook: "https://www.facebook.com/uniquefutsalManigramButwal",
+  instagram: "https://www.instagram.com/unique_futsal/",
+  // the Google review page of the venue: customers land straight on the star rating and the review box
+  googleReview: "https://g.page/r/CRl5beWqurMkEBM/review",
+  tiktok: "https://www.tiktok.com/@unique.futsal?lang=en",
+  // "Track us" opens the phone's maps app: Google Maps by default, Apple Maps on iPhone, iPad and Mac
+  mapLink: "https://maps.app.goo.gl/D5SzJbdStfEnhhSP9", // the venue's pin on Google Maps
+  mapLat: 27.620156, // the same pin, for Apple Maps
+  mapLng: 83.4725211,
   mapEmbed: "https://www.google.com/maps?q=Unique+Futsal+Tilottama+Rupandehi+Nepal&output=embed",
 };

@@ -8,43 +8,24 @@
   --color-ink: #1e293b;
 }
 
+/* The app background: a light blue with a fine dotted texture, fixed behind every page. */
 html {
   color-scheme: light;
-  background: #ffffff;
+  background: #e9f1ff;
 }
 
 body {
   font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   color: var(--color-ink);
-  background: #ffffff;
+  background-color: #eaf2ff;
+  background-image:
+    radial-gradient(rgba(51, 69, 176, 0.09) 1px, transparent 1.4px),
+    radial-gradient(rgba(51, 69, 176, 0.05) 1px, transparent 1.4px),
+    linear-gradient(180deg, #f3f8ff 0%, #e6f0ff 55%, #dce9ff 100%);
+  background-size: 22px 22px, 22px 22px, 100% 100%;
+  background-position: 0 0, 11px 11px, 0 0;
+  background-attachment: fixed;
   overflow-x: hidden;
-}
-
-/* The Home page paints a photo background (components/ScrollBackdrop.tsx) behind the content, so the page itself
-   must not paint white over it. In dark mode the photos are not used. */
-html.has-backdrop body {
-  background: transparent;
-}
-html.dark .scroll-backdrop {
-  display: none;
-}
-html.dark.has-backdrop body {
-  background: #ffffff;
-}
-
-/* With a photo behind the page, the light greys would blend into it. Secondary text is one step darker here, and
-   text is drawn for legibility. */
-html.has-backdrop {
-  text-rendering: optimizeLegibility;
-}
-html.has-backdrop .text-slate-400 {
-  color: #475569;
-}
-html.has-backdrop .text-slate-500 {
-  color: #334155;
-}
-html.has-backdrop .text-slate-600 {
-  color: #1e293b;
 }
 
 /* Clean white cards: a hairline border and a soft shadow, no tint and no blur. */
@@ -240,20 +221,6 @@ html.dark :is(.bg-brand:not(.text-white), .uf-keep, [class*="bg-[#0c0b5d]"], [cl
 }
 @media (prefers-reduced-motion: reduce) {
   .uf-soon { animation: none; }
-}
-
-/* Home sky: soft clouds drift slowly across (components/ScrollBackdrop.tsx). */
-@keyframes uf-cloud-drift {
-  from { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(40px, 0, 0); }
-  to { transform: translate3d(0, 0, 0); }
-}
-.uf-cloud {
-  animation: uf-cloud-drift 46s ease-in-out infinite;
-  filter: drop-shadow(0 6px 10px rgba(59, 130, 246, 0.12));
-}
-@media (prefers-reduced-motion: reduce) {
-  .uf-cloud { animation: none; }
 }
 
 /* Splash screen (components/Splash.tsx): a dark blue screen where the white kicking player "connects" from the feet up

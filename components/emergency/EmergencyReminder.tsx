@@ -31,14 +31,14 @@ export default function EmergencyReminder({ className = "" }: { className?: stri
   }
 
   return (
-    <div role="note" className={`flex items-start gap-3 rounded-3xl bg-rose-50 p-4 text-rose-900 ring-1 ring-rose-200 ${className}`}>
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-rose-500/15 text-rose-600"><HeartPulse size={20} /></span>
+    <div role="note" className={`flex items-start gap-3 rounded-3xl bg-gradient-to-br from-[#4457c4] via-[#3345b0] to-[#2c3da0] p-4 text-white ring-1 ring-[#4a5cc8] shadow-[0_8px_22px_-12px_rgba(51,69,176,0.6)] ${className}`}>
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white"><HeartPulse size={20} /></span>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold">Add an emergency contact</p>
-        <p className="mt-0.5 text-xs text-rose-800/80">For emergency situations: if you get hurt at the venue, we (and your teammates) can call them straight away.</p>
-        <Link href="/profile#emergency" className="mt-2 inline-flex rounded-full bg-rose-600 px-4 py-1.5 text-xs font-bold" style={{ color: "#ffffff" }}>Add now</Link>
+        <p className="mt-0.5 text-xs text-sky-100/90">For emergency situations: if you get hurt at the venue, we (and your teammates) can call them straight away.</p>
+        <Link href="/profile#emergency" className="mt-2 inline-flex rounded-full bg-white px-4 py-1.5 text-xs font-bold" style={{ color: "#2c3da0" }}>Add now</Link>
       </div>
-      <button type="button" onClick={remindLater} aria-label="Remind me later" title="Remind me later" className="shrink-0 rounded-full p-1 text-rose-400 hover:text-rose-600"><X size={18} /></button>
+      <button type="button" onClick={remindLater} aria-label="Remind me later" title="Remind me later" className="shrink-0 rounded-full p-1 text-white/70 hover:text-white"><X size={18} /></button>
     </div>
   );
 }

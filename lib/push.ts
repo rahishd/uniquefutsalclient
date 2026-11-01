@@ -38,10 +38,16 @@ export async function enablePush(): Promise<{ ok: true } | { ok: false; error: s
   if (permission !== "granted") return { ok: false, error: "Alerts are blocked. Allow notifications for this site in your browser settings." };
   const key = await api<{ enabled: boolean; publicKey: string }>("/push/public-key", { auth: "none" });
   if (!key.enabled) return { ok: false, error: "Alerts when the app is closed are not available yet." };
-  const reg = await registration();
-  const sub = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: toKey(key.publicKey) }));
-  await send(sub);
-  return { ok: true };
+  try {
+    const reg = await registration();
+    const sub = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: toKey(key.publicKey) }));
+    await send(sub);
+    return { ok: true };
+  } catch (e) {
+    // the browser's push service refused (AbortError): common in embedded/private browsers and when offline
+    if (e instanceof DOMException && e.name === "AbortError") return { ok: false, error: "This browser's push service is not available right now. Try Chrome or Edge, or install the app to your Home Screen." };
+    throw e;
+  }
 }
 
 export async function disablePush() {

@@ -27,27 +27,32 @@ export default function UserBadge() {
   const clubMember = Boolean(session?.registered && club?.member); // active Unique Club member
 
   return (
-    <div className={`order-1 mt-3 flex w-full min-w-0 items-center gap-3 rounded-3xl border p-3 desk:col-span-6 desk:mt-0 desk:p-4 ${vip
-      ? "text-[#0c0b5d] border-rose-300 bg-gradient-to-br from-[#ffe9ec] via-[#ffd0d6] to-[#ffb3be] shadow-[0_8px_22px_-12px_rgba(225,29,72,0.6)]"
-      : "text-white border-emerald-700 bg-gradient-to-br from-[#06402b] via-[#0a5a3c] to-[#0f7a50] shadow-[0_8px_22px_-12px_rgba(6,64,43,0.7)]"}`}>
+    <div className={`order-1 mt-2 flex w-full min-w-0 items-center gap-3 rounded-3xl border p-2.5 desk:col-span-6 desk:mt-0 desk:p-4 ${vip
+      ? "text-white border-[#0c0b5d] bg-gradient-to-br from-[#0c0b5d] via-[#08084a] to-[#050a2b] shadow-[0_8px_22px_-12px_rgba(12,11,93,0.8)]"
+      : "text-white border-[#4a5cc8] bg-gradient-to-br from-[#4457c4] via-[#3345b0] to-[#2c3da0] shadow-[0_8px_22px_-12px_rgba(51,69,176,0.6)]"}`}>
       <Link href="/profile" className="flex min-w-0 flex-1 items-center gap-3">
-        {session ? <ProfileAvatar name={name} captain={captain} size={56} src={session.registered ? session.avatar : null} /> : <span className="block h-14 w-14 shrink-0 rounded-full bg-white/60" />}
+        {session ? <ProfileAvatar name={name} captain={captain} size={44} src={session.registered ? session.avatar : null} /> : <span className="block h-11 w-11 shrink-0 rounded-full bg-white/60" />}
         <span className="min-w-0">
-          <span className={`block text-sm ${vip ? "text-rose-900/70" : "text-emerald-100/80"}`}>
+          <span className={`block text-xs text-sky-100/85`}>
             {captain ? t("Captain") : t("Hello")} <span aria-hidden>👋</span>
           </span>
-          <span className="block min-h-8 truncate text-xl font-medium leading-tight tab:text-2xl">{session ? name : ""}</span>
-          {clubMember && <span className={`mt-1 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${vip ? "bg-[#0c0b5d] text-white" : "bg-white text-emerald-900"}`}><BadgeCheck size={13} aria-hidden /> Club Member</span>}
+          <span className="block min-h-6 truncate text-lg font-medium leading-tight tab:text-2xl">{session ? name : ""}</span>
+          {clubMember && <span className={`mt-1 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${vip ? "bg-white text-[#0c0b5d]" : "bg-white text-[#2c3da0]"}`}><BadgeCheck size={13} aria-hidden /> Club Member</span>}
         </span>
       </Link>
-      {/* the quick icons: a 2 x 2 block of white round buttons on phones and tablets; one big row on desktop */}
-      <div className="ml-auto grid shrink-0 grid-cols-2 place-items-center gap-2.5 [&>a]:!h-12 [&>a]:!w-12 [&>a]:!bg-white [&>a]:!shadow-[0_4px_10px_-3px_rgba(12,11,93,0.3)] [&>a>svg]:!h-6 [&>a>svg]:!w-6 [&>button]:!h-12 [&>button]:!w-12 [&>button]:!bg-white [&>button]:!shadow-[0_4px_10px_-3px_rgba(12,11,93,0.3)] [&>button>svg]:!h-6 [&>button>svg]:!w-6 tab:gap-3 lg:flex lg:gap-4 lg:[&>a]:!h-14 lg:[&>a]:!w-14 lg:[&>button]:!h-14 lg:[&>button]:!w-14 lg:[&>a>svg]:!h-7 lg:[&>a>svg]:!w-7 lg:[&>button>svg]:!h-7 lg:[&>button>svg]:!w-7">
+    </div>
+  );
+}
+
+// The quick icons: one row of white round buttons, shown just under the weather and date on Home.
+export function QuickIcons() {
+  return (
+    <div className="order-1 mt-2.5 flex w-full min-w-0 items-center justify-between gap-2 rounded-2xl bg-white px-2.5 py-2.5 shadow-[0_8px_20px_-12px_rgba(59,130,246,0.45)] ring-1 ring-[#bfd7ff] desk:col-span-6 desk:mt-3 desk:justify-start desk:gap-5 desk:rounded-none desk:bg-transparent desk:p-0 desk:px-1 desk:shadow-none desk:ring-0 [&>a]:!h-10 [&>a]:!w-10 [&>a]:!bg-[#eaf1ff] [&>a]:!shadow-none [&>a>svg]:!h-5 [&>a>svg]:!w-5 [&>button]:!h-10 [&>button]:!w-10 [&>button]:!bg-[#eaf1ff] [&>button]:!shadow-none [&>button>svg]:!h-5 [&>button>svg]:!w-5 desk:[&>a]:!bg-white desk:[&>a]:!shadow-[0_4px_10px_-3px_rgba(12,11,93,0.3)] desk:[&>button]:!bg-white desk:[&>button]:!shadow-[0_4px_10px_-3px_rgba(12,11,93,0.3)] lg:[&>a]:!h-14 lg:[&>a]:!w-14 lg:[&>button]:!h-14 lg:[&>button]:!w-14 lg:[&>a>svg]:!h-7 lg:[&>a>svg]:!w-7 lg:[&>button>svg]:!h-7 lg:[&>button>svg]:!w-7">
         <DigitalIdButton />
         <OrderButton />
         <WifiButton />
         <RulesButton />
         <WhatsAppChat />
       </div>
-    </div>
   );
 }

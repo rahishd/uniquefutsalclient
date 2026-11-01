@@ -20,17 +20,17 @@ export default function Facilities() {
   return (
     <section aria-label="What Makes Us Unique" className="mb-10">
       <h2 className="text-left text-lg font-bold text-brand desk:text-2xl">What Makes Us Unique</h2>
-      <ul className="mt-4 grid grid-cols-2 gap-3 desk:mt-6 desk:grid-cols-3 desk:gap-5">
+      <ul className="mt-3 grid grid-cols-2 gap-2.5 desk:mt-5 desk:grid-cols-4 desk:gap-4">
         {FACILITIES.map(({ title, note, icon: Icon }) => (
           <li
             key={title}
-            className="last:col-span-2 desk:last:col-span-1 flex flex-col items-center gap-3 rounded-3xl border border-slate-200 bg-white px-3 py-5 text-center shadow-[0_2px_10px_rgba(15,23,42,0.05)] desk:py-7"
+            className="last:col-span-2 desk:last:col-span-1 flex flex-col items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-2.5 py-3 text-center shadow-[0_2px_8px_rgba(15,23,42,0.05)] desk:px-4 desk:py-5"
           >
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-100 text-[#0c0b5d] desk:h-16 desk:w-16">
-              <Icon size={28} strokeWidth={1.9} aria-hidden />
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100 text-[#0c0b5d] desk:h-12 desk:w-12">
+              <Icon size={22} strokeWidth={1.9} aria-hidden />
             </span>
-            <span className="text-sm font-semibold leading-snug text-slate-800 desk:text-base">{title}</span>
-            {note && <span className="-mt-2 text-[11px] leading-snug text-slate-500 desk:text-xs">{note}</span>}
+            <span className="mt-0.5 text-[13px] font-bold leading-tight text-[#0c0b5d] desk:text-[15px]">{title}</span>
+            {note && <span className="text-[10.5px] leading-snug text-slate-500 desk:text-xs">{note}</span>}
           </li>
         ))}
       </ul>

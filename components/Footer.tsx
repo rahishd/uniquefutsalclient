@@ -1,16 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Mail, MapPin, PhoneCall, Leaf, Smartphone } from "lucide-react";
-import { FaFacebookF, FaTiktok, FaWhatsapp } from "react-icons/fa6";
+import { ChevronDown, ChevronUp, Mail, MapPin, Navigation, PhoneCall, Leaf, Smartphone } from "lucide-react";
+import { FaFacebookF, FaGoogle, FaInstagram, FaStar, FaTiktok, FaWhatsapp } from "react-icons/fa6";
 import { site } from "@/lib/site";
 import { useT } from "@/lib/i18n";
 import PartnersStrip from "@/components/PartnersStrip";
 import Facilities from "@/components/Facilities";
 
 
-function Social({ href, label, children }: { href: string; label: string; children: React.ReactNode }) {
-  const cls = "glass flex h-12 w-12 items-center justify-center rounded-2xl text-lg";
+// a round brand-coloured tile with a white icon; `bg` is the brand colour (or gradient) and `glow` its soft shadow
+function Social({ href, label, bg, glow, children }: { href: string; label: string; bg: string; glow: string; children: React.ReactNode }) {
+  const cls = `flex h-12 w-12 items-center justify-center rounded-full text-[22px] text-white ring-2 ring-white/70 transition active:scale-95 ${bg} ${glow}`;
   return href ? (
     <a href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className={cls}>
       {children}
@@ -20,6 +21,14 @@ function Social({ href, label, children }: { href: string; label: string; childr
       {children}
     </span>
   );
+}
+
+const GOOGLE_MAP = site.mapLink;
+const APPLE_MAP = `https://maps.apple.com/?ll=${site.mapLat},${site.mapLng}&q=${encodeURIComponent(site.name)}`;
+
+// A tap opens the maps app on the phone: Apple Maps on Apple devices, otherwise Google Maps (the link also works in a browser).
+function openMaps(e: React.MouseEvent<HTMLAnchorElement>) {
+  if (/iPhone|iPad|iPod|Macintosh/i.test(navigator.userAgent)) { e.preventDefault(); window.open(APPLE_MAP, "_blank", "noopener,noreferrer"); }
 }
 
 const heading = "text-xs font-bold uppercase tracking-[0.2em] text-[#0c0b5d]";
@@ -73,9 +82,28 @@ export default function Footer() {
       </section>
 
 
-      <div className="mt-10 space-y-10 desk:grid desk:grid-cols-3 desk:gap-10 desk:space-y-0">
+      {/* ask for a Google review: plain text; any star (or the link) opens the venue's Google review form */}
+      <section aria-label="Review us on Google" className="mt-10">
+        <h2 className={heading}>{t("How was your experience?")}</h2>
+        <p className="mt-4 text-sm text-slate-500">{t("Tell others about Unique Futsal with a quick Google review.")}</p>
+        <div className="relative mt-3 overflow-hidden rounded-2xl bg-gradient-to-br from-[#eaf3ff] via-[#dbeaff] to-[#cbe0ff] p-3.5 text-center shadow-[0_14px_28px_-16px_rgba(59,130,246,0.5)] ring-1 ring-[#bfd7ff]">
+          <span aria-hidden className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white opacity-70 blur-3xl" />
+          <div className="relative flex justify-center gap-1">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <a key={n} href={site.googleReview} target="_blank" rel="noopener noreferrer" aria-label={`Rate us ${n} star${n > 1 ? "s" : ""} on Google`} className="rounded-full p-1 text-[26px] text-[#fbbc05] drop-shadow-[0_2px_3px_rgba(0,0,0,0.25)] transition active:scale-90">
+                <FaStar />
+              </a>
+            ))}
+          </div>
+          <a href={site.googleReview} target="_blank" rel="noopener noreferrer" className="relative mt-2 flex items-center justify-center gap-1.5 rounded-full bg-white px-4 py-2 text-[13px] font-bold transition active:scale-[0.98]" style={{ color: "#2c3da0" }}>
+            <FaGoogle size={13} className="text-[#4285f4]" /> {t("Write a Google review")} <span aria-hidden>→</span>
+          </a>
+        </div>
+      </section>
+
+      <div className="mt-10 space-y-10 desk:grid desk:grid-cols-2 desk:gap-10 desk:space-y-0">
         <div>
-          <h2 className={heading}>{t("Contact us")}</h2>
+          <h2 className={heading}>{t("Connect with us")}</h2>
           <ul className="mt-4 space-y-3 text-sm font-medium text-slate-600">
             <li>
               <a href={`tel:${site.phone}`} className="flex items-center gap-3">
@@ -100,63 +128,78 @@ export default function Footer() {
               {site.address}
             </li>
           </ul>
-        </div>
-
-        <div>
-          <h2 className={heading}>{t("Follow us")}</h2>
-          <p className="mt-4 text-sm text-slate-500">{t("Stay updated with our latest offers, tournaments, and events.")}</p>
-          <div className="mt-4 flex gap-3">
-            <Social href={site.whatsapp} label="WhatsApp">
-              <FaWhatsapp className="text-[#25d366]" />
+          <div className="mt-5 border-t border-slate-200/80 pt-4">
+            <p className="text-sm font-medium text-slate-600">{t("Connect with our Social Media Profile")}</p>
+          <div className="mt-3 flex gap-3">
+            <Social href={site.whatsapp} label="WhatsApp" bg="bg-gradient-to-br from-[#3be07a] to-[#12a150]" glow="shadow-[0_8px_16px_-6px_rgba(18,161,80,0.7)]">
+              <FaWhatsapp />
             </Social>
-            <Social href={site.facebook} label="Facebook">
-              <FaFacebookF className="text-[#1877f2]" />
+            <Social href={site.facebook} label="Facebook" bg="bg-gradient-to-br from-[#3b8bff] to-[#1250c8]" glow="shadow-[0_8px_16px_-6px_rgba(24,119,242,0.7)]">
+              <FaFacebookF className="text-xl" />
             </Social>
-            <Social href={site.tiktok} label="TikTok">
-              <FaTiktok className="text-black" />
+            <Social href={site.instagram} label="Instagram" bg="bg-gradient-to-tr from-[#f9a825] via-[#e1306c] to-[#7b3fe4]" glow="shadow-[0_8px_16px_-6px_rgba(225,48,108,0.7)]">
+              <FaInstagram />
             </Social>
+            <Social href={site.tiktok} label="TikTok" bg="bg-gradient-to-br from-[#2a2a33] to-black" glow="shadow-[0_8px_16px_-6px_rgba(0,0,0,0.6)]">
+              <FaTiktok className="text-xl" />
+            </Social>
+          </div>
           </div>
         </div>
 
-        <div>
-          <h2 className={heading}>{t("Find us")}</h2>
-          <div className="glass mt-4 overflow-hidden rounded-2xl">
-            <iframe
-              title={`${site.name} on Google Maps`}
-              src={site.mapEmbed}
-              className="h-48 w-full border-0"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
+        <div className="space-y-6">
+          {/* Go Digital Go Paperless section */}
+          <section aria-label="Environmental commitment" className="rounded-2xl bg-white p-3 shadow-md ring-1 ring-slate-200">
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-center gap-4">
+                <div className="flex items-center gap-2.5">
+                  <Smartphone size={18} className="text-[#0c0b5d]" />
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wide text-[#0c0b5d]">Go Digital</h3>
+                    <p className="text-[11px] text-[#0c0b5d] font-semibold">Go Paperless</p>
+                  </div>
+                </div>
+                <div className="h-7 w-px bg-slate-300" />
+                <div className="flex items-center gap-2.5">
+                  <Leaf size={18} className="text-[#0c0b5d]" />
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wide text-[#0c0b5d]">Save</h3>
+                    <p className="text-[11px] text-[#0c0b5d] font-semibold">Environment</p>
+                  </div>
+                </div>
+              </div>
+              <div className="border-t border-slate-200 pt-2.5">
+                <p className="text-center text-[10.5px] leading-snug text-[#0c0b5d]">At Unique Futsal, we believe in making everyday operations smarter and easier through digital technology. From bookings and payments to records and daily management, we handle almost everything digitally, reducing the need for paper and printed documents while creating a more efficient, eco-friendly, and sustainable environment.</p>
+              </div>
+            </div>
+          </section>
+
+          <div>
+            <h2 className={heading}>{t("Find us")}</h2>
+            <a href={GOOGLE_MAP} onClick={openMaps} target="_blank" rel="noopener noreferrer" aria-label={`Track ${site.name} on the map`}
+              className="relative mt-3 block overflow-hidden rounded-2xl bg-gradient-to-br from-[#eaf3ff] via-[#dbeaff] to-[#cbe0ff] p-3.5 text-[#0c0b5d] shadow-[0_14px_28px_-16px_rgba(59,130,246,0.5)] ring-2 ring-white/80 transition active:scale-[0.98]">
+              <span aria-hidden className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white opacity-70 blur-3xl" />
+              <span aria-hidden className="pointer-events-none absolute -bottom-12 -left-8 h-28 w-28 rounded-full border border-white/70" />
+              <span aria-hidden className="pointer-events-none absolute -bottom-6 -left-2 h-16 w-16 rounded-full border border-white/70" />
+              <div className="relative flex items-center gap-3">
+                <span className="relative flex h-11 w-11 shrink-0 items-center justify-center">
+                  <span aria-hidden className="absolute inset-0 animate-ping rounded-full bg-[#3345b0]/15 motion-reduce:animate-none" />
+                  <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#3345b0] shadow-[0_5px_12px_-6px_rgba(51,69,176,0.5)] ring-2 ring-white"><MapPin size={20} /></span>
+                </span>
+                <div className="min-w-0">
+                  <p className="inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-[#3345b0]"><span aria-hidden className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Live location</p>
+                  <p className="text-base font-bold leading-tight">{site.name}</p>
+                  <p className="text-[11px] leading-snug text-[#334155]">{site.address}</p>
+                </div>
+              </div>
+              <span className="relative mt-3 flex items-center justify-center gap-1.5 rounded-full bg-white px-4 py-2 text-[13px] font-bold shadow-[0_4px_10px_-6px_rgba(59,130,246,0.6)] ring-1 ring-white" style={{ color: "#2c3da0" }}>
+                <Navigation size={14} /> {t("Track us")} <span aria-hidden>→</span>
+              </span>
+            </a>
           </div>
         </div>
       </div>
 
-      {/* Go Digital Go Paperless section */}
-      <section aria-label="Environmental commitment" className="mb-8 mt-16 rounded-3xl bg-white p-4 shadow-md ring-1 ring-slate-200">
-        <div className="space-y-4">
-          <div className="flex items-center justify-center gap-5">
-            <div className="flex items-center gap-2.5">
-              <Smartphone size={18} className="text-[#0c0b5d]" />
-              <div>
-                <h3 className="text-xs font-bold uppercase tracking-wide text-[#0c0b5d]">Go Digital</h3>
-                <p className="text-[11px] text-[#0c0b5d] font-semibold">Go Paperless</p>
-              </div>
-            </div>
-            <div className="h-9 w-px bg-slate-300" />
-            <div className="flex items-center gap-2.5">
-              <Leaf size={18} className="text-[#0c0b5d]" />
-              <div>
-                <h3 className="text-xs font-bold uppercase tracking-wide text-[#0c0b5d]">Save</h3>
-                <p className="text-[11px] text-[#0c0b5d] font-semibold">Environment</p>
-              </div>
-            </div>
-          </div>
-          <div className="border-t border-slate-200 pt-4">
-            <p className="text-center text-[11px] leading-relaxed text-[#0c0b5d]">At Unique Futsal, we believe in making everyday operations smarter and easier through digital technology. From bookings and payments to records and daily management, we handle almost everything digitally, reducing the need for paper and printed documents while creating a more efficient, eco-friendly, and sustainable environment.</p>
-          </div>
-        </div>
-      </section>
 
       <div className="mt-8 flex items-center justify-between gap-4 border-t border-slate-200 pt-5">
         <div className="flex items-center gap-2.5">

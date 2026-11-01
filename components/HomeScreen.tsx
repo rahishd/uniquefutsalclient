@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import HomeHero from "@/components/HomeHero";
-import UserBadge from "@/components/UserBadge";
+import UserBadge, { QuickIcons } from "@/components/UserBadge";
 import TodayCard from "@/components/TodayCard";
 import EmergencyReminder from "@/components/emergency/EmergencyReminder";
 import HeaderPoints from "@/components/HeaderPoints";
@@ -17,7 +17,6 @@ import TournamentSection from "@/components/TournamentSection";
 import KidSkills from "@/components/KidSkills";
 import AdStrip from "@/components/ads/AdStrip";
 import GallerySection from "@/components/ads/GallerySection";
-import ScrollBackdrop from "@/components/ScrollBackdrop";
 
 // Phone and portrait tablet: one column, in the `order-N` order below.
 // Tablet and wide phone (`tab:`, 640px and up): the same two columns, 50/50. Desktop mode (`desk:`, see globals.css), top to bottom:
@@ -30,11 +29,9 @@ export default function HomeScreen() {
     <>
       <StickyHomeBar />
     <div className="uf-home flex flex-col tab:grid tab:grid-cols-12 tab:items-start tab:gap-x-6 desk:items-stretch desk:gap-x-8 desk:gap-y-6">
-      {/* photo background that changes as the page scrolls (fixed, behind everything, ignores clicks) */}
-      <ScrollBackdrop />
       <div className="uf-home-left contents tab:col-span-6 tab:block desk:contents">
         {/* Who is signed in. The bell lives in the page header (components/CompanyHeader.tsx). */}
-        <header className="uf-navy-card order-1 -mx-5 -mt-5 overflow-hidden rounded-b-[2rem] bg-[#0c0b5d] tab:mx-0 tab:mt-0 tab:rounded-3xl text-white shadow-[0_10px_30px_rgba(12,11,93,0.35)] desk:hidden">
+        <header className="uf-navy-card order-1 -mx-5 -mt-5 overflow-hidden rounded-b-[2rem] bg-[#3345b0] tab:mx-0 tab:mt-0 tab:rounded-3xl text-white shadow-[0_10px_30px_rgba(51,69,176,0.3)] desk:hidden">
           {/* phone: the logo, points and bell sit on the top row of this one card (on desktop the bar above does this) */}
           <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-[max(calc(env(safe-area-inset-top)_-_0.625rem),0.5rem)] desk:hidden">
             <div className="flex min-w-0 items-center gap-2.5">
@@ -48,10 +45,11 @@ export default function HomeScreen() {
           </div>
 </header>
 
-        {/* the profile card: green for a regular customer, red for a VIP (see components/UserBadge.tsx) */}
+        {/* the profile card: soft blue for a regular customer, dark blue for a VIP (see components/UserBadge.tsx) */}
         <UserBadge />
 
         <TodayCard />
+        <QuickIcons />
 
         {/* no emergency contact on the account yet (older or Google accounts): a reminder with a link to add it */}
         <EmergencyReminder className="order-1 mx-3 mt-3 desk:col-span-12 desk:mx-0 desk:mt-0" />
