@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession } from "@/lib/session";
 import { orderStore } from "@/lib/venueorder";
+import LockedIcon from "@/components/LockedIcon";
 import OrderIcon from "@/components/order/OrderIcon";
 import OrderSheet from "@/components/order/OrderSheet";
 
@@ -12,7 +13,7 @@ export default function OrderButton() {
   const session = useSession();
   const { data } = orderStore.use();
   const [open, setOpen] = useState(false);
-  if (!session?.registered) return null;
+  if (!session?.registered) return <LockedIcon label="Order drinks and snacks"><OrderIcon size={20} /></LockedIcon>;
   const live = Boolean(data?.active);
   return (
     <>

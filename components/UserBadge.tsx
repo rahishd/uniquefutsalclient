@@ -40,7 +40,7 @@ export default function UserBadge() {
           {clubMember && <span className={`mt-1 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${vip ? "bg-white text-[#0c0b5d]" : "bg-white text-[#2c3da0]"}`}><BadgeCheck size={13} aria-hidden /> Club Member</span>}
         </span>
       </Link>
-      <span className="shrink-0 [&>button]:!h-11 [&>button]:!w-11 [&>button]:!rounded-2xl [&>button]:!bg-white [&>button>svg]:!h-6 [&>button>svg]:!w-6"><DigitalIdButton /></span>
+      <span className="shrink-0 [&>button]:!h-11 [&>button]:!w-11 [&>button]:!rounded-2xl [&>button]:!bg-white [&>button>svg]:!h-6 [&>button>svg]:!w-6 [&>a]:!h-11 [&>a]:!w-11 [&>a]:!rounded-2xl [&>a]:!bg-white [&>a>svg]:!h-6 [&>a>svg]:!w-6"><DigitalIdButton /></span>
     </div>
   );
 }

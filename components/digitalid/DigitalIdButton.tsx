@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { QrCode } from "lucide-react";
 import { useSession } from "@/lib/session";
+import LockedIcon from "@/components/LockedIcon";
 import DigitalIdSheet from "@/components/digitalid/DigitalIdSheet";
 
 // Small QR button (next to "Hello" on Home) or a full row (Profile) that opens the customer's Digital ID card. Registered customers only.
 export default function DigitalIdButton({ variant = "icon" }: { variant?: "icon" | "row" }) {
   const session = useSession();
   const [open, setOpen] = useState(false);
-  if (!session?.registered) return null;
+  if (!session?.registered) return variant === "icon" ? <LockedIcon label="My Digital ID"><QrCode size={18} /></LockedIcon> : null;
   return (
     <>
       {variant === "icon" ? (

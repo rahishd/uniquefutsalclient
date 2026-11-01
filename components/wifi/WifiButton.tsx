@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Wifi as WifiIcon } from "lucide-react";
 import { useSession } from "@/lib/session";
 import { useOnCellular, wifiStore } from "@/lib/wifi";
+import LockedIcon from "@/components/LockedIcon";
 import WifiSheet from "@/components/wifi/WifiSheet";
 
 // Wi-Fi icon next to "Hello" on Home. Shown only to signed-in customers and only while staff keep the Wi-Fi switched on
@@ -13,7 +14,8 @@ export default function WifiButton() {
   const { data } = wifiStore.use();
   const cellular = useOnCellular();
   const [open, setOpen] = useState(false);
-  if (!session?.registered || !data?.visible) return null;
+  if (!session?.registered) return <LockedIcon label="Venue Wi-Fi"><WifiIcon size={18} /></LockedIcon>;
+  if (!data?.visible) return null;
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} aria-label="Venue Wi-Fi" className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dcebff] text-black shadow-sm">
