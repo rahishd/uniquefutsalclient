@@ -83,6 +83,7 @@ Times use Nepal time. Dates are `YYYY-MM-DD`. Money is whole rupees.
 | GET | `/promos` | Guest | `code,title,description,discount,kind,until,daysLeft,terms,status` |
 | POST | `/promos/validate` | Guest | `{code,date,startTime}` |
 | GET | `/loyalty/me` | User | `remaining, earned, claimed, expired, expiringSoon, byType, rows[], shifts[{period,price,perGame,cost,canClaim}], vouchers[], toNext` |
+| POST | `/loyalty/offers/:id/claim` | User | Take points the venue offered ("Add to my points"). 404 if the offer is not yours, 409 if already added or withdrawn. Adds a `game` entry worded `Adjustment: <reason>` once. `GET /loyalty/me` also returns `offers:[{id,points,reason,createdAt}]` (pending only). Staff create offers in the admin portal (Top up points) |
 | POST | `/loyalty/claim` | User | `{period: Morning|Day|Evening}` -> voucher. 409 if not enough points. Locked so a double tap cannot spend twice |
 | GET | `/loyalty/share/friend/:phone` | User | the registered customer a number belongs to, first name only (400 bad number or yourself, 404 not registered) |
 | DELETE | `/loyalty/vouchers/:id` | User | Cancel your own unused free game voucher: it is voided and its points come back as new entries (kind `free_game`) with the same expiry dates they were spent from (vouchers claimed before this was recorded get 3 months from today) -> `{id, period, refunded}`. 409 if already used or already cancelled, 404 for someone else's voucher |

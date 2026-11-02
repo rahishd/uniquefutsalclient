@@ -12,7 +12,7 @@ import { errorText } from "@/lib/api";
 import { GAME_RS_PER_POINT, GOODS_DAILY_MAX_POINTS, GZ_POINTS_PER_HOUR, GAME_POINTS_MONTHS, MEMBERSHIP_POINTS, POINTS_CAPTAIN_WIN, REFERRAL_POINTS, RS_PER_POINT, SHIFT_HOURS, WATCH_POINTS_MONTHS, fmtPts } from "@/lib/points";
 import { RULES as WE_RULES, watchEarnStore } from "@/lib/watchearn";
 import { RULES as GR_RULES, goalRushStore } from "@/lib/goalrush";
-import { FALLBACK_SHARE, cancelVoucher, claimFreeGame, loyaltyStore, progressPct, type LoyaltyRow, type Period } from "@/lib/loyalty";
+import { FALLBACK_SHARE, cancelVoucher, claimFreeGame, claimOffer, type PointsOffer, loyaltyStore, progressPct, type LoyaltyRow, type Period } from "@/lib/loyalty";
 import { askConfirm } from "@/lib/confirm";
 import { formatRs } from "@/lib/booking";
 import { fmtDay } from "@/lib/promos";
@@ -33,6 +33,28 @@ const KIND: Record<LoyaltyRow["kind"], { icon: typeof Star; tone: string }> = {
 
 const SHOWN = 4;
 const ADMIN_GIFT = "Adjustment: "; // how the admin portal words points staff add by hand (uniquefutsaladmin server/src/modules/loyalty.ts)
+
+// Points the venue offers as a gift: a card with the amount and the reason, and a button to take them.
+function OfferCard({ offer }: { offer: PointsOffer }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  async function add() {
+    setBusy(true); setError(null);
+    try { await claimOffer(offer.id); } catch (e) { setError(errorText(e)); setBusy(false); }
+  }
+  return (
+    <section aria-label="A gift of loyalty points" className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-500 via-pink-500 to-amber-400 p-5 text-white shadow-[0_18px_34px_-18px_rgba(244,63,94,0.85)] desk:col-span-2">
+      <Gift size={120} className="pointer-events-none absolute -right-5 -top-5 rotate-12 text-white/15" aria-hidden />
+      <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white/90"><Gift size={14} aria-hidden /> A gift from Unique Futsal</p>
+      <p className="mt-2 flex items-end gap-2 leading-none"><Star className="fill-white text-white" size={30} aria-hidden /><span className="text-5xl font-extrabold">+{fmtPts(offer.points)}</span><span className="pb-1 text-base font-bold">loyalty points</span></p>
+      <p className="mt-3 rounded-2xl bg-white/20 px-3.5 py-2.5 text-sm font-medium">{offer.reason}</p>
+      {error && <p role="alert" className="mt-2 rounded-xl bg-white/90 px-3 py-2 text-sm font-medium text-rose-700">{error}</p>}
+      <button type="button" onClick={add} disabled={busy} className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-base font-bold text-rose-600 shadow-md transition active:scale-[0.98] disabled:opacity-60">
+        {busy ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />} Add to my points
+      </button>
+    </section>
+  );
+}
 
 function Validity({ row }: { row: LoyaltyRow }) {
   if (row.status === "used") return <p className="text-[11px] text-slate-400">Used</p>;
@@ -102,6 +124,8 @@ export default function PointsPage() {
       <h1 className="text-2xl font-semibold desk:col-span-2 desk:text-3xl">Loyalty points</h1>
 
       {/* Balance */}
+      {(loy.offers ?? []).map((o) => <OfferCard key={o.id} offer={o} />)}
+
       <section className="rounded-3xl bg-gradient-to-br from-[#0c0b5d] to-[#2a2aa8] p-5 text-white shadow-lg desk:col-span-2" aria-label="Your points balance">
         <p className="text-xs uppercase tracking-wide text-white/60">Remaining points</p>
         <div className="mt-1 flex items-end justify-between">

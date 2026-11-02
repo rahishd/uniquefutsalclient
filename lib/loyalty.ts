@@ -41,7 +41,10 @@ export interface Loyalty {
   shifts: { period: Period; price: number; perGame: number; cost: number; canClaim: boolean }[];
   vouchers: Voucher[];
   share?: ShareRules;
+  offers?: PointsOffer[]; // points the venue offered, waiting for the customer to add them
 }
+
+export interface PointsOffer { id: string; points: number; reason: string; createdAt: string }
 
 // Sharing points with a friend (rules come from the server)
 export interface ShareRules {
@@ -65,6 +68,11 @@ export const loyaltyStore = createRemoteStore<Loyalty | null>(() => api<Loyalty>
 
 export async function claimFreeGame(period: Period) {
   await api("/loyalty/claim", { method: "POST", body: { period } });
+  await loyaltyStore.refresh();
+}
+
+export async function claimOffer(id: string) {
+  await api(`/loyalty/offers/${encodeURIComponent(id)}/claim`, { method: "POST" });
   await loyaltyStore.refresh();
 }
 

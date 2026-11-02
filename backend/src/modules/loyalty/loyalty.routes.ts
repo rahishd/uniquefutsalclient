@@ -33,6 +33,16 @@ router.post(
   }),
 );
 
+// Take points staff offered ("Add to my points")
+router.post(
+  "/offers/:id/claim",
+  authMiddleware,
+  asyncHandler(async (req: AuthRequest, res: Response) => {
+    const r = await loyaltyService.claimOffer(req.user!.id, req.params.id);
+    res.status(201).json(ApiResponseUtil.success(201, "Points added", r));
+  }),
+);
+
 // Cancel a free game voucher that has not been used yet: its points come back
 router.delete(
   "/vouchers/:id",

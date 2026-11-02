@@ -60,6 +60,7 @@ export class LoyaltyService {
       prisma.freeGameVoucher.findMany({ where: { userId, status: "unused" }, orderBy: { claimedAt: "asc" } }),
     ]);
     const summary = summarize(ledger, today);
+    const offers = await prisma.pointsOffer.findMany({ where: { userId, status: "pending" }, orderBy: { createdAt: "asc" } });
     const cheapest = Math.min(...shifts.map((s) => s.cost));
     return {
       ...summary,
@@ -68,7 +69,25 @@ export class LoyaltyService {
       shifts: shifts.map((s) => ({ ...s, canClaim: summary.remaining >= s.cost })),
       vouchers: vouchers.map((v) => ({ id: v.id, period: v.period, cost: num(v.cost), claimedAt: v.claimedAt })),
       share: { min: SHARE_MIN, max: SHARE_MAX, minBalance: SHARE_MIN_BALANCE, perDay: SHARE_PER_DAY },
+      offers: offers.map((o) => ({ id: o.id, points: num(o.points), reason: o.reason, createdAt: o.createdAt })),
     };
+  }
+
+  /** Takes points staff offered ("Add to my points"). Only the customer it was offered to, and only once: the offer flips from pending first. */
+  async claimOffer(userId: string, offerId: string) {
+    const offer = await prisma.pointsOffer.findFirst({ where: { id: offerId, userId } });
+    if (!offer) throw new AppError(404, "This offer was not found");
+    if (offer.status !== "pending") throw new AppError(409, offer.status === "claimed" ? "You already added these points" : "This offer was withdrawn");
+    const taken = await prisma.pointsOffer.updateMany({ where: { id: offerId, userId, status: "pending" }, data: { status: "claimed", claimedAt: new Date() } });
+    if (taken.count !== 1) throw new AppError(409, "You already added these points");
+    try {
+      // worded "Adjustment: ..." like points staff add directly, so the history shows it as the same gift card
+      await this.award({ userId, kind: "game", points: num(offer.points), sourceType: "adjustment", sourceId: offer.id, detail: `Adjustment: ${offer.reason}` });
+    } catch (e) {
+      await prisma.pointsOffer.updateMany({ where: { id: offerId }, data: { status: "pending", claimedAt: null } });
+      throw e;
+    }
+    return { id: offer.id, points: num(offer.points) };
   }
 
   /** The person points would go to: another registered customer. Returns only their first name, to check it is the right one. */

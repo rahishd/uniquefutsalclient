@@ -221,6 +221,7 @@ export const helpTopics: HelpTopic[] = [
       `Game points last ${GAME_POINTS_MONTHS} months, goods points 1 year, membership points never expire. We warn you before points expire.`,
       "To use them: open Points, pick a shift and tap Claim. Then book that shift and tap \"Use a free game voucher\".",
       "Free games work for regular bookings only, not for hosting a challenge.",
+      "A gift from the venue: when Unique Futsal offers you loyalty points, a pink gift card appears at the top of Points with the amount and the reason. Tap Add to my points to take them. Until you do, they are not added.",
       "To share points: you need at least 100 points. Open Points, tap Share points with a friend, enter their mobile number (they need an account) and send. Every share is 10 points. Their points keep the same expiry date. Sent points can't be taken back, and you can share up to 3 times a day.",
     ],
     href: { label: "My points", to: "/points" },
