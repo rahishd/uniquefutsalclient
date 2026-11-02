@@ -32,6 +32,7 @@ const KIND: Record<LoyaltyRow["kind"], { icon: typeof Star; tone: string }> = {
 };
 
 const SHOWN = 4;
+const ADMIN_GIFT = "Adjustment: "; // how the admin portal words points staff add by hand (uniquefutsaladmin server/src/modules/loyalty.ts)
 
 function Validity({ row }: { row: LoyaltyRow }) {
   if (row.status === "used") return <p className="text-[11px] text-slate-400">Used</p>;
@@ -355,6 +356,18 @@ export default function PointsPage() {
         ) : (
           <ul className="mt-3 space-y-3">
             {rows.map((e) => {
+              // points the venue's staff added by hand (admin top-up) show as a gift card with the reason
+              if (e.points > 0 && e.detail.startsWith(ADMIN_GIFT)) {
+                return (
+                  <li key={e.id} data-hl={e.id} className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-500 via-pink-500 to-amber-400 p-4 text-white shadow-[0_14px_28px_-16px_rgba(244,63,94,0.8)]">
+                    <Gift size={72} className="pointer-events-none absolute -right-3 -top-3 rotate-12 text-white/15" aria-hidden />
+                    <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-white/90"><Gift size={14} aria-hidden /> A gift from Unique Futsal</p>
+                    <p className="mt-1 text-3xl font-extrabold leading-none">+{fmtPts(e.points)} <span className="text-base font-bold">loyalty points</span></p>
+                    <p className="mt-2 rounded-2xl bg-white/20 px-3 py-2 text-sm font-medium">{e.detail.slice(ADMIN_GIFT.length)}</p>
+                    <p className="mt-2 text-[11px] text-white/85">{fmtDay(e.earnedOn)}{e.status === "valid" && e.expiresOn ? ` · valid until ${fmtDay(e.expiresOn)}` : e.status === "expired" ? " · expired" : e.status === "used" ? " · used" : ""}</p>
+                  </li>
+                );
+              }
               const k = KIND[e.kind] ?? KIND.game;
               const Icon = k.icon;
               return (
