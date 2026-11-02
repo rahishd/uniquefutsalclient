@@ -206,7 +206,17 @@ html.dark :is(.bg-brand:not(.text-white), .uf-keep, [class*="bg-[#0c0b5d]"], [cl
 .uf-badge-ping {
   animation: uf-badge-ping 1.6s ease-out infinite;
 }
+/* A Quick Access tile with a new message for the customer (components/PopularGrid.tsx): the tile glows and lifts every second. */
+@keyframes uf-tile-blink {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.55), 0 12px 22px -14px rgba(59, 130, 246, 0.7); transform: scale(1); }
+  50% { box-shadow: 0 0 0 7px rgba(244, 63, 94, 0), 0 0 18px 3px rgba(244, 63, 94, 0.45); transform: scale(1.06); }
+}
+.uf-tile-blink {
+  animation: uf-tile-blink 1.3s ease-in-out infinite;
+  --tw-ring-color: rgba(244, 63, 94, 0.55);
+}
 @media (prefers-reduced-motion: reduce) {
+  .uf-tile-blink { animation: none; box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.55); }
   .uf-bell-ring, .uf-badge-blink, .uf-badge-ping { animation: none; }
   .uf-badge-ping { display: none; }
 }

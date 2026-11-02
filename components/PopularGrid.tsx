@@ -20,7 +20,7 @@ interface Tile {
 }
 
 // Every tile wears a "New" tag except the long-standing ones, and nobody who has signed in more than this many times sees it.
-const NEW_TAG_LOGINS = 5;
+const NEW_TAG_LOGINS = 2;
 const NO_NEW_TAG = new Set(["Book", "Gamezone", "Points", "Tournaments"]);
 
 const TILES: Tile[] = [
@@ -93,7 +93,7 @@ export default function PopularGrid() {
           const locked = guest && !GUEST_OK.has(t.href);
           const face = (
             <>
-              <span className={`relative flex h-[70px] w-[70px] items-center justify-center rounded-[22px] bg-gradient-to-br from-white to-sky-50 shadow-[0_12px_22px_-14px_rgba(59,130,246,0.7)] ring-1 ring-sky-100 transition-transform group-active:scale-95 desk:h-24 desk:w-24 desk:group-hover:-translate-y-1 ${locked ? "opacity-60" : ""}`}>
+              <span className={`${!locked && count > 0 ? "uf-tile-blink " : ""}relative flex h-[70px] w-[70px] items-center justify-center rounded-[22px] bg-gradient-to-br from-white to-sky-50 shadow-[0_12px_22px_-14px_rgba(59,130,246,0.7)] ring-1 ring-sky-100 transition-transform group-active:scale-95 desk:h-24 desk:w-24 desk:group-hover:-translate-y-1 ${locked ? "opacity-60" : ""}`}>
                 <Icon className={`${t.tone} h-[30px] w-[30px] desk:h-10 desk:w-10`} />
                 {locked && (
                   <span aria-hidden className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-slate-700 text-white shadow ring-2 ring-white">
@@ -106,7 +106,10 @@ export default function PopularGrid() {
                   </span>
                 )}
                 {!locked && count > 0 && (
-                  <span aria-hidden className="absolute -right-1.5 -top-1.5 flex h-6 min-w-6 items-center justify-center rounded-full bg-rose-500 px-1.5 text-xs font-semibold text-white shadow ring-2 ring-white">
+                  <span aria-hidden className="uf-badge-ping absolute -right-1.5 -top-1.5 h-6 w-6 rounded-full bg-rose-400" />
+                )}
+                {!locked && count > 0 && (
+                  <span aria-hidden className="uf-badge-blink absolute -right-1.5 -top-1.5 flex h-6 min-w-6 items-center justify-center rounded-full bg-rose-500 px-1.5 text-xs font-semibold text-white shadow ring-2 ring-white">
                     {count > 9 ? "9+" : count}
                   </span>
                 )}

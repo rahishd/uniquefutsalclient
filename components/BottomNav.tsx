@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Home, CalendarDays, User, Gamepad2, MessageCircle, Check, RefreshCw } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Home, CalendarDays, User, Gamepad2, MessageCircle, Check, RefreshCw, ArrowLeft } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { unreadStore } from "@/lib/chat";
 
@@ -22,6 +22,7 @@ const TABS = [
 // (the name is still read out by screen readers and shown as a tooltip).
 export default function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const t = useT();
   const [refresh, setRefresh] = useState<"refreshing" | "done" | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -52,6 +53,9 @@ export default function BottomNav() {
   const unread = unreadStore.use().data ?? 0;
   // the sign-in page is a clean card on its own
   if (pathname === "/login" || pathname.startsWith("/login/")) return null;
+  // a page inside the app (not Home or one of the five tabs) gets a Back button above the bar
+  const inner = pathname !== "/" && !TABS.some((tab) => tab.href === pathname);
+  const goBack = () => (window.history.length > 1 ? router.back() : router.push("/"));
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/"));
 
   return (
@@ -62,6 +66,13 @@ export default function BottomNav() {
             {refresh === "refreshing" ? <RefreshCw size={14} className="animate-spin" aria-hidden /> : <Check size={14} aria-hidden />}
             {refresh === "refreshing" ? "Refreshing…" : "Refreshed"}
           </span>
+        </div>
+      )}
+      {inner && (
+        <div className="absolute bottom-[calc(100%+0.625rem)] right-3">
+          <button type="button" onClick={goBack} aria-label={t("Back")} title={t("Back")} className="pointer-events-auto grid h-12 w-12 place-items-center rounded-full bg-red-600 text-white shadow-[0_8px_20px_-6px_rgba(220,38,38,0.6)] ring-[3px] ring-white transition active:scale-90">
+            <ArrowLeft size={22} strokeWidth={2.6} aria-hidden />
+          </button>
         </div>
       )}
       <div className="pointer-events-auto flex w-full items-center justify-between gap-1 border-t border-sky-100 bg-white px-2 pb-[calc(env(safe-area-inset-bottom)+2px)] pt-1.5 short:pt-1 shadow-[0_-8px_24px_-14px_rgba(15,23,42,0.25)]">
