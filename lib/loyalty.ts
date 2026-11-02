@@ -64,7 +64,7 @@ export async function sharePoints(friendPhone: string, points: number) {
   return sent;
 }
 
-export const loyaltyStore = createRemoteStore<Loyalty | null>(() => api<Loyalty>("/loyalty/me"), { signedOut: null });
+export const loyaltyStore = createRemoteStore<Loyalty | null>(() => api<Loyalty>("/loyalty/me"), { signedOut: null, pollMs: 15000 });
 
 export async function claimFreeGame(period: Period) {
   await api("/loyalty/claim", { method: "POST", body: { period } });

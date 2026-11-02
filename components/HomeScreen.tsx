@@ -19,6 +19,7 @@ import TournamentSection from "@/components/TournamentSection";
 import KidSkills from "@/components/KidSkills";
 import AdStrip from "@/components/ads/AdStrip";
 import GallerySection from "@/components/ads/GallerySection";
+import GiftOffers from "@/components/points/OfferCard";
 
 // Phone and portrait tablet: one column, in the `order-N` order below.
 // Tablet and wide phone (`tab:`, 640px and up): the same two columns, 50/50. Desktop mode (`desk:`, see globals.css), top to bottom:
@@ -60,6 +61,9 @@ export default function HomeScreen() {
 
         {/* the search bar: on its own, full width on desktop */}
         <div className="order-2 tab:mt-3 tab:[&>*]:mt-0 desk:col-span-12 desk:mt-0 desk:[&>*]:mt-0"><HomeHero /></div>
+
+        {/* points the venue offered: right under the search bar until the customer adds them */}
+        <GiftOffers className="order-[3] mt-4 empty:hidden desk:col-span-12 desk:mt-0" />
 
         <div className="uf-home-main contents desk:order-[5] desk:col-span-8 desk:block">
         {/* Promo banner */}
