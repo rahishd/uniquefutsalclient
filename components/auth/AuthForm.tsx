@@ -45,6 +45,15 @@ export default function AuthForm() {
   const [faceOk, setFaceOk] = useState(false); // this device can use Face ID / fingerprint
   useEffect(() => { passkeySupported().then(setFaceOk); }, []);
 
+  // opening the app straight on the sign-in page (a bookmark, a restored tab, a cold start) goes to Home instead: Home has the Log in and
+  // Create account buttons. Coming from inside the app (the Log in buttons, or a page that needs a sign-in, which add ?next= or ?mode=) stays here.
+  useEffect(() => {
+    try {
+      const q = new URLSearchParams(window.location.search);
+      if (!q.has("next") && !q.has("mode") && sessionStorage.getItem("uf-in-app") !== "1") window.location.replace("/");
+    } catch { /* storage blocked: stay on the sign-in page */ }
+  }, []);
+
   useEffect(() => {
     if (mode !== "reset" || google) return;
     googleConfig().then(setGoogle).catch(() => setGoogle({ configured: false, clientId: null }));

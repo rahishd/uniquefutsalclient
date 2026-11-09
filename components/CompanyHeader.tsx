@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { site } from "@/lib/site";
 import AdStrip from "@/components/ads/AdStrip";
@@ -22,6 +23,8 @@ export default function CompanyHeader() {
   const home = path === "/";
   // the sign-in page needs no greeting bar: the person is not signed in yet
   const signIn = path === "/login" || path.startsWith("/login/");
+  // remember that the visitor has been inside the app in this tab, so the sign-in page can tell a cold start (see AuthForm)
+  useEffect(() => { if (!signIn) { try { sessionStorage.setItem("uf-in-app", "1"); } catch { /* private mode */ } } }, [signIn]);
   return (
     <>
       {!home && !signIn && <PageInfoBar />}

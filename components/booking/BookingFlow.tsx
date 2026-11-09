@@ -461,7 +461,7 @@ export default function BookingFlow({ initialDate, initialHour }: { initialDate?
         <ul aria-label="Court specifications" className="mt-2.5 grid grid-cols-4 gap-1.5 desk:max-w-xl desk:gap-2">
           {([[Users, "5A Side"], [Award, "FIFA Grade Turf"], [Armchair, "250+ Sitting"], [ShieldCheck, "Health Insurance"]] as const).map(([Icon, label]) => (
             <li key={label} className="flex flex-col items-center gap-1 rounded-xl border border-slate-200 bg-white px-1 py-2 text-center">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#0a0a0a] text-white"><Icon size={15} strokeWidth={1.9} aria-hidden /></span>
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-700 text-white"><Icon size={15} strokeWidth={1.9} aria-hidden /></span>
               <span className="min-w-0 text-[10.5px] font-semibold leading-[1.15] text-[#0c0b5d]">{label}</span>
             </li>
           ))}
