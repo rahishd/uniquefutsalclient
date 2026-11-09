@@ -2,9 +2,10 @@
 
 import ShareBooking, { bookingShareText } from "@/components/ShareBooking";
 import CharityLine from "@/components/CharityLine";
+import CourtScene from "@/components/booking/CourtScene";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { CalendarPlus, Check, ChevronDown, ChevronLeft, ChevronRight, Droplets, Gift, Layers, Loader2, Lock, Tag, X } from "lucide-react";
+import { Armchair, Award, CalendarPlus, Check, ChevronDown, ChevronLeft, ChevronRight, Droplets, Gift, Layers, Loader2, Lock, ShieldCheck, Tag, Users, X } from "lucide-react";
 import PaymentMethodPicker from "@/components/payment/PaymentMethodPicker";
 import PaymentQr from "@/components/payment/PaymentQr";
 import { errorText } from "@/lib/api";
@@ -454,6 +455,17 @@ export default function BookingFlow({ initialDate, initialHour }: { initialDate?
       <header>
         <h1 className="text-2xl font-semibold">Book a court</h1>
         <p className="text-sm text-slate-500">Pick a date and a one-hour slot. Bookings open up to {MAX_ADVANCE_DAYS} days in advance.</p>
+        {/* eight Unique Futsal players passing and showing their skills on the court (components/booking/CourtScene.tsx) */}
+        <CourtScene />
+        {/* what the court offers */}
+        <ul aria-label="Court specifications" className="mt-2.5 grid grid-cols-4 gap-1.5 desk:max-w-xl desk:gap-2">
+          {([[Users, "5A Side"], [Award, "FIFA Grade Turf"], [Armchair, "250+ Sitting"], [ShieldCheck, "Health Insurance"]] as const).map(([Icon, label]) => (
+            <li key={label} className="flex flex-col items-center gap-1 rounded-xl border border-slate-200 bg-white px-1 py-2 text-center">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#0a0a0a] text-white"><Icon size={15} strokeWidth={1.9} aria-hidden /></span>
+              <span className="min-w-0 text-[10.5px] font-semibold leading-[1.15] text-[#0c0b5d]">{label}</span>
+            </li>
+          ))}
+        </ul>
         {initialHour !== undefined && selHour === initialHour && slots && !slot && (
           <p role="status" className="mt-2 rounded-xl bg-amber-400/15 px-3 py-2 text-xs text-amber-700">That time isn&apos;t available on this date. Please pick another time.</p>
         )}
@@ -461,14 +473,14 @@ export default function BookingFlow({ initialDate, initialHour }: { initialDate?
 
       <Link
         href="/book/bulk"
-        className="group flex items-center gap-4 rounded-3xl bg-[#87ceeb] p-4 text-[#0c0b5d] transition active:scale-[0.99] desk:max-w-xl"
+        className="group flex items-center gap-3 rounded-2xl bg-emerald-700 px-3 py-2.5 text-white transition active:scale-[0.99] desk:max-w-xl"
       >
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white text-[#0c0b5d]"><Layers size={24} /></span>
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-emerald-700"><Layers size={18} /></span>
         <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-2 text-base font-semibold">Bulk Booking <span className="rounded-full bg-orange-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0c0b5d]">New</span></span>
-          <span className="block text-xs text-[#0c0b5d]/80">Up to 5 games a week over the next 7 days. Pay 50% now or in full.</span>
+          <span className="flex items-center gap-2 text-sm font-semibold">Bulk Booking <span className="rounded-full bg-orange-400 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-[#0c0b5d]">New</span></span>
+          <span className="block text-[11px] leading-snug text-white/90">Up to 5 games a week over the next 7 days. Pay 50% now or in full.</span>
         </span>
-        <ChevronRight size={20} className="shrink-0 transition group-hover:translate-x-0.5" />
+        <ChevronRight size={18} className="shrink-0 transition group-hover:translate-x-0.5" />
       </Link>
 
       <section aria-label="Select date">
