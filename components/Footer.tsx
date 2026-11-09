@@ -1,5 +1,6 @@
 "use client";
 
+import BackToTop from "@/components/BackToTop";
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown, ChevronUp, Mail, MapPin, Navigation, PhoneCall, Leaf, Smartphone, Banknote } from "lucide-react";
@@ -46,7 +47,7 @@ export default function Footer() {
   const [more, setMore] = useState(false); // the founder message: short by default, "Read More" shows the rest
   const t = useT();
   return (
-    <footer className="mx-auto w-full max-w-md px-5 pb-28 pt-6 tab:max-w-3xl tab:px-8 desk:max-w-none desk:px-10 desk:pb-14 desk:pt-6">
+    <footer className="mx-auto w-full max-w-md px-5 pb-[calc(env(safe-area-inset-bottom)+83px)] pt-5 tab:max-w-3xl tab:px-8 desk:max-w-none desk:px-10 desk:pb-[26px] desk:pt-5">
       {/* the organisations the venue works with: between the promo codes above and the founder message */}
       <PartnersStrip />
 
@@ -187,7 +188,7 @@ export default function Footer() {
     </section>
 
     {/* the ways to pay: the wallets we take today, cash at the venue, and card payment (a mobile POS) coming soon */}
-    <section aria-label="We accept" className="mt-4 rounded-2xl bg-white p-3 shadow-md ring-1 ring-slate-200">
+    <section aria-label="We accept" className="mt-3 rounded-2xl bg-white p-3 shadow-md ring-1 ring-slate-200">
       <h3 className="text-center text-xs font-medium uppercase tracking-wide text-[#0c0b5d]">We Accept (For Nepalese)</h3>
       <ul className="mt-2.5 flex items-start gap-2">
         <li className="flex min-w-0 flex-1 flex-col items-center gap-1">
@@ -212,9 +213,9 @@ export default function Footer() {
         </li>
       </ul>
       <div className="mt-4 border-t border-slate-200 pt-4">
-        <p className="text-center text-[11px] font-medium uppercase tracking-wide text-[#0c0b5d]">For Indian tourists &amp; foreigners</p>
+        <p className="text-center text-[11px] font-medium uppercase tracking-wide text-[#0c0b5d]">For Indian and foreign players</p>
         <ul className="mt-2 flex items-start gap-2">
-          {[["/pay-phonepe.webp", "PhonePe", "h-7"], ["/pay-gpay.webp", "Google Pay", "h-5"], ["/pay-upi.webp", "UPI", "h-7"]].map(([src, name, h]) => (
+          {[["/pay-phonepe.webp", "PhonePe", "h-7"], ["/pay-upi.webp", "UPI", "h-7"], ["/pay-gpay.webp", "Google Pay", "h-5"], ["/pay-stripe.webp", "Stripe", "h-5"]].map(([src, name, h]) => (
             <li key={name} className="flex min-w-0 flex-1 flex-col items-center gap-1">
               <div className="flex w-full min-w-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-2 h-10">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -227,13 +228,21 @@ export default function Footer() {
       </div>
     </section>
 
-      <div className="mt-8 flex items-center justify-between gap-4 border-t border-slate-200 pt-5">
-        <div className="flex items-center gap-2.5">
+      {/* two rows: the brand and "Since 2018" in the middle, then the copyright (left) and the credit (right), two short lines each */}
+      <div className="mt-3 flex justify-end">
+        <BackToTop />
+      </div>
+      <div className="mt-3 border-t-2 border-[#0c0b5d]/25 pt-[26px]">
+        <div className="flex items-center justify-center gap-2.5 px-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-mark-navy.png" alt="" aria-hidden className="h-9 w-auto" />
-          <span className="text-base font-extrabold uppercase leading-tight tracking-wide text-brand">{site.name}</span>
+          <img src="/logo-mark-navy.png" alt="" aria-hidden className="h-8 w-auto" />
+          <span className="text-lg font-extrabold uppercase leading-tight tracking-wide text-brand">{site.name}</span>
+          <span className="border-l border-slate-300 pl-2.5 text-xs font-medium text-slate-600">Since 2018</span>
         </div>
-        <p className="text-right text-xs text-slate-500">{t("Designed & Developed by")}:<br /><span className="font-semibold text-[#0c0b5d]">Rahish Dumre</span></p>
+        <div className="mt-2 flex items-center justify-between gap-1.5 whitespace-nowrap px-1 text-[8px] text-slate-600 desk:text-xs desk:font-medium">
+          <p>&copy; {new Date().getFullYear()} {site.name}. All rights reserved.</p>
+          <p>{t("Designed & Developed by")} <span className="font-semibold text-[#0c0b5d]">Rahish Dumre</span></p>
+        </div>
       </div>
     </footer>
   );

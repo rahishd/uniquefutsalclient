@@ -1,16 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 import { ArrowUp } from "lucide-react";
 import { useT } from "@/lib/i18n";
 
-// A round "back to top" button on the right. It only appears once the page has been scrolled to its end (and only on a page
-// long enough to scroll), and takes the visitor smoothly back to the top. On the phone it sits well above the bottom bar, clear of the footer text.
-// Shown on the Home page only: every other page (Chat, Profile, Book, ...) has no back-to-top button.
+// A small round red "back to top" button in the Home footer, between the payment methods and the footer line. Its place is always kept, but
+// it only pops in (it grows and slides up) once the visitor has scrolled to the very end of the page, and it takes them smoothly back to the top.
 export default function BackToTop() {
   const t = useT();
-  const pathname = usePathname();
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -18,9 +15,7 @@ export default function BackToTop() {
     const check = () => {
       frame = 0;
       const doc = document.documentElement;
-      const scrollable = doc.scrollHeight - window.innerHeight > 300;
-      const atEnd = window.scrollY + window.innerHeight >= doc.scrollHeight - 80;
-      setShow(scrollable && atEnd);
+      setShow(window.scrollY + window.innerHeight >= doc.scrollHeight - 60);
     };
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(check); };
     check();
@@ -38,8 +33,6 @@ export default function BackToTop() {
     window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
   };
 
-  if (pathname !== "/") return null;
-
   return (
     <button
       type="button"
@@ -48,11 +41,11 @@ export default function BackToTop() {
       title={t("Back to top")}
       tabIndex={show ? 0 : -1}
       aria-hidden={!show}
-      className={`fixed right-4 z-40 grid h-12 w-12 place-items-center rounded-full bg-red-600 text-white shadow-[0_8px_20px_-6px_rgba(220,38,38,0.6)] ring-[3px] ring-white active:scale-90 bottom-[calc(env(safe-area-inset-bottom)+175px)] transition-all duration-300 desk:right-8 desk:bottom-[calc(env(safe-area-inset-bottom)+96px)] ${
-        show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
+      className={`grid h-9 w-9 place-items-center rounded-full bg-red-600 text-white shadow-[0_6px_14px_-5px_rgba(220,38,38,0.6)] ring-2 ring-white transition-all duration-500 ease-[cubic-bezier(.34,1.56,.64,1)] active:scale-90 ${
+        show ? "translate-y-0 scale-100 opacity-100" : "pointer-events-none translate-y-4 scale-50 opacity-0"
       }`}
     >
-      <ArrowUp size={22} strokeWidth={2.6} aria-hidden />
+      <ArrowUp size={18} strokeWidth={2.6} aria-hidden className={show ? "animate-bounce [animation-iteration-count:3]" : ""} />
     </button>
   );
 }
