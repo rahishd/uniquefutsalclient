@@ -428,19 +428,20 @@ html.dark img.uf-hdr-logo { filter: none; }
 .uf-hl { border-radius: 1rem; animation: uf-hl-blink 1s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .uf-hl { animation: none; box-shadow: 0 0 0 3px #f5822a; background-color: rgba(245, 130, 42, 0.15); } }
 
-/* The customer header is a navy bar with white logo and icons (components/CompanyHeader.tsx). */
+/* The desktop header is a white bar with a navy logo, text and icons (components/CompanyHeader.tsx). */
 .uf-navy-header {
-  background-color: #0c0b5d;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e8ebf2;
 }
 .uf-navy-header button,
 .uf-navy-header a {
-  color: #ffffff;
+  color: #0c0b5d;
   box-shadow: none !important;
 }
 /* the icon buttons and links get a soft tile; the logo link does not */
 .uf-navy-header button,
 .uf-navy-header a:not(:has(img)) {
-  background-color: rgba(255, 255, 255, 0.14) !important;
+  background-color: rgba(12, 11, 93, 0.07) !important;
 }
 
 /* The Home profile card is navy with white text and icons (components/HomeScreen.tsx). */
@@ -463,15 +464,14 @@ html.dark img.uf-hdr-logo { filter: none; }
 .uf-chat-popup { animation: uf-chat-popup-in 0.28s ease-out; }
 @media (prefers-reduced-motion: reduce) { .uf-chat-popup { animation: none; } }
 
-/* The Chat button in the desktop header: white frosted glass (components/HeaderChat.tsx), beating the soft-tile rule above. */
+/* The Chat button in the desktop header: a soft navy tile (components/HeaderChat.tsx), beating the soft-tile rule above. */
 .uf-navy-header a.uf-header-chat {
-  background-color: rgba(255, 255, 255, 0.88) !important;
+  background-color: rgba(12, 11, 93, 0.08) !important;
   color: #0c0b5d !important;
-  box-shadow: 0 4px 16px -4px rgba(255, 255, 255, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
 }
 .uf-navy-header a.uf-header-chat:hover,
 .uf-navy-header a.uf-header-chat[aria-current="page"] {
-  background-color: #ffffff !important;
+  background-color: rgba(12, 11, 93, 0.14) !important;
 }
 
 /* iPhone zooms the whole page when a field with text smaller than 16px gets focus (chat box, search, forms) and does not
@@ -485,15 +485,20 @@ html.dark img.uf-hdr-logo { filter: none; }
 }
 
 
-/* Home, desktop mode: when the right-hand sidebar has nothing to show (a guest, no offers yet), the main column takes the full width instead of leaving a blank third. */
+/* Home, desktop mode. Row 1: the promo banner (8/12) with the live promo codes on its right (4/12). Row 2: Quick Access, stretched nearly to the
+   edges of the screen. Row 3: the gallery and Goal Rush (8/12) with "book again" and the tournaments on the right (4/12).
+   When the promo codes have nothing to show the banner takes the full width, and when the right-hand blocks are empty the gallery does. */
 @media (min-width: 1024px) and ((orientation: landscape) or ((hover: hover) and (pointer: fine))) {
-  .uf-home:not(:has(> .uf-home-side > div:not(:empty))) .uf-home-main { grid-column: span 12 / span 12; }
-  .uf-home:not(:has(> .uf-home-side > div:not(:empty))) .uf-home-side { display: none; }
+  .uf-home:has(.uf-promo-col:empty) .uf-home-main { grid-column: span 12 / span 12; }
+  .uf-promo-col:empty { display: none; }
+  .uf-home:not(:has(> .uf-home-side > .uf-rest-col:not(:empty))) .uf-home-below { grid-column: span 12 / span 12; }
+  .uf-home:not(:has(> .uf-home-side > .uf-rest-col:not(:empty))) .uf-home-side { display: none; }
+  .uf-home-quick { width: calc(100vw - 6rem); margin-left: calc(50% - 50vw + 3rem); }
 }
 /* Same on a tablet: no sidebar content, so the left column takes the full width. */
-@media (min-width: 640px) {
-  .uf-home:not(:has(> .uf-home-side > div:not(:empty))) > .uf-home-left { grid-column: span 12 / span 12; }
-  .uf-home:not(:has(> .uf-home-side > div:not(:empty))) > .uf-home-side { display: none; }
+@media (min-width: 640px) and (not ((min-width: 1024px) and ((orientation: landscape) or ((hover: hover) and (pointer: fine))))) {
+  .uf-home:not(:has(> .uf-home-side > div:not(:empty):not(.uf-desk-only))) > .uf-home-left { grid-column: span 12 / span 12; }
+  .uf-home:not(:has(> .uf-home-side > div:not(:empty):not(.uf-desk-only))) > .uf-home-side { display: none; }
 }
 
 /* The desktop menu marker (components/DeskNav.tsx): it glides from one page to the next with a small overshoot, like a drop of liquid. */

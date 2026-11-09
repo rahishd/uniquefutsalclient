@@ -47,14 +47,15 @@ export default function Footer() {
   const [more, setMore] = useState(false); // the founder message: short by default, "Read More" shows the rest
   const t = useT();
   return (
-    <footer className="mx-auto w-full max-w-md px-5 pb-[calc(env(safe-area-inset-bottom)+83px)] pt-5 tab:max-w-3xl tab:px-8 desk:max-w-none desk:px-10 desk:pb-[26px] desk:pt-5">
+    <footer className="mx-auto w-full max-w-md px-5 pb-[calc(env(safe-area-inset-bottom)+83px)] pt-5 tab:max-w-3xl tab:px-8 desk:max-w-none desk:px-10 desk:pb-[26px] desk:pt-14">
       {/* the organisations the venue works with: between the promo codes above and the founder message */}
       <PartnersStrip />
 
       {/* what the venue offers, between Corporate Network and the founder message */}
-      <Facilities />
+      {/* desktop shows this list in the What makes us unique card beside Goal Rush instead (components/WhyUnique.tsx) */}
+      <Facilities className="mb-10 desk:hidden" />
 
-      <section aria-label="A message from the founder" className="glass mb-10 overflow-hidden rounded-3xl">
+      <section aria-label="A message from the founder" className="glass mb-10 desk:mb-16 overflow-hidden rounded-3xl">
         <div className="relative bg-slate-100 text-slate-700">
 
           <div className="relative grid desk:grid-cols-[1.55fr_1fr]">
@@ -93,13 +94,17 @@ export default function Footer() {
 
 
       {/* ask for a Google review, with a one-time loyalty point for registered customers (components/GoogleReview.tsx) */}
+      {/* desktop: the review on the left and Find us on the right, in one row (the phone stacks them) */}
+      <div className="desk:grid desk:grid-cols-2 desk:items-stretch desk:gap-6">
       <GoogleReview />
 
-      {/* Find us: right under the Google review */}
-      <div className="mt-10">
+      {/* Find us: right under the Google review (beside it on the desktop) */}
+      <div className="mt-10 desk:mt-0 desk:flex desk:flex-col">
         <h2 className={heading}>{t("Find us")}</h2>
+        {/* desktop: a line like the one under "How was your experience?", so both cards start and end at the same height */}
+        <p className="mt-4 hidden text-sm text-slate-500 desk:block">{t("Visit us, or track us live on the map.")}</p>
         <a href={GOOGLE_MAP} onClick={openMaps} target="_blank" rel="noopener noreferrer" aria-label={`Track ${site.name} on the map`}
-          className="relative mt-3 block overflow-hidden rounded-2xl bg-gradient-to-br from-[#eaf3ff] via-[#dbeaff] to-[#cbe0ff] p-3.5 text-[#0c0b5d] shadow-[0_14px_28px_-16px_rgba(59,130,246,0.5)] ring-2 ring-white/80 transition active:scale-[0.98]">
+          className="relative mt-3 block overflow-hidden rounded-2xl desk:flex desk:flex-1 desk:flex-col desk:justify-center bg-gradient-to-br from-[#eaf3ff] via-[#dbeaff] to-[#cbe0ff] p-3.5 text-[#0c0b5d] shadow-[0_14px_28px_-16px_rgba(59,130,246,0.5)] ring-2 ring-white/80 transition active:scale-[0.98]">
           <span aria-hidden className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white opacity-70 blur-3xl" />
           <span aria-hidden className="pointer-events-none absolute -bottom-12 -left-8 h-28 w-28 rounded-full border border-white/70" />
           <span aria-hidden className="pointer-events-none absolute -bottom-6 -left-2 h-16 w-16 rounded-full border border-white/70" />
@@ -119,9 +124,12 @@ export default function Footer() {
           </span>
         </a>
       </div>
+      </div>
 
+      {/* desktop: the site map and Connect with us side by side in one row */}
+      <div className="desk:mt-16 desk:grid desk:grid-cols-2 desk:items-stretch desk:gap-6">
       {/* the site map: one dropdown at a time */}
-      <nav aria-label="Footer links" className="mt-10 rounded-3xl border border-[#e8ebf2] bg-white px-5 py-1 desk:px-8">
+      <nav aria-label="Footer links" className="mt-10 desk:mt-0 rounded-3xl border border-[#e8ebf2] bg-white px-5 py-1 desk:flex desk:flex-col desk:justify-around desk:px-8">
         {LINKS.map((g, i) => {
           const open = openGroup === g.title;
           return (
@@ -140,10 +148,12 @@ export default function Footer() {
             </div>
           );
         })}
+        {/* desktop: Verify Documents, below Updates (on the phone it is a Quick Access tile) */}
+        <Link href="/verify" className="hidden border-t border-[#eef0f6] py-4 text-base font-bold text-[#0c0b5d] desk:block">{t("Verify Documents")}</Link>
       </nav>
 
       {/* Connect with us: compact, one card */}
-      <section aria-label="Connect with us" className="mt-6 rounded-3xl border border-[#e8ebf2] bg-white p-4 desk:p-6">
+      <section aria-label="Connect with us" className="mt-6 desk:mt-0 rounded-3xl border border-[#e8ebf2] bg-white p-4 desk:p-6">
         <h2 className={heading}>{t("Connect with us")}</h2>
         <ul className="mt-3 space-y-2 text-sm font-medium text-slate-700">
           <li><a href={`tel:${site.phone}`} className="flex items-center gap-3"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dbeafe] text-[#2c3da0]"><PhoneCall size={16} /></span>{site.phone}</a></li>
@@ -160,52 +170,27 @@ export default function Footer() {
           </div>
         </div>
       </section>
-
-    {/* Go Digital Go Paperless section */}
-    <section aria-label="Environmental commitment" className="mt-6 rounded-2xl bg-white p-3 shadow-md ring-1 ring-slate-200">
-      <div className="space-y-2.5">
-        <div className="flex items-center justify-center gap-4">
-          <div className="flex items-center gap-2.5">
-            <Smartphone size={18} className="text-[#0c0b5d]" />
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-wide text-[#0c0b5d]">Go Digital</h3>
-              <p className="text-[11px] text-[#0c0b5d] font-semibold">Go Paperless</p>
-            </div>
-          </div>
-          <div className="h-7 w-px bg-slate-300" />
-          <div className="flex items-center gap-2.5">
-            <Leaf size={18} className="text-[#0c0b5d]" />
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-wide text-[#0c0b5d]">Save</h3>
-              <p className="text-[11px] text-[#0c0b5d] font-semibold">Environment</p>
-            </div>
-          </div>
-        </div>
-        <div className="border-t border-slate-200 pt-2.5">
-          <p className="text-center text-[10.5px] leading-snug text-[#0c0b5d]">At Unique Futsal, we believe in making everyday operations smarter and easier through digital technology. From bookings and payments to records and daily management, we handle almost everything digitally, reducing the need for paper and printed documents while creating a more efficient, eco-friendly, and sustainable environment.</p>
-        </div>
       </div>
-    </section>
 
     {/* the ways to pay: the wallets we take today, cash at the venue, and card payment (a mobile POS) coming soon */}
-    <section aria-label="We accept" className="mt-3 rounded-2xl bg-white p-3 shadow-md ring-1 ring-slate-200">
-      <h3 className="text-center text-xs font-medium uppercase tracking-wide text-[#0c0b5d]">We Accept (For Nepalese)</h3>
-      <ul className="mt-2.5 flex items-start gap-2">
-        <li className="flex min-w-0 flex-1 flex-col items-center gap-1">
+    <section aria-label="We accept" className="mt-6 desk:mt-16 rounded-2xl bg-white p-3 shadow-md ring-1 ring-slate-200">
+      <h3 className="text-center text-xs font-bold uppercase tracking-wide text-[#0c0b5d]">We Accept</h3>
+      <ul className="mt-2.5 flex items-start gap-2 desk:justify-center desk:gap-40">
+        <li className="flex min-w-0 flex-1 flex-col items-center gap-1 desk:w-36 desk:flex-none">
           <div className="flex w-full min-w-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-2 h-11">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/pay-fonepay.webp" alt="" aria-hidden className="h-6 w-auto max-w-full object-contain" />
           </div>
           <span className="text-[11px] font-bold text-[#0c0b5d]">Fonepay</span>
         </li>
-        <li className="flex min-w-0 flex-1 flex-col items-center gap-1">
+        <li className="flex min-w-0 flex-1 flex-col items-center gap-1 desk:w-36 desk:flex-none">
           <div className="flex w-full min-w-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-2 h-11">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/pay-esewa.webp" alt="" aria-hidden className="h-6 w-auto max-w-full object-contain" />
           </div>
           <span className="text-[11px] font-bold text-[#0c0b5d]">eSewa</span>
         </li>
-        <li className="flex min-w-0 flex-1 flex-col items-center gap-1">
+        <li className="flex min-w-0 flex-1 flex-col items-center gap-1 desk:w-36 desk:flex-none">
           <div className="flex w-full min-w-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-2 h-11 gap-1.5 text-[#0c0b5d]">
             <Banknote size={22} strokeWidth={1.8} aria-hidden />
           </div>
@@ -214,9 +199,9 @@ export default function Footer() {
       </ul>
       <div className="mt-4 border-t border-slate-200 pt-4">
         <p className="text-center text-[11px] font-medium uppercase tracking-wide text-[#0c0b5d]">For Indian and foreign players</p>
-        <ul className="mt-2 flex items-start gap-2">
+        <ul className="mt-2 flex items-start gap-2 desk:justify-center desk:gap-40">
           {[["/pay-phonepe.webp", "PhonePe", "h-7"], ["/pay-upi.webp", "UPI", "h-7"], ["/pay-gpay.webp", "Google Pay", "h-5"], ["/pay-stripe.webp", "Stripe", "h-5"]].map(([src, name, h]) => (
-            <li key={name} className="flex min-w-0 flex-1 flex-col items-center gap-1">
+            <li key={name} className="flex min-w-0 flex-1 flex-col items-center gap-1 desk:w-36 desk:flex-none">
               <div className="flex w-full min-w-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-2 h-10">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={src} alt="" aria-hidden className={`${h} w-auto max-w-full object-contain`} />
@@ -229,10 +214,48 @@ export default function Footer() {
     </section>
 
       {/* two rows: the brand and "Since 2018" in the middle, then the copyright (left) and the credit (right), two short lines each */}
-      <div className="mt-3 flex justify-end">
-        <BackToTop />
+      {/* Go Digital Go Paperless section */}
+      <section aria-label="Environmental commitment" className="mt-6 rounded-2xl bg-white p-4 shadow-md desk:px-10 desk:py-6 ring-1 ring-slate-200">
+        <div className="space-y-3 desk:space-y-5">
+          <div className="flex items-center justify-center gap-5 desk:gap-10">
+            <div className="flex items-center gap-2.5">
+              <Smartphone size={18} className="text-[#0c0b5d]" />
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wide text-[#0c0b5d]">Go Digital</h3>
+                <p className="text-[11px] text-[#0c0b5d] font-semibold">Go Paperless</p>
+              </div>
+            </div>
+            <div className="h-8 w-px bg-slate-300" />
+            <div className="flex items-center gap-2.5">
+              <Leaf size={18} className="text-[#0c0b5d]" />
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wide text-[#0c0b5d]">Save</h3>
+                <p className="text-[11px] text-[#0c0b5d] font-semibold">Environment</p>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-slate-200 pt-3 desk:pt-5">
+            <p className="mx-auto max-w-5xl text-center text-[10.5px] leading-relaxed text-[#0c0b5d] desk:text-[13px]">At Unique Futsal, we believe in making everyday operations smarter and easier through digital technology. From bookings and payments to records and daily management, we handle almost everything digitally, reducing the need for paper and printed documents while creating a more efficient, eco-friendly, and sustainable environment.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* the back-to-top button: at the right, between the Go Digital card and the footer line */}
+      <div className="mt-4 flex items-center justify-end desk:mt-6 desk:grid desk:grid-cols-[1fr_auto_1fr]">
+        {/* desktop only: the web app is made for the phone, so say so */}
+        <div className="hidden items-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 py-2 pl-2.5 pr-5 text-white shadow-[0_10px_20px_-10px_rgba(5,150,105,0.7)] desk:col-start-2 desk:flex">
+          <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-[0_6px_12px_-6px_rgba(0,0,0,0.35)]">
+            <Smartphone size={20} strokeWidth={1.9} aria-hidden />
+            <span aria-hidden className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-amber-300 ring-2 ring-white" />
+          </span>
+          <p className="leading-tight">
+            <span className="block text-[13px] font-bold text-white">{t("Most optimized for Mobile Web")}</span>
+            <span className="block text-[11px] font-medium text-white/90">{t("Please use your smartphone for the best experience and all features")}</span>
+          </p>
+        </div>
+        <div className="flex justify-end desk:col-start-3"><BackToTop /></div>
       </div>
-      <div className="mt-3 border-t-2 border-[#0c0b5d]/25 pt-[26px]">
+      <div className="mt-4 border-t-2 border-[#0c0b5d]/25 pt-[26px] desk:mt-6">
         <div className="flex items-center justify-center gap-2.5 px-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo-mark-navy.png" alt="" aria-hidden className="h-8 w-auto" />

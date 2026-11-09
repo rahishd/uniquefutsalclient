@@ -17,7 +17,7 @@ export default function GallerySection() {
   const shown = photos.slice(0, STRIP);
 
   return (
-    <section className="mt-5" aria-label="Gallery">
+    <section className="mt-5 desk:mt-0" aria-label="Gallery">
       <div className="flex items-end justify-between">
         <h2 className="text-lg font-medium">Gallery</h2>
         <Link href="/gallery" className="inline-flex items-center gap-0.5 text-sm font-medium text-[#3345b0]">View more <ChevronRight size={16} aria-hidden /></Link>
@@ -27,7 +27,7 @@ export default function GallerySection() {
           <button type="button" key={p.id} onClick={() => setOpen(i)} aria-label={`Open photo: ${p.title}`} className="relative aspect-[4/3] w-[72%] shrink-0 snap-start overflow-hidden rounded-2xl bg-slate-100 tab:w-60">
             {/* photos come from the venue's own API, so next/image is not used */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={mediaUrl(p.imageUrl)} alt={p.title} loading="lazy" draggable={false} className="h-full w-full object-cover" />
+            <img src={mediaUrl(p.imageUrl)} alt={p.title} loading="lazy" draggable={false} className="h-full w-full object-contain" />
             <span className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/55 to-transparent px-3 pb-2 pt-6 text-left text-xs font-medium text-white">{p.title}</span>
           </button>
         ))}

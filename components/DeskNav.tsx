@@ -41,9 +41,9 @@ export default function DeskNav() {
       {mark && (
         <>
           {/* the glass sheen behind the current page */}
-          <span aria-hidden className="uf-nav-glass pointer-events-none absolute inset-y-0 rounded-md border shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] backdrop-blur-md" style={{ left: mark.left, width: mark.width, background: "rgba(255,255,255,0.12)", borderColor: "rgba(255,255,255,0.28)" }} />
+          <span aria-hidden className="uf-nav-glass pointer-events-none absolute inset-y-0 rounded-md border backdrop-blur-md" style={{ left: mark.left, width: mark.width, background: "rgba(12,11,93,0.08)", borderColor: "rgba(12,11,93,0.2)" }} />
           {/* the line under it */}
-          <span aria-hidden className="uf-nav-glass pointer-events-none absolute -bottom-1.5 h-0.5 rounded-sm bg-[#ffffff]" style={{ left: mark.left + 8, width: Math.max(0, mark.width - 16) }} />
+          <span aria-hidden className="uf-nav-glass pointer-events-none absolute -bottom-1.5 h-0.5 rounded-sm bg-[#0c0b5d]" style={{ left: mark.left + 8, width: Math.max(0, mark.width - 16) }} />
         </>
       )}
       {LINKS.map((l) => {

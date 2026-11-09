@@ -12,6 +12,7 @@ import GuestPrompt from "@/components/GuestPrompt";
 import StickyHomeBar from "@/components/StickyHomeBar";
 import QuickRebook from "@/components/QuickRebook";
 import PopularGrid from "@/components/PopularGrid";
+import WhyUnique from "@/components/WhyUnique";
 import GoalRushCard from "@/components/goalrush/GoalRushCard";
 import PromoCodes from "@/components/PromoCodes";
 import BannerOffer from "@/components/BannerOffer";
@@ -70,21 +71,29 @@ export default function HomeScreen() {
           </div>
           <KidSkills className="pointer-events-none absolute bottom-0 right-0 h-[230px] w-auto desk:right-10 desk:h-[300px]" />
         </section>
+        </div>
 
-        <div className="order-[7]">
-          <PopularGrid />
-          {/* photos from games and tournaments: only shows once photos are uploaded (components/ads/GallerySection.tsx) */}
-          <GallerySection />
+        {/* desktop: the live promo codes sit right beside the banner (one code at a time, a slider when there are more); on the phone and tablet they stay in the side column below */}
+        <div className="uf-promo-col hidden empty:hidden desk:order-[6] desk:col-span-4 desk:block desk:[&>*]:mt-0"><PromoCodes /></div>
+
+        {/* desktop: Quick Access on its own full-width row (2 rows of tiles), under the banner and the promo codes */}
+        <div className="uf-home-quick order-[7] desk:col-span-12 desk:mb-10"><PopularGrid /></div>
+
+        {/* photos from games and tournaments: only shows once photos are uploaded (components/ads/GallerySection.tsx); desktop: full width, corner to corner */}
+        <div className="order-[7] empty:hidden desk:order-[10] desk:col-span-12 desk:mt-10"><GallerySection /></div>
+
+        <div className="uf-home-below order-[7] desk:order-[8] desk:col-span-8 desk:flex desk:flex-col">
           {/* the penalty mini game, right under Quick Access */}
           <GoalRushCard />
         </div>
-        </div>
       </div>
 
-      <aside className="uf-home-side contents tab:col-span-6 tab:flex tab:flex-col tab:gap-4 desk:sticky desk:top-28 desk:order-[6] desk:col-span-4 desk:gap-5 desk:self-start">
-        <div className="order-[6] empty:hidden tab:[&>*]:mt-0 desk:[&>*]:mt-0"><QuickRebook /></div>
-        <div className="order-[9] empty:hidden tab:[&>*]:mt-0 desk:[&>*]:mt-0"><PromoCodes /></div>
-        <div className="order-[10] empty:hidden tab:[&>*]:mt-0 desk:[&>*]:mt-0"><TournamentSection /></div>
+      <aside className="uf-home-side contents tab:col-span-6 tab:flex tab:flex-col tab:gap-4 desk:order-[9] desk:col-span-4 desk:flex desk:flex-col desk:gap-5">
+        <div className="uf-rest-col order-[6] empty:hidden tab:[&>*]:mt-0 desk:[&>*]:mt-0"><QuickRebook /></div>
+        <div className="order-[9] empty:hidden tab:[&>*]:mt-0 desk:hidden"><PromoCodes /></div>
+        <div className="uf-rest-col order-[10] empty:hidden tab:[&>*]:mt-0 desk:[&>*]:mt-0"><TournamentSection /></div>
+        {/* desktop: beside the Goal Rush card; `uf-rest-col` keeps the side column open (see the :has() rule in globals.css) */}
+        <div className="uf-rest-col uf-desk-only order-[11] hidden desk:flex desk:flex-1 desk:flex-col"><WhyUnique className="flex flex-1 flex-col" /></div>
       </aside>
 
     </div>

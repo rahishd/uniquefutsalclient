@@ -49,7 +49,8 @@ export default function InstallPrompt() {
   const signedIn = session?.registered === true;
 
   const open = useCallback(() => {
-    if (isStandalone() || wasDismissedThisVisit()) return;
+    // the install popup is for phones and tablets only: never on a desktop web browser, not even once
+    if (isStandalone() || wasDismissedThisVisit() || !(isIos() || isAndroid())) return;
     timers.current.forEach(clearTimeout);
     timers.current = [];
     if (isIos()) {

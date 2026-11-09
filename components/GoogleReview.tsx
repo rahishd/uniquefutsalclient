@@ -57,10 +57,10 @@ export default function GoogleReview() {
   }
 
   return (
-    <section aria-label="Review us on Google" className="mt-10">
+    <section aria-label="Review us on Google" className="mt-10 desk:mt-0 desk:flex desk:flex-col">
       <h2 className={heading}>{t("How was your experience?")}</h2>
       <p className="mt-4 text-sm text-slate-500">{t("Tell others about Unique Futsal with a quick Google review.")}</p>
-      <div className="relative mt-3 overflow-hidden rounded-2xl bg-gradient-to-br from-[#eaf3ff] via-[#dbeaff] to-[#cbe0ff] p-3.5 text-center shadow-[0_14px_28px_-16px_rgba(59,130,246,0.5)] ring-1 ring-[#bfd7ff]">
+      <div className="relative mt-3 overflow-hidden rounded-2xl desk:flex desk:flex-1 desk:flex-col desk:justify-center bg-gradient-to-br from-[#eaf3ff] via-[#dbeaff] to-[#cbe0ff] p-3.5 text-center shadow-[0_14px_28px_-16px_rgba(59,130,246,0.5)] ring-1 ring-[#bfd7ff]">
         <span aria-hidden className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white opacity-70 blur-3xl" />
         <div className="relative flex justify-center gap-1">
           {[1, 2, 3, 4, 5].map((n) => (

@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
-import { Check, ChevronRight, Copy } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Copy } from "lucide-react";
 import { fmtDay, promosStore } from "@/lib/promos";
 import { useSession } from "@/lib/session";
 
 export default function PromoCodes() {
   const session = useSession();
   const [copied, setCopied] = useState<string | null>(null);
+  const track = useRef<HTMLUListElement>(null);
+  const [at, setAt] = useState(0); // desktop slider: which code is showing
   const live = (promosStore.use().data ?? []).filter((p) => p.status === "active");
 
   async function copy(code: string) {
@@ -20,6 +22,10 @@ export default function PromoCodes() {
       // clipboard blocked: nothing to do
     }
   }
+
+  // desktop slider: one code at a time, arrows and dots when there is more than one
+  const slide = (by: number) => { const el = track.current; if (el) el.scrollBy({ left: by * el.clientWidth, behavior: "smooth" }); };
+  const onSlide = () => { const el = track.current; if (el && el.clientWidth) setAt(Math.round(el.scrollLeft / el.clientWidth)); };
 
   // promo codes are for signed-in customers; a guest pays the full price
   if (live.length === 0 || session?.registered !== true) return null;
@@ -35,9 +41,9 @@ export default function PromoCodes() {
         </Link>
       </div>
 
-      <ul className="-mx-5 mt-4 flex snap-x gap-3 overflow-x-auto px-5 pb-2 desk:mx-0 desk:grid desk:grid-cols-1 desk:gap-3 desk:overflow-visible desk:px-0">
+      <ul ref={track} onScroll={onSlide} className="-mx-5 mt-4 flex snap-x gap-3 overflow-x-auto px-5 pb-2 desk:mx-0 desk:snap-mandatory desk:gap-0 desk:px-0 desk:pb-1 desk:[scrollbar-width:none] desk:[&::-webkit-scrollbar]:hidden">
         {live.map((p) => (
-          <li key={p.code} className="glass w-64 shrink-0 snap-start rounded-3xl p-4 desk:w-auto">
+          <li key={p.code} className="glass w-64 shrink-0 snap-start rounded-3xl p-4 desk:w-full">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm font-medium">{p.title}</p>
@@ -60,6 +66,13 @@ export default function PromoCodes() {
           </li>
         ))}
       </ul>
+      {live.length > 1 && (
+        <div className="mt-2 hidden items-center justify-center gap-3 desk:flex">
+          <button type="button" onClick={() => slide(-1)} aria-label="Previous code" className="grid h-7 w-7 place-items-center rounded-full bg-white/70 text-brand shadow-sm"><ChevronLeft size={16} /></button>
+          <div className="flex gap-1.5" aria-hidden>{live.map((p, i) => <span key={p.code} className={`h-1.5 rounded-full transition-all ${i === at ? "w-4 bg-brand" : "w-1.5 bg-slate-300"}`} />)}</div>
+          <button type="button" onClick={() => slide(1)} aria-label="Next code" className="grid h-7 w-7 place-items-center rounded-full bg-white/70 text-brand shadow-sm"><ChevronRight size={16} /></button>
+        </div>
+      )}
     </section>
   );
 }

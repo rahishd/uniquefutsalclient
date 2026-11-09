@@ -22,7 +22,7 @@ export default function HeaderChat() {
       <MessageCircle size={14} strokeWidth={2.2} />
       {t("Chat")}
       {unread > 0 && (
-        <span className="absolute -right-0.5 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-[#0c0b5d]">{unread > 9 ? "9+" : unread}</span>
+        <span className="absolute -right-0.5 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">{unread > 9 ? "9+" : unread}</span>
       )}
     </Link>
   );

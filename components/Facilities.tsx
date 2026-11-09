@@ -1,7 +1,7 @@
 import { Accessibility, Armchair, Crown, Gamepad2, HandHeart, Leaf, PawPrint, PiggyBank, ShieldPlus } from "lucide-react";
 import EvCarIcon from "@/components/ev/EvCarIcon";
 
-const FACILITIES: { title: string; icon: React.ElementType }[] = [
+export const FACILITIES: { title: string; icon: React.ElementType }[] = [
   { title: "Pet Friendly", icon: PawPrint },
   { title: "AC EV Charging", icon: EvCarIcon },
   { title: "3% Charity", icon: HandHeart },
@@ -15,9 +15,9 @@ const FACILITIES: { title: string; icon: React.ElementType }[] = [
 ];
 
 // "What Makes Us Unique": what the venue offers and stands for, each with its own icon. Sits between Corporate Network and the founder message.
-export default function Facilities() {
+export default function Facilities({ className = "mb-10" }: { className?: string }) {
   return (
-    <section aria-label="What Makes Us Unique" className="mb-10">
+    <section aria-label="What Makes Us Unique" className={className}>
       <h2 className="text-left text-lg font-bold text-brand desk:text-2xl">What Makes Us Unique</h2>
       <ul className="mt-3 grid grid-cols-2 gap-2 desk:mt-5 desk:grid-cols-4 desk:gap-3">
         {FACILITIES.map(({ title, icon: Icon }) => (

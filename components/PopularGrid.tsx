@@ -23,6 +23,9 @@ interface Tile {
 const NEW_TAG_LOGINS = 2;
 const NO_NEW_TAG = new Set(["Book", "Gamezone", "Points", "Tournaments"]);
 
+// the desktop shows the first row of tiles only (the phone shows all of them)
+const DESK_TILES = 10;
+
 const TILES: Tile[] = [
   { label: "Book", href: "/book", icon: CalendarDays, tone: "text-brand", types: ["booking", "reminder", "payment"] },
   { label: "Gamezone", href: "/gamezone", icon: Gamepad2, tone: "text-brand", types: ["gamezone"] },
@@ -86,8 +89,9 @@ export default function PopularGrid() {
           <button type="button" onClick={openSignIn} className="rounded-full bg-[#0c0b5d] px-4 py-1.5 text-xs font-semibold" style={{ color: "#ffffff" }}>{tr("Register / Sign in")}</button>
         </div>
       )}
-      <ul className="mt-4 grid grid-cols-4 gap-x-3 gap-y-5 desk:grid-cols-6 desk:gap-x-4 desk:gap-y-6">
-        {TILES.map((t) => {
+      {/* desktop: the tiles fill two rows across the whole width (9 + 8 for 17 tiles, 10 + 10 for 20) */}
+      <ul style={{ "--qa-cols": DESK_TILES } as React.CSSProperties} className="mt-4 grid grid-cols-4 gap-x-3 gap-y-5 desk:[grid-template-columns:repeat(var(--qa-cols),minmax(0,1fr))] desk:gap-x-4 desk:gap-y-6">
+        {TILES.map((t, i) => {
           const count = countFor(t);
           const Icon = t.icon;
           const locked = guest && !GUEST_OK.has(t.href);
@@ -118,7 +122,7 @@ export default function PopularGrid() {
             </>
           );
           return (
-            <li key={t.label}>
+            <li key={t.label} className={i >= DESK_TILES ? "desk:hidden" : undefined}>
               {locked ? (
                 <button type="button" onClick={openSignIn} aria-label={`${t.label}: sign in to use`} className="group flex w-full flex-col items-center gap-2">
                   {face}

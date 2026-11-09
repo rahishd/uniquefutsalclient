@@ -32,10 +32,10 @@ export default function CompanyHeader() {
       <div className="mx-auto w-full max-w-md px-5 tab:max-w-3xl tab:px-8 desk:max-w-[1320px] desk:px-10">
         <div className="flex min-h-0 items-center gap-3 py-2.5 tab:gap-4 pr-1 desk:gap-3 2xl:gap-6">
           <Link href="/" aria-label={`${site.name} home`} className="flex min-w-0 items-center gap-2.5 desk:shrink-0">
-            {/* The kicking player alone, in white on the navy bar, with no tile behind it (public/logo-mark-white.png) */}
+            {/* The kicking player alone, in navy on the white bar, with no tile behind it (public/logo-mark-navy.png) */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-mark-white.png" alt="" aria-hidden className="uf-hdr-logo shrink-0" style={{ "--s": "28px" } as React.CSSProperties} />
-            <span className="whitespace-nowrap text-[13px] font-bold uppercase tracking-[0.08em] text-white">{site.name}</span>
+            <img src="/logo-mark-navy.png" alt="" aria-hidden className="uf-hdr-logo shrink-0" style={{ "--s": "28px" } as React.CSSProperties} />
+            <span className="whitespace-nowrap text-[13px] font-bold uppercase tracking-[0.08em] text-[#0c0b5d]">{site.name}</span>
           </Link>
           <DeskNav />
           <div className="-mr-2 ml-auto flex shrink-0 items-center gap-0 desk:ml-0"><HeaderPoints plain /><HeaderChat /><div className="[&_button[aria-label^=Notifications]]:!h-9 [&_button[aria-label^=Notifications]]:!w-8 [&_button[aria-label^=Notifications]]:!rounded-md [&_button[aria-label^=Notifications]]:!bg-transparent [&_button[aria-label^=Notifications]]:!text-white [&_button[aria-label^=Notifications]]:!shadow-none [&_button[aria-label^=Notifications]]:!ring-0 [&_button[aria-label^=Notifications]]:!border-0 [&_button[aria-label^=Notifications]>svg]:!h-4 [&_button[aria-label^=Notifications]>svg]:!w-4"><NotificationBell /></div><HeaderLogout /></div>
