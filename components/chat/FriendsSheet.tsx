@@ -6,6 +6,7 @@ import { errorText } from "@/lib/api";
 import { MIN_SEARCH_DIGITS, acceptFriend, friendsStore, removeFriend, searchPeople, sendFriendRequest, type ChatPerson } from "@/lib/chat";
 import ProfileAvatar from "@/components/captain/ProfileAvatar";
 import FullScreenPanel from "@/components/chat/FullScreenPanel";
+import { askConfirm } from "@/lib/confirm";
 
 type Tab = "add" | "requests" | "friends";
 
@@ -149,7 +150,7 @@ export default function FriendsSheet({ initialTab = "add", onClose }: { initialT
                   <span className="block text-xs text-slate-500">{f.phone}</span>
                 </span>
                 <button type="button" disabled={busy !== null}
-                  onClick={() => { if (window.confirm(`Remove ${f.name} from your friends?`)) void run(`rm-${f.id}`, () => removeFriend(f.id)); }}
+                  onClick={async () => { if (await askConfirm(`Remove ${f.name} from your friends?`)) void run(`rm-${f.id}`, () => removeFriend(f.id)); }}
                   className="rounded-full bg-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-600 disabled:opacity-60">Remove</button>
               </li>
             ))}
