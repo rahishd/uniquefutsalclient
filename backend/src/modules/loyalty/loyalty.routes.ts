@@ -33,6 +33,24 @@ router.post(
   }),
 );
 
+// The one-time point for a first Google review (customers only): status, then claim
+router.get(
+  "/review",
+  authMiddleware,
+  asyncHandler(async (req: AuthRequest, res: Response) => {
+    res.json(ApiResponseUtil.success(200, "Review reward", await loyaltyService.reviewStatus(req.user!.id)));
+  }),
+);
+
+router.post(
+  "/review/claim",
+  authMiddleware,
+  asyncHandler(async (req: AuthRequest, res: Response) => {
+    const r = await loyaltyService.claimReview(req.user!.id);
+    res.status(r.earned ? 201 : 200).json(ApiResponseUtil.success(r.earned ? 201 : 200, r.earned ? "Point added" : "Already claimed", r));
+  }),
+);
+
 // Take points staff offered ("Add to my points")
 router.post(
   "/offers/:id/claim",

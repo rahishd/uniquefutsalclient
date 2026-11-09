@@ -8,6 +8,7 @@ import EmergencyReminder from "@/components/emergency/EmergencyReminder";
 import HealthReminder from "@/components/health/HealthReminder";
 import HomeTop from "@/components/HomeTop";
 import DeskHero from "@/components/DeskHero";
+import GuestPrompt from "@/components/GuestPrompt";
 import StickyHomeBar from "@/components/StickyHomeBar";
 import QuickRebook from "@/components/QuickRebook";
 import PopularGrid from "@/components/PopularGrid";
@@ -36,6 +37,7 @@ export default function HomeScreen() {
         <HomeTop />
         {/* desktop only: the venue banner in place of the account and weather cards */}
         <DeskHero />
+        <GuestPrompt className="order-1 hidden desk:col-span-12 desk:block" />
 
         {/* desktop profile card: soft blue for a regular customer, dark blue for a VIP (see components/UserBadge.tsx) */}
         <UserBadge />

@@ -3,7 +3,7 @@
 import { startLoginSplash } from "@/lib/splash";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Cake, CheckCircle2, Eye, EyeOff, HeartPulse, Loader2, Lock, Phone, ScanFace, User } from "lucide-react";
+import { Cake, CheckCircle2, Eye, EyeOff, HeartPulse, Loader2, Lock, Phone, User } from "lucide-react";
 import { errorText } from "@/lib/api";
 import { signIn, signUp, useSession } from "@/lib/session";
 import { site } from "@/lib/site";
@@ -11,7 +11,6 @@ import { googleConfig, requestPasswordReset, resetPasswordWithGoogle, type Googl
 import GoogleButton from "@/components/auth/GoogleButton";
 import { useT } from "@/lib/i18n";
 import { dobKey, dobOk } from "@/lib/age";
-import { passkeyCancelled, passkeyName, passkeySupported, signInWithPasskey } from "@/lib/passkey";
 
 // A soft grey field with its icon on the left; focus shows a blue ring, a bad value turns it red with the message under it.
 const field = "flex items-center gap-3 rounded-2xl bg-slate-100 px-4 py-3.5 ring-1 transition focus-within:bg-white focus-within:ring-2";
@@ -42,9 +41,6 @@ export default function AuthForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
-  const [faceOk, setFaceOk] = useState(false); // this device can use Face ID / fingerprint
-  useEffect(() => { passkeySupported().then(setFaceOk); }, []);
-
   // opening the app straight on the sign-in page (a bookmark, a restored tab, a cold start) goes to Home instead: Home has the Log in and
   // Create account buttons. Coming from inside the app (the Log in buttons, or a page that needs a sign-in, which add ?next= or ?mode=) stays here.
   useEffect(() => {
@@ -52,6 +48,11 @@ export default function AuthForm() {
       const q = new URLSearchParams(window.location.search);
       if (!q.has("next") && !q.has("mode") && sessionStorage.getItem("uf-in-app") !== "1") window.location.replace("/");
     } catch { /* storage blocked: stay on the sign-in page */ }
+  }, []);
+  // /login?mode=up (the "Create account" button on Home) opens on the sign-up form
+  useEffect(() => {
+    const h = setTimeout(() => { if (new URLSearchParams(window.location.search).get("mode") === "up") setMode("up"); }, 0);
+    return () => clearTimeout(h);
   }, []);
 
   useEffect(() => {
@@ -100,20 +101,6 @@ export default function AuthForm() {
     } catch (err) {
       setError(errorText(err));
     } finally {
-      setBusy(false);
-    }
-  }
-
-  async function faceSignIn() {
-    if (busy) return;
-    setBusy(true);
-    setError(null);
-    try {
-      await signInWithPasskey();
-      startLoginSplash(); // the splash screen plays once on the next page, only after a sign-in
-      window.location.assign(nextPath());
-    } catch (err) {
-      if (!passkeyCancelled(err)) setError(errorText(err));
       setBusy(false);
     }
   }
@@ -321,24 +308,17 @@ export default function AuthForm() {
             <button type="submit" disabled={!ok || busy} className={primary}>
               {busy ? <><Loader2 size={18} className="animate-spin" /> Please wait…</> : mode === "in" ? t("Log In") : t("Create account")}
             </button>
-            {mode === "in" && faceOk && (
-              <button type="button" onClick={faceSignIn} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-100 py-3.5 text-[15px] font-semibold text-[#0c0b5d] ring-1 ring-slate-200 transition hover:bg-slate-200/70 active:scale-[0.99] disabled:opacity-40">
-                <ScanFace size={20} /> {t("Sign in with")} {passkeyName()}
-              </button>
-            )}
           </>
         )}
       </form>
 
       </div>
 
-      <p className="mt-5 text-center text-sm text-slate-500">
-        {mode === "in" ? (
-          <>{t("No account yet?")} <button type="button" onClick={() => go("up")} className="font-bold text-[#0c0b5d]">{t("Create one")}</button></>
-        ) : (
-          <>{t(mode === "up" ? "Already have an account?" : "Remembered it?")} <button type="button" onClick={() => go("in")} className="font-bold text-[#0c0b5d]">{t("Sign In")}</button></>
-        )}
-      </p>
+      {mode !== "in" && (
+        <p className="mt-5 text-center text-sm text-slate-500">
+          {t(mode === "up" ? "Already have an account?" : "Remembered it?")} <button type="button" onClick={() => go("in")} className="font-bold text-[#0c0b5d]">{t("Sign In")}</button>
+        </p>
+      )}
 
       <div className="mt-5 flex items-center gap-3 text-xs text-slate-400" aria-hidden>
         <span className="h-px flex-1 bg-slate-200" /> or <span className="h-px flex-1 bg-slate-200" />

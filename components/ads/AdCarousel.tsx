@@ -60,7 +60,8 @@ export default function AdCarousel() {
 
   if (!count) return null;
   return (
-    <section aria-label="Offers and ads">
+    <section aria-label="For You">
+      <h2 className="mb-2 px-1.5 text-lg font-bold text-[#0c0b5d] desk:text-xl">For You</h2>
       <div className="relative overflow-hidden rounded-none bg-white/60">
         <div
           ref={track}

@@ -6,7 +6,7 @@ import notificationService from "../notification/notification.service";
 import { todayKey } from "../../utils/dates";
 import { randomUUID } from "crypto";
 import {
-  EXPIRY_WARN_DAYS, LedgerRow, LoyaltyKind, MEMBERSHIP_POINTS, PERIODS, PERIOD_HOUR, POINTS_CAPTAIN_WIN, SHARE_MAX, SHARE_MIN, SHARE_MIN_BALANCE, SHARE_PER_DAY,
+  EXPIRY_WARN_DAYS, LedgerRow, LoyaltyKind, MEMBERSHIP_POINTS, PERIODS, PERIOD_HOUR, POINTS_CAPTAIN_WIN, REVIEW_POINTS, SHARE_MAX, SHARE_MIN, SHARE_MIN_BALANCE, SHARE_PER_DAY,
   Period, expiryFor, freeGameCost, goodsPointsRoom, periodOfHour, planShare, pointsForGame, pointsForGoods, r1, summarize,
 } from "../../utils/loyaltyPoints";
 import { addDaysKey } from "../../utils/dates";
@@ -156,6 +156,20 @@ export class LoyaltyService {
       href: await this.pointsHref(userId, "share", id), dedupeKey: `share-out-${id}`,
     });
     return { id, points, to: friend.firstName, remaining };
+  }
+
+  /** Has this customer already taken the one-time Google review point? */
+  async reviewStatus(userId: string) {
+    const e = await prisma.loyaltyEntry.findFirst({ where: { userId, kind: "review" }, select: { id: true } });
+    return { claimed: !!e, points: REVIEW_POINTS };
+  }
+
+  /** The one-time point for opening the Google review page: once per customer, ever (unique ledger key = the customer). */
+  async claimReview(userId: string) {
+    const user = await prisma.user.findUnique({ where: { phoneNumber: userId }, select: { isActive: true, role: true } });
+    if (!user || !user.isActive || user.role !== "user") throw new AppError(403, "Sign in with a customer account to claim this point.");
+    const earned = await this.award({ userId, kind: "review", points: REVIEW_POINTS, sourceType: "review", sourceId: userId, detail: "Google review: thank you for reviewing us" });
+    return { earned, points: earned ? REVIEW_POINTS : 0, claimed: true };
   }
 
   // Adds points once per (kind, source). Calling it again for the same source changes nothing.

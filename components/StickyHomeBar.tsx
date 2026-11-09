@@ -20,7 +20,7 @@ export default function StickyHomeBar() {
   return (
     <div
       aria-hidden={!shown}
-      className={`fixed inset-x-0 top-0 z-40 border-b border-[#e8ebf2] bg-white text-[#0c0b5d] shadow-[0_6px_16px_-10px_rgba(12,11,93,0.35)] transition-all duration-300 ease-out desk:hidden ${
+      className={`fixed inset-x-0 top-0 z-40 border-b border-[#cfe0fa] bg-[#e4efff] text-[#0c0b5d] shadow-[0_6px_16px_-10px_rgba(12,11,93,0.35)] transition-all duration-300 ease-out desk:hidden ${
         shown ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-full opacity-0"
       }`}
       style={{ paddingTop: "max(calc(env(safe-area-inset-top) - 0.625rem), 0.5rem)" }}

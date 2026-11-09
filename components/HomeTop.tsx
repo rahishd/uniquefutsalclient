@@ -14,6 +14,7 @@ import { site } from "@/lib/site";
 import LastPlayed from "@/components/LastPlayed";
 import TodayCard from "@/components/TodayCard";
 import { MobileHero } from "@/components/DeskHero";
+import GuestPrompt from "@/components/GuestPrompt";
 import NotificationBell from "@/components/NotificationBell";
 import DigitalIdButton from "@/components/digitalid/DigitalIdButton";
 import WifiButton from "@/components/wifi/WifiButton";
@@ -58,21 +59,50 @@ export default function HomeTop() {
   const next = registered ? [...bookings].filter((b) => isUpcoming(b, now)).sort((a, b) => startsAtMs(a) - startsAtMs(b))[0] : undefined;
 
   const dark = vip;
+  const logoRow = (
+    <div className="flex items-center justify-between gap-3 -mx-5 rounded-b-3xl bg-[#e4efff] px-5 pb-3 pt-[max(calc(env(safe-area-inset-top)_+_0.75rem),1rem)] tab:mx-0 tab:rounded-3xl">
+      <div className="flex min-w-0 items-center gap-2.5">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-mark-navy.png" alt="" aria-hidden className="h-9 w-auto shrink-0" />
+        <span className="truncate text-[17px] font-extrabold uppercase leading-none tracking-tight text-[#0c0b5d]">Unique Futsal</span>
+      </div>
+      <div className="flex shrink-0 items-center gap-2.5 [&_button[aria-label^=Notifications]]:!h-11 [&_button[aria-label^=Notifications]]:!w-11 [&_button[aria-label^=Notifications]]:!bg-white [&_button[aria-label^=Notifications]]:!shadow-none [&_button[aria-label^=Notifications]]:!ring-0 [&_button[aria-label^=Notifications]]:!border-0">
+        <NotificationBell />
+      </div>
+    </div>
+  );
+
+  // a guest or new visitor: no greeting and no account card; the banner, then an invitation to log in or create an account (no cards),
+  // with the weather and date at the top (the quick icons are for registered customers only)
+  if (!registered) {
+    return (
+      <div className="uf-plain order-1 -mx-5 -mt-5 bg-white px-5 pb-4 tab:mx-0 tab:mt-0 tab:rounded-3xl desk:contents">
+        <div className="desk:hidden">
+          {logoRow}
+          {/* the weather and date at the top, then the banner and the invitation */}
+          <div className="mt-4"><TodayCard compact /></div>
+          <div className="relative -mx-5 mt-3 overflow-hidden tab:mx-0"><MobileHero /></div>
+          <GuestPrompt />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="uf-plain order-1 -mx-5 -mt-5 bg-white px-5 pb-4 pt-[max(calc(env(safe-area-inset-top)_+_0.75rem),1rem)] tab:mx-0 tab:mt-0 tab:rounded-3xl desk:contents">
+    <div className="uf-plain order-1 -mx-5 -mt-5 bg-white px-5 pb-4 tab:mx-0 tab:mt-0 tab:rounded-3xl desk:contents">
       <div className="desk:hidden">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3 -mx-5 rounded-b-3xl bg-[#e4efff] px-5 pb-3 pt-[max(calc(env(safe-area-inset-top)_+_0.75rem),1rem)] tab:mx-0 tab:rounded-3xl">
         <div className="flex min-w-0 items-center gap-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo-mark-navy.png" alt="" aria-hidden className="h-9 w-auto shrink-0" />
           <span className="truncate text-[17px] font-extrabold uppercase leading-none tracking-tight text-[#0c0b5d]">Unique Futsal</span>
         </div>
-        <div className="flex shrink-0 items-center gap-2.5 [&_button[aria-label^=Notifications]]:!h-11 [&_button[aria-label^=Notifications]]:!w-11 [&_button[aria-label^=Notifications]]:!bg-[#f0f1f6] [&_button[aria-label^=Notifications]]:!shadow-none [&_button[aria-label^=Notifications]]:!ring-0">
+        <div className="flex shrink-0 items-center gap-2.5 [&_button[aria-label^=Notifications]]:!h-11 [&_button[aria-label^=Notifications]]:!w-11 [&_button[aria-label^=Notifications]]:!bg-white [&_button[aria-label^=Notifications]]:!shadow-none [&_button[aria-label^=Notifications]]:!ring-0">
           <NotificationBell />
         </div>
       </div>
 
-      <div className="mt-2 flex items-end justify-between gap-3 px-4">
+      <div className="mt-6 flex items-end justify-between gap-3 px-4">
         <p className="min-w-0 truncate text-[22px] font-medium leading-tight text-[#14142b]">Hi, {first}!</p>
         <Link href={registered ? "/profile" : "/login"} className="inline-flex shrink-0 items-center gap-1 pb-0.5 text-sm font-medium text-[#3345b0]">
           {registered ? "My Account" : "Sign in"} <ChevronDown size={15} aria-hidden />
@@ -123,13 +153,13 @@ export default function HomeTop() {
               {!registered ? "Sign in to book" : next ? <>{dayFmt.format(parseKey(next.date))}, {formatHour(parseInt(next.startTime, 10))}</> : "No game booked"}
             </p>
           </div>
-          <Link href={registered ? "/profile" : "/login"} className={`inline-flex shrink-0 items-center gap-1 rounded-xl border px-3 py-2 text-sm font-medium ${dark ? "border-white/40 text-white" : "border-[#dcdcf0] text-[#3345b0]"}`}>
+          <Link href={registered ? "/profile/bookings" : "/login"} className={`inline-flex shrink-0 items-center gap-1 rounded-xl border px-3 py-2 text-sm font-medium ${dark ? "border-white/40 text-white" : "border-[#dcdcf0] text-[#3345b0]"}`}>
             {registered ? "My Games" : "Sign in"} <ChevronDown size={16} aria-hidden />
           </Link>
         </div>
 
         {/* the quick icons, just under the next game */}
-        <div className="mt-3 flex items-center justify-evenly gap-2 [&>a]:!h-11 [&>a]:!w-11 [&>button]:!h-11 [&>button]:!w-11 [&>a]:!bg-[#eaf1ff] [&>button]:!bg-[#eaf1ff] [&>a>svg]:!h-5 [&>a>svg]:!w-5 [&>button>svg]:!h-5 [&>button>svg]:!w-5"><OrderButton /><RulesButton /><WifiButton /><DigitalIdButton /></div>
+        <div className="mt-3 flex items-center justify-evenly gap-2 [&>a]:!h-11 [&>a]:!w-11 [&>a]:!rounded-xl [&>button]:!h-11 [&>button]:!w-11 [&>button]:!rounded-xl [&>a]:!bg-[#eaf1ff] [&>button]:!bg-[#eaf1ff] [&>a>svg]:!h-5 [&>a>svg]:!w-5 [&>button>svg]:!h-5 [&>button>svg]:!w-5"><OrderButton /><RulesButton /><WifiButton /><DigitalIdButton /></div>
       </section>
     </div>
   );

@@ -28,6 +28,7 @@ const KIND: Record<LoyaltyRow["kind"], { icon: typeof Star; tone: string }> = {
   goal_rush: { icon: Goal, tone: "bg-emerald-400/20 text-emerald-700" },
   gift: { icon: Gift, tone: "bg-rose-400/20 text-rose-600" },
   watch_earn: { icon: Clapperboard, tone: "bg-sky-400/20 text-sky-700" },
+  review: { icon: Star, tone: "bg-amber-400/25 text-amber-600" },
   shared_out: { icon: Send, tone: "bg-orange-400/20 text-orange-600" },
   shared_in: { icon: Send, tone: "bg-emerald-400/20 text-emerald-700" },
 };

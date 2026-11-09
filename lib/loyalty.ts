@@ -8,7 +8,7 @@ export type Period = "Morning" | "Day" | "Evening";
 
 export interface LoyaltyRow {
   id: string;
-  kind: "game" | "captain_win" | "goods" | "membership" | "free_game" | "referral" | "goal_rush" | "gift" | "watch_earn" | "shared_out" | "shared_in";
+  kind: "game" | "captain_win" | "goods" | "membership" | "free_game" | "referral" | "goal_rush" | "gift" | "watch_earn" | "review" | "shared_out" | "shared_in";
   points: number;
   earnedOn: string;
   expiresOn: string | null;
@@ -65,6 +65,14 @@ export async function sharePoints(friendPhone: string, points: number) {
 }
 
 export const loyaltyStore = createRemoteStore<Loyalty | null>(() => api<Loyalty>("/loyalty/me"), { signedOut: null, pollMs: 15000 });
+
+// The one-time point for a first Google review (customers only; the server gives it once, ever)
+export const reviewStatus = () => api<{ claimed: boolean; points: number }>("/loyalty/review");
+export async function claimReviewPoint() {
+  const r = await api<{ earned: boolean; points: number; claimed: boolean }>("/loyalty/review/claim", { method: "POST" });
+  await loyaltyStore.refresh();
+  return r;
+}
 
 export async function claimFreeGame(period: Period) {
   await api("/loyalty/claim", { method: "POST", body: { period } });

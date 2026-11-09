@@ -11,6 +11,7 @@
 // - Challenge game: only the winning captain earns 5 points.
 // - Unique Goal Rush (penalty game): a finished game with 3+ goals out of 5 earns 1 point per 3 goals (1 a game), 3 games a day.
 // - Watch & Earn: 40 ads of 15 seconds (10 minutes) = 1 point, valid 1 year.
+// - Google review: 1 point, once per customer, valid 1 year.
 // - Expiry: game and challenge points 3 months after the game, goods points 1 year,
 //   membership points never. A claim spends the points that expire soonest first.
 
@@ -26,6 +27,8 @@ export const GAME_POINTS_MONTHS = 3;
 export const GOODS_POINTS_MONTHS = 12;
 export const WATCH_POINTS_MONTHS = 12; // Watch & Earn points last 1 year
 export const REFERRAL_POINTS_MONTHS = 12;
+export const REVIEW_POINTS = 1; // a registered customer's first Google review click, once per customer
+export const REVIEW_POINTS_MONTHS = 12;
 export const GIFT_POINTS_MONTHS = 12; // points a friend bought for you
 export const EXPIRY_WARN_DAYS = 30;
 export const MEMBERSHIP_POINTS: Record<string, number> = { quarterly: 30, half: 70 };
@@ -39,7 +42,7 @@ export function periodOfHour(hour: number): Period {
   return hour < 10 ? "Morning" : hour < 17 ? "Day" : "Evening";
 }
 
-export type LoyaltyKind = "game" | "captain_win" | "goods" | "membership" | "free_game" | "referral" | "goal_rush" | "gift" | "watch_earn" | "shared_out" | "shared_in";
+export type LoyaltyKind = "game" | "captain_win" | "goods" | "membership" | "free_game" | "referral" | "goal_rush" | "gift" | "watch_earn" | "review" | "shared_out" | "shared_in";
 
 // Sharing points: a customer sends whole points they hold to another registered customer. The points keep the expiry
 // they had, so sharing never makes points last longer.
@@ -70,6 +73,7 @@ export function goodsPointsRoom(alreadyToday: number): number {
 export function expiryFor(kind: LoyaltyKind, earnedOn: string): string | null | undefined {
   if (kind === "game" || kind === "captain_win" || kind === "goal_rush") return addMonthsKey(earnedOn, GAME_POINTS_MONTHS);
   if (kind === "watch_earn") return addMonthsKey(earnedOn, WATCH_POINTS_MONTHS);
+  if (kind === "review") return addMonthsKey(earnedOn, REVIEW_POINTS_MONTHS);
   if (kind === "goods") return addMonthsKey(earnedOn, GOODS_POINTS_MONTHS);
   if (kind === "referral") return addMonthsKey(earnedOn, REFERRAL_POINTS_MONTHS);
   if (kind === "gift") return addMonthsKey(earnedOn, GIFT_POINTS_MONTHS);

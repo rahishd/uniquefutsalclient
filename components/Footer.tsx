@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, ChevronUp, Mail, MapPin, Navigation, PhoneCall, Leaf, Smartphone } from "lucide-react";
-import { FaFacebookF, FaGoogle, FaInstagram, FaStar, FaTiktok, FaWhatsapp } from "react-icons/fa6";
+import { ChevronDown, ChevronUp, Mail, MapPin, Navigation, PhoneCall, Leaf, Smartphone, Banknote } from "lucide-react";
+import { FaFacebookF, FaInstagram, FaTiktok, FaWhatsapp } from "react-icons/fa6";
 import { site } from "@/lib/site";
 import { useT } from "@/lib/i18n";
 import PartnersStrip from "@/components/PartnersStrip";
+import GoogleReview from "@/components/GoogleReview";
 import Facilities from "@/components/Facilities";
 
 
@@ -90,24 +91,8 @@ export default function Footer() {
       </section>
 
 
-      {/* ask for a Google review: plain text; any star (or the link) opens the venue's Google review form */}
-      <section aria-label="Review us on Google" className="mt-10">
-        <h2 className={heading}>{t("How was your experience?")}</h2>
-        <p className="mt-4 text-sm text-slate-500">{t("Tell others about Unique Futsal with a quick Google review.")}</p>
-        <div className="relative mt-3 overflow-hidden rounded-2xl bg-gradient-to-br from-[#eaf3ff] via-[#dbeaff] to-[#cbe0ff] p-3.5 text-center shadow-[0_14px_28px_-16px_rgba(59,130,246,0.5)] ring-1 ring-[#bfd7ff]">
-          <span aria-hidden className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white opacity-70 blur-3xl" />
-          <div className="relative flex justify-center gap-1">
-            {[1, 2, 3, 4, 5].map((n) => (
-              <a key={n} href={site.googleReview} target="_blank" rel="noopener noreferrer" aria-label={`Rate us ${n} star${n > 1 ? "s" : ""} on Google`} className="rounded-full p-1 text-[26px] text-[#fbbc05] drop-shadow-[0_2px_3px_rgba(0,0,0,0.25)] transition active:scale-90">
-                <FaStar />
-              </a>
-            ))}
-          </div>
-          <a href={site.googleReview} target="_blank" rel="noopener noreferrer" className="relative mt-2 flex items-center justify-center gap-1.5 rounded-full bg-white px-4 py-2 text-[13px] font-bold transition active:scale-[0.98]" style={{ color: "#2c3da0" }}>
-            <FaGoogle size={13} className="text-[#4285f4]" /> {t("Write a Google review")} <span aria-hidden>→</span>
-          </a>
-        </div>
-      </section>
+      {/* ask for a Google review, with a one-time loyalty point for registered customers (components/GoogleReview.tsx) */}
+      <GoogleReview />
 
       {/* Find us: right under the Google review */}
       <div className="mt-10">
@@ -201,6 +186,46 @@ export default function Footer() {
       </div>
     </section>
 
+    {/* the ways to pay: the wallets we take today, cash at the venue, and card payment (a mobile POS) coming soon */}
+    <section aria-label="We accept" className="mt-4 rounded-2xl bg-white p-3 shadow-md ring-1 ring-slate-200">
+      <h3 className="text-center text-xs font-medium uppercase tracking-wide text-[#0c0b5d]">We Accept (For Nepalese)</h3>
+      <ul className="mt-2.5 flex items-start gap-2">
+        <li className="flex min-w-0 flex-1 flex-col items-center gap-1">
+          <div className="flex w-full min-w-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-2 h-11">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/pay-fonepay.webp" alt="" aria-hidden className="h-6 w-auto max-w-full object-contain" />
+          </div>
+          <span className="text-[11px] font-bold text-[#0c0b5d]">Fonepay</span>
+        </li>
+        <li className="flex min-w-0 flex-1 flex-col items-center gap-1">
+          <div className="flex w-full min-w-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-2 h-11">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/pay-esewa.webp" alt="" aria-hidden className="h-6 w-auto max-w-full object-contain" />
+          </div>
+          <span className="text-[11px] font-bold text-[#0c0b5d]">eSewa</span>
+        </li>
+        <li className="flex min-w-0 flex-1 flex-col items-center gap-1">
+          <div className="flex w-full min-w-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-2 h-11 gap-1.5 text-[#0c0b5d]">
+            <Banknote size={22} strokeWidth={1.8} aria-hidden />
+          </div>
+          <span className="text-[11px] font-bold text-[#0c0b5d]">Cash</span>
+        </li>
+      </ul>
+      <div className="mt-4 border-t border-slate-200 pt-4">
+        <p className="text-center text-[11px] font-medium uppercase tracking-wide text-[#0c0b5d]">For Indian tourists &amp; foreigners</p>
+        <ul className="mt-2 flex items-start gap-2">
+          {[["/pay-phonepe.webp", "PhonePe", "h-7"], ["/pay-gpay.webp", "Google Pay", "h-5"], ["/pay-upi.webp", "UPI", "h-7"]].map(([src, name, h]) => (
+            <li key={name} className="flex min-w-0 flex-1 flex-col items-center gap-1">
+              <div className="flex w-full min-w-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-2 h-10">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} alt="" aria-hidden className={`${h} w-auto max-w-full object-contain`} />
+              </div>
+              <span className="text-[11px] font-bold text-[#0c0b5d]">{name}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
 
       <div className="mt-8 flex items-center justify-between gap-4 border-t border-slate-200 pt-5">
         <div className="flex items-center gap-2.5">
