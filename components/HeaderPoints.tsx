@@ -7,7 +7,7 @@ import { useSession } from "@/lib/session";
 import { loyaltyStore } from "@/lib/loyalty";
 import { fmtPts } from "@/lib/points";
 
-export default function HeaderPoints() {
+export default function HeaderPoints({ plain = false }: { plain?: boolean }) {
   const session = useSession();
   const points = loyaltyStore.use().data?.remaining ?? null;
   if (!session?.registered) return null;
@@ -15,11 +15,11 @@ export default function HeaderPoints() {
     <Link
       href="/points"
       aria-label={points === null ? "Loyalty points" : `${fmtPts(points)} loyalty points available`}
-      className="inline-flex items-center gap-1.5 rounded-full bg-white py-1.5 pl-2.5 pr-3 font-extrabold text-[#0c0b5d]"
+      className={plain ? "inline-flex items-center gap-1 px-2.5 py-2 font-bold !bg-transparent" : "inline-flex items-center gap-1.5 rounded-full bg-white py-1.5 pl-2.5 pr-3 font-extrabold text-[#0c0b5d]"}
     >
-      <Star size={15} className="fill-[#f5822a] text-[#f5822a]" />
-      <span className="text-sm leading-none tabular-nums">{points === null ? "--" : fmtPts(points)}</span>
-      <span className="text-[11px] font-bold leading-none">pts</span>
+      <Star size={plain ? 12 : 15} className="fill-[#f5822a] text-[#f5822a]" />
+      <span className={`${plain ? "text-xs" : "text-sm"} leading-none tabular-nums`}>{points === null ? "--" : fmtPts(points)}</span>
+      <span className="text-[11px] font-semibold leading-none opacity-80">pts</span>
     </Link>
   );
 }

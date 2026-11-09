@@ -1,89 +1,42 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { mediaUrl, useContent, type GalleryPhoto } from "@/lib/content";
+import { useState } from "react";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
+import { mediaUrl, useContent } from "@/lib/content";
+import PhotoViewer from "@/components/ads/PhotoViewer";
 
-// Photos the venue uploaded. Landscape and portrait pictures sit side by side in a tidy two-column layout; tapping one opens it full screen.
-const FIRST = 6;
-const SHAPE: Record<GalleryPhoto["orientation"], string> = { landscape: "aspect-[4/3]", portrait: "aspect-[3/4]", square: "aspect-square" };
+// The venue's photos (for example from a tournament), just under Quick Access on Home. It only shows once the venue has uploaded photos.
+// A slide-along strip of the first photos; a tap opens one full screen (with Download), and "View more" opens the whole Gallery page.
+const STRIP = 8;
 
 export default function GallerySection() {
   const photos = useContent().gallery;
-  const [all, setAll] = useState(false);
   const [open, setOpen] = useState<number | null>(null);
-  const touch = useRef<number | null>(null);
-
-  const go = useCallback((d: number) => setOpen((i) => (i === null ? i : (i + d + photos.length) % photos.length)), [photos.length]);
-
-  useEffect(() => {
-    if (open === null) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(null);
-      if (e.key === "ArrowRight") go(1);
-      if (e.key === "ArrowLeft") go(-1);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, go]);
-
   if (photos.length === 0) return null;
-  const shown = all ? photos : photos.slice(0, FIRST);
-  const current = open !== null ? photos[open] ?? null : null;
+  const shown = photos.slice(0, STRIP);
 
   return (
-    <section className="mt-6 desk:mt-10" aria-label="Gallery">
+    <section className="mt-5" aria-label="Gallery">
       <div className="flex items-end justify-between">
         <h2 className="text-lg font-medium">Gallery</h2>
-        {photos.length > FIRST && (
-          <button type="button" onClick={() => setAll((a) => !a)} className="text-sm font-medium text-brand">{all ? "Show less" : `See all ${photos.length}`}</button>
-        )}
+        <Link href="/gallery" className="inline-flex items-center gap-0.5 text-sm font-medium text-[#3345b0]">View more <ChevronRight size={16} aria-hidden /></Link>
       </div>
-      <div className="mt-3 columns-2 gap-3 desk:columns-3">
-        {shown.map((p) => {
-          const i = photos.indexOf(p);
-          return (
-            <button type="button" key={p.id} onClick={() => setOpen(i)} aria-label={`Open photo: ${p.title}`} className={`glass mb-3 block w-full break-inside-avoid overflow-hidden rounded-2xl ${SHAPE[p.orientation]}`}>
-              {/* photos come from the venue's own API, so next/image is not used */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={mediaUrl(p.imageUrl)} alt={p.title} loading="lazy" className="h-full w-full object-cover" />
-            </button>
-          );
-        })}
-      </div>
-
-      {current && (
-        <div
-          className="fixed inset-0 z-[80] flex flex-col bg-black/90"
-          role="dialog" aria-modal="true" aria-label={current.title}
-          onTouchStart={(e) => { touch.current = e.touches[0].clientX; }}
-          onTouchEnd={(e) => {
-            if (touch.current === null) return;
-            const dx = e.changedTouches[0].clientX - touch.current;
-            touch.current = null;
-            if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
-          }}
-        >
-          <div className="flex items-center justify-between p-4 text-white">
-            <span className="text-sm text-white/70">{(open ?? 0) + 1} / {photos.length}</span>
-            <button type="button" onClick={() => setOpen(null)} aria-label="Close" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15"><X size={22} /></button>
-          </div>
-          <div className="relative flex min-h-0 flex-1 items-center justify-center px-2">
+      <div className="-mx-5 mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden tab:mx-0 tab:px-0">
+        {shown.map((p, i) => (
+          <button type="button" key={p.id} onClick={() => setOpen(i)} aria-label={`Open photo: ${p.title}`} className="relative aspect-[4/3] w-[72%] shrink-0 snap-start overflow-hidden rounded-2xl bg-slate-100 tab:w-60">
+            {/* photos come from the venue's own API, so next/image is not used */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={mediaUrl(current.imageUrl)} alt={current.title} className="max-h-full max-w-full object-contain" />
-            {photos.length > 1 && (
-              <>
-                <button type="button" onClick={() => go(-1)} aria-label="Previous photo" className="absolute left-2 flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white"><ChevronLeft size={24} /></button>
-                <button type="button" onClick={() => go(1)} aria-label="Next photo" className="absolute right-2 flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white"><ChevronRight size={24} /></button>
-              </>
-            )}
-          </div>
-          <div className="p-5 text-center text-white" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}>
-            <p className="font-medium">{current.title}</p>
-            {current.caption && <p className="mt-1 text-sm text-white/70">{current.caption}</p>}
-          </div>
-        </div>
-      )}
+            <img src={mediaUrl(p.imageUrl)} alt={p.title} loading="lazy" draggable={false} className="h-full w-full object-cover" />
+            <span className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/55 to-transparent px-3 pb-2 pt-6 text-left text-xs font-medium text-white">{p.title}</span>
+          </button>
+        ))}
+        <Link href="/gallery" className="flex aspect-[4/3] w-[40%] shrink-0 snap-start flex-col items-center justify-center gap-1 rounded-2xl bg-[#eaf1ff] text-sm font-semibold text-[#2c3da0] tab:w-40">
+          View more
+          <span className="text-xs font-normal">{photos.length > STRIP ? `${photos.length - STRIP} more photo${photos.length - STRIP === 1 ? "" : "s"}` : "Open the gallery"}</span>
+        </Link>
+      </div>
+      {open !== null && <PhotoViewer photos={photos} index={open} onIndex={setOpen} onClose={() => setOpen(null)} />}
     </section>
   );
 }

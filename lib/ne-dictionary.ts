@@ -1100,6 +1100,8 @@ export const NE_DICTIONARY: Record<string, string> = {
  "Offers and tournaments": "अफर र टुर्नामेन्टहरू",
  "Language": "भाषा",
  "Sign out": "साइन आउट",
+ "Logout": "लगआउट",
+ "Sign out of Unique Futsal?": "के तपाईं साइन आउट गर्न चाहनुहुन्छ?",
  "Live promo codes": "लाइभ प्रोमो कोडहरू",
  "Copy code {0}": "कोड {0} कपी गर्नुहोस्",
  "No end date": "अन्त्य मिति छैन",

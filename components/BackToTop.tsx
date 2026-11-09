@@ -48,11 +48,11 @@ export default function BackToTop() {
       title={t("Back to top")}
       tabIndex={show ? 0 : -1}
       aria-hidden={!show}
-      className={`glass-active fixed right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bottom-[calc(env(safe-area-inset-bottom)+175px)] transition-all duration-300 desk:right-8 desk:bottom-[calc(env(safe-area-inset-bottom)+96px)] ${
+      className={`fixed right-4 z-40 grid h-12 w-12 place-items-center rounded-full bg-red-600 text-white shadow-[0_8px_20px_-6px_rgba(220,38,38,0.6)] ring-[3px] ring-white active:scale-90 bottom-[calc(env(safe-area-inset-bottom)+175px)] transition-all duration-300 desk:right-8 desk:bottom-[calc(env(safe-area-inset-bottom)+96px)] ${
         show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
       }`}
     >
-      <ArrowUp size={22} strokeWidth={2.4} />
+      <ArrowUp size={22} strokeWidth={2.6} aria-hidden />
     </button>
   );
 }

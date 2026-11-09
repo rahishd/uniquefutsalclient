@@ -13,6 +13,7 @@ import { useTeams } from "@/lib/teams";
 import { site } from "@/lib/site";
 import LastPlayed from "@/components/LastPlayed";
 import TodayCard from "@/components/TodayCard";
+import { MobileHero } from "@/components/DeskHero";
 import NotificationBell from "@/components/NotificationBell";
 import DigitalIdButton from "@/components/digitalid/DigitalIdButton";
 import WifiButton from "@/components/wifi/WifiButton";
@@ -79,7 +80,7 @@ export default function HomeTop() {
       </div>
       </div>
 
-      <section aria-label="My account" className={`order-1 mt-3 rounded-[1.75rem] border p-3.5 desk:col-span-6 desk:mt-0 desk:flex desk:flex-col desk:justify-between desk:rounded-3xl desk:p-6 shadow-[0_8px_22px_-14px_rgba(12,11,93,0.5)] ${dark ? "border-[#0c0b5d] bg-gradient-to-br from-[#0c0b5d] via-[#08084a] to-[#050a2b] text-white" : "border-[#dcdcf0] bg-white text-[#14142b]"}`}>
+      <section aria-label="My account" className={`order-1 mt-3 rounded-[1.75rem] border p-3.5 desk:hidden shadow-[0_8px_22px_-14px_rgba(12,11,93,0.5)] ${dark ? "border-[#0c0b5d] bg-gradient-to-br from-[#0c0b5d] via-[#08084a] to-[#050a2b] text-white" : "border-[#dcdcf0] bg-white text-[#14142b]"}`}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="flex items-center gap-2 text-base font-semibold leading-tight">
@@ -111,6 +112,8 @@ export default function HomeTop() {
 
         {/* the weather and date, then the last games, inside the card (desktop shows them as their own cards, see HomeScreen) */}
         <TodayCard inCard dark={dark} />
+        {/* the venue banner, just under the weather and date (desktop shows it as the hero instead) */}
+        <div className="relative -mx-3.5 mt-3 overflow-hidden desk:hidden"><MobileHero /></div>
         <LastPlayed embedded dark={dark} />
 
         <div className={`mt-3 flex items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 ${dark ? "border-white/25" : "border-[#dcdcf0]"}`}>

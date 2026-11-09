@@ -7,6 +7,7 @@ import TodayCard from "@/components/TodayCard";
 import EmergencyReminder from "@/components/emergency/EmergencyReminder";
 import HealthReminder from "@/components/health/HealthReminder";
 import HomeTop from "@/components/HomeTop";
+import DeskHero from "@/components/DeskHero";
 import StickyHomeBar from "@/components/StickyHomeBar";
 import QuickRebook from "@/components/QuickRebook";
 import PopularGrid from "@/components/PopularGrid";
@@ -33,6 +34,8 @@ export default function HomeScreen() {
       <div className="uf-home-left contents tab:col-span-6 tab:block desk:contents">
         {/* phone: white header and account card (components/HomeTop.tsx); desktop: the bar above and the profile card below */}
         <HomeTop />
+        {/* desktop only: the venue banner in place of the account and weather cards */}
+        <DeskHero />
 
         {/* desktop profile card: soft blue for a regular customer, dark blue for a VIP (see components/UserBadge.tsx) */}
         <UserBadge />
@@ -41,11 +44,11 @@ export default function HomeScreen() {
         <LastPlayed />
 
         {/* no emergency contact on the account yet (older or Google accounts): a reminder with a link to add it */}
-        <EmergencyReminder className="order-1 mx-3 mt-3 desk:col-span-12 desk:mx-0 desk:mt-0" />
-        <HealthReminder className="order-1 mx-0 mt-2.5 desk:col-span-12 desk:mt-0" />
+        <EmergencyReminder className="order-1 mx-3 mt-3 desk:order-2 desk:col-span-12 desk:mx-0 desk:mt-0" />
+        <HealthReminder className="order-1 mx-0 mt-2.5 desk:order-2 desk:col-span-12 desk:mt-0" />
 
         {/* the search bar: on its own, full width on desktop */}
-        <div className="order-2 tab:mt-3 tab:[&>*]:mt-0 desk:col-span-12 desk:mt-0 desk:[&>*]:mt-0"><HomeHero /></div>
+        <div className="order-2 tab:mt-3 tab:[&>*]:mt-0 desk:order-1 desk:col-span-8 desk:self-center desk:mt-0 desk:[&>*]:mt-0"><HomeHero /></div>
 
         {/* the offers and ads, right under the search bar: swipe left or right (components/ads/AdCarousel.tsx) */}
         <div className="order-2 mt-3 empty:hidden desk:col-span-12 desk:mx-auto desk:w-full desk:max-w-4xl"><AdCarousel /></div>
@@ -68,10 +71,11 @@ export default function HomeScreen() {
 
         <div className="order-[7]">
           <PopularGrid />
+          {/* photos from games and tournaments: only shows once photos are uploaded (components/ads/GallerySection.tsx) */}
+          <GallerySection />
           {/* the penalty mini game, right under Quick Access */}
           <GoalRushCard />
         </div>
-        <div className="order-[11]"><GallerySection /></div>
         </div>
       </div>
 

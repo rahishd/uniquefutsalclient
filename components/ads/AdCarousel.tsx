@@ -15,7 +15,6 @@ function Slide({ ad }: { ad: AdItem }) {
       {/* ads come from the venue's own API, so next/image is not used */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={mediaUrl(ad.imageUrl)} alt={ad.title} draggable={false} className="h-full w-full object-cover" />
-      <span className="absolute left-2 top-1.5 rounded bg-black/40 px-1.5 text-[9px] font-medium uppercase tracking-wide text-white">Ad</span>
     </>
   );
   const cls = "relative block aspect-[16/7] w-full shrink-0 snap-center overflow-hidden";

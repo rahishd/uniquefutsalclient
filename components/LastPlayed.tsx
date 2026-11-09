@@ -36,7 +36,7 @@ export default function LastPlayed({ embedded = false, dark = false }: { embedde
   const [last, ...before] = games;
 
   return (
-    <section aria-label="Last played" className={embedded ? `relative mt-3 border-t pt-3 desk:hidden ${dark ? "border-white/20 text-white" : "border-[#e3e6f4] text-[#0c0b5d]"}` : "order-1 mx-0 hidden desk:block mt-2.5 rounded-2xl border border-[#bfd7ff] bg-gradient-to-br from-[#eaf3ff] via-[#dbeaff] to-[#cbe0ff] p-3.5 text-[#0c0b5d] shadow-[0_8px_20px_-12px_rgba(59,130,246,0.45)] ring-2 ring-white/80 desk:col-span-6 desk:mt-0 desk:p-4"}>
+    <section aria-label="Last played" className={embedded ? `relative mt-3 border-t pt-3 desk:hidden ${dark ? "border-white/20 text-white" : "border-[#e3e6f4] text-[#0c0b5d]"}` : "order-1 mx-0 hidden mt-2.5 rounded-2xl border border-[#bfd7ff] bg-gradient-to-br from-[#eaf3ff] via-[#dbeaff] to-[#cbe0ff] p-3.5 text-[#0c0b5d] shadow-[0_8px_20px_-12px_rgba(59,130,246,0.45)] ring-2 ring-white/80 desk:col-span-6 desk:mt-0 desk:p-4"}>
       <div className="flex items-center justify-between gap-3">
         <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider"><History size={14} /> Last played</p>
         <Link href="/profile" className="flex items-center gap-0.5 text-xs font-semibold">All games <ChevronRight size={14} /></Link>
