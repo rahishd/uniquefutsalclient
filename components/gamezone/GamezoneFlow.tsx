@@ -4,7 +4,7 @@ import ShareBooking, { bookingShareText } from "@/components/ShareBooking";
 import CharityLine from "@/components/CharityLine";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { Check, ChevronLeft, Gamepad2, Loader2, Minus, Plus } from "lucide-react";
+import { AirVent, Check, ChevronLeft, Gamepad2, Loader2, Minus, PhoneCall, Plus, Sofa, Tv, Volume2, Wifi } from "lucide-react";
 import { MAX_ADVANCE_DAYS, dateKey, formatHour, formatRs, parseKey } from "@/lib/booking";
 import { errorText } from "@/lib/api";
 import { METHOD_LABEL, isOnline, type PayMethod } from "@/lib/payment";
@@ -13,6 +13,7 @@ import { bookGamezone, catalogStore, estimate, fetchGzSlots, myGzStore, type Cat
 import { clubOff, clubStore } from "@/lib/club";
 import PaymentMethodPicker from "@/components/payment/PaymentMethodPicker";
 import PaymentQr from "@/components/payment/PaymentQr";
+import GamezoneScene from "@/components/gamezone/GamezoneScene";
 
 const noop = () => () => {};
 const nowKey = () => String(Math.floor(Date.now() / 60000));
@@ -50,6 +51,16 @@ function useGzSlots(date: string, hours: number, consoleId: string, version: num
   const ready = state?.key === key;
   return { hours: ready ? state!.hours : null, error: ready ? state!.error : null };
 }
+
+// What the Gamezone room offers, shown under the page title
+const SPECS = [
+  { icon: AirVent, label: "AC Room" },
+  { icon: Tv, label: "55 inch 4K TV" },
+  { icon: Sofa, label: "Comfy Sofa Seat" },
+  { icon: Volume2, label: "3D Surround Sound" },
+  { icon: PhoneCall, label: "Landline Intercom" },
+  { icon: Wifi, label: "300 Mbps Internet" },
+];
 
 export default function GamezoneFlow() {
   const catalog = catalogStore.use();
@@ -257,6 +268,16 @@ function Flow({ catalog }: { catalog: Catalog }) {
       <header className="desk:col-span-2">
         <h1 className="flex items-center gap-2 text-2xl font-semibold"><Gamepad2 size={26} className="text-brand" /> Gamezone</h1>
         <p className="text-sm text-slate-500">Book a PS5 console by the hour. Bookings open up to {MAX_ADVANCE_DAYS} days ahead.</p>
+        {/* the animated room: two friends play football on the TV, score, jump, high-five and clap (components/gamezone/GamezoneScene.tsx) */}
+        <GamezoneScene />
+        <ul aria-label="Gamezone room" className="mt-2.5 grid grid-cols-3 gap-1.5 desk:grid-cols-6 desk:gap-2">
+          {SPECS.map(({ icon: Icon, label }) => (
+            <li key={label} className="flex flex-col items-center gap-1 rounded-xl border border-slate-200 bg-white px-1 py-2 text-center">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#0a0a0a] text-white"><Icon size={15} strokeWidth={1.9} aria-hidden /></span>
+              <span className="min-w-0 text-[10.5px] font-semibold leading-[1.15] text-[#0c0b5d]">{label}</span>
+            </li>
+          ))}
+        </ul>
       </header>
 
       <section aria-label="Players">
