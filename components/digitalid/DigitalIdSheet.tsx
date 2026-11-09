@@ -91,16 +91,16 @@ export default function DigitalIdSheet({ onClose }: { onClose: () => void }) {
           <div className="mx-auto flex h-96 w-64 items-center justify-center rounded-3xl bg-white/60"><Loader2 className="animate-spin text-slate-400" /></div>
         ) : null}
 
-        <p className="mt-3 text-center text-xs text-slate-500">Show this QR at the venue. It only works inside Unique Futsal: other apps cannot read your details from it.</p>
+        <p className="mt-2 text-center text-[11px] leading-snug text-slate-500">Show this QR at the venue. It only works inside Unique Futsal: other apps cannot read your details from it.</p>
 
         {image && (
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <SendPdfButton mode="download" label="Download PDF" build={cardPdf} filename={pdfFileName("digital-id", id?.phone)} message="" className="flex w-full items-center justify-center gap-2 rounded-full bg-white py-3 text-sm font-medium" />
-            <SendPdfButton label="WhatsApp (PDF)" build={cardPdf} filename={pdfFileName("digital-id", id?.phone)} message="My Unique Futsal Digital ID is in the attached PDF." className="flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 py-3 text-sm font-medium text-white" />
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <SendPdfButton mode="download" label="Download PDF" build={cardPdf} filename={pdfFileName("digital-id", id?.phone)} message="" className="flex w-full items-center justify-center gap-2 rounded-full bg-white py-2.5 text-[13px] font-medium" />
+            <SendPdfButton label="WhatsApp (PDF)" build={cardPdf} filename={pdfFileName("digital-id", id?.phone)} message="My Unique Futsal Digital ID is in the attached PDF." className="flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 py-2.5 text-[13px] font-medium text-white" />
           </div>
         )}
-        {note && <p role="status" className="mt-3 rounded-2xl bg-white/70 px-4 py-3 text-sm text-slate-600">{note}</p>}
-        {id && <button type="button" onClick={replace} disabled={busy} className="mx-auto mt-4 flex items-center gap-1.5 text-xs font-medium text-slate-500 disabled:opacity-50"><RefreshCw size={13} /> Lost it or shared it by mistake? Make a new QR</button>}
+        {note && <p role="status" className="mt-2 rounded-2xl bg-white/70 px-3 py-2 text-xs text-slate-600">{note}</p>}
+        {id && <button type="button" onClick={replace} disabled={busy} className="mx-auto mt-3 flex items-center gap-1.5 text-[11px] font-medium text-slate-500 disabled:opacity-50"><RefreshCw size={13} /> Lost it or shared it by mistake? Make a new QR</button>}
       </div>
     </div>
   );

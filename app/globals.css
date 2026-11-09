@@ -8,31 +8,41 @@
   --color-ink: #1e293b;
 }
 
-/* The app background: a light blue with a fine dotted texture, fixed behind every page. */
+/* The look of the app: a plain white page, light-blue buttons and icons, and cards drawn with a very light rounded outline.
+   (These rules are not in a layer, so they win over the Tailwind utilities on the components.) */
+:root {
+  --uf-line: #e8ebf2; /* the card outline: a hairline you barely notice */
+  --uf-blue: #dbeafe; /* buttons and icons */
+  --uf-blue-line: #bfd7ff;
+}
 html {
   color-scheme: light;
-  background: #e9f1ff;
+  background: #ffffff;
 }
 
 body {
   font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   color: var(--color-ink);
-  background-color: #eaf2ff;
-  background-image:
-    radial-gradient(rgba(51, 69, 176, 0.09) 1px, transparent 1.4px),
-    radial-gradient(rgba(51, 69, 176, 0.05) 1px, transparent 1.4px),
-    linear-gradient(180deg, #f3f8ff 0%, #e6f0ff 55%, #dce9ff 100%);
-  background-size: 22px 22px, 22px 22px, 100% 100%;
-  background-position: 0 0, 11px 11px, 0 0;
-  background-attachment: fixed;
+  background: #ffffff;
   overflow-x: hidden;
 }
 
 /* Clean white cards: a hairline border and a soft shadow, no tint and no blur. */
 .glass {
   background: #ffffff;
-  border: 1px solid #e8ecf4;
-  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+  border: 1px solid var(--uf-line);
+  box-shadow: 0 1px 3px rgba(17, 24, 39, 0.04);
+}
+/* full-width bars that use .glass (top info bar, sheets) are not cards: no outline, only a hairline underneath */
+.glass[class*="rounded-none"] {
+  border: 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+/* round icon chips that use .glass are buttons, not cards: light blue */
+.glass[class*="rounded-full"] {
+  background: var(--uf-blue);
+  border: 1px solid var(--uf-blue-line);
+  box-shadow: none;
 }
 
 /* Buttons and highlighted cards: light blue with dark-blue text. (.glass-active is the selected state of a chip, tab
@@ -53,7 +63,7 @@ body {
 /* Big highlighted cards (Home banner, membership, points, sign-in banner, "I'm coming"): a soft light-blue gradient. */
 [class*="from-[#0c0b5d]"] {
   background-image: linear-gradient(135deg, #eaf3ff 0%, #d6e7ff 55%, #c3dcff 100%);
-  border: 1px solid #bfd7ff;
+  border: 1px solid var(--uf-line);
   color: #0c0b5d;
   box-shadow: 0 8px 24px rgba(59, 130, 246, 0.16);
 }
@@ -90,6 +100,28 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
 select,
 textarea {
   border: 1px solid #dbe1ec;
+}
+
+/* Cards: any rounded white or tinted panel (not a button, field or link) gets a very light outline and shadow. */
+a[class*="rounded-2xl"][class*="block"],
+:not(button, a, span, input, select, textarea, img, svg, label, p, h1, h2, h3)[class*="rounded-2xl"],
+:not(button, a, span, input, select, textarea, img, svg, label, p, h1, h2, h3)[class*="rounded-3xl"],
+:not(button, a, span, input, select, textarea, img, svg, label, p, h1, h2, h3)[class*="rounded-[1.75rem]"],
+:not(button, a, span, input, select, textarea, img, svg, label, p, h1, h2, h3)[class*="rounded-[2rem]"],
+:not(button, a, span, input, select, textarea, img, svg, label, p, h1, h2, h3)[class*="rounded-[28px]"],
+:not(button, a, span, input, select, textarea, img, svg, label, p, h1, h2, h3)[class*="rounded-[32px]"] {
+  &:is([class*="bg-white"], [class*="bg-gradient"], [class*="bg-slate-50"], [class*="shadow"], [class*="ring-1"], .glass):not([class*="bg-[#0c0b5d]"]):not([class*="fixed"]):not([class*="bg-black"]):not([class*="bg-slate-900"]):not(.uf-plain) {
+    border: 1px solid var(--uf-line);
+    box-shadow: 0 1px 3px rgba(17, 24, 39, 0.04);
+  }
+}
+
+/* Buttons and icons: light blue with dark-blue ink. Round white buttons, icon chips and pills turn light blue. */
+:is(button, a, span)[class*="rounded-full"][class*="bg-white"]:not(.bg-brand),
+:is(button, a)[class*="rounded-2xl"][class*="bg-white"][class*="shadow"] {
+  background-color: var(--uf-blue);
+  border: 1px solid var(--uf-blue-line);
+  box-shadow: none;
 }
 
 @keyframes adfade {

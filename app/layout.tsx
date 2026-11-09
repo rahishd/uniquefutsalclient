@@ -19,7 +19,7 @@ import BackToTop from "@/components/BackToTop";
 import CallHost from "@/components/chat/CallHost";
 import ChatPopup from "@/components/chat/ChatPopup";
 
-const poppins = Poppins({ variable: "--font-poppins", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+const poppins = Poppins({ variable: "--font-poppins", subsets: ["latin"], weight: ["300", "400", "500", "600", "700"] });
 
 export const metadata: Metadata = {
   title: "Unique Futsal",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { ChevronDown, ChevronUp, Mail, MapPin, Navigation, PhoneCall, Leaf, Smartphone } from "lucide-react";
 import { FaFacebookF, FaGoogle, FaInstagram, FaStar, FaTiktok, FaWhatsapp } from "react-icons/fa6";
 import { site } from "@/lib/site";
@@ -9,9 +10,9 @@ import PartnersStrip from "@/components/PartnersStrip";
 import Facilities from "@/components/Facilities";
 
 
-// a round brand-coloured tile with a white icon; `bg` is the brand colour (or gradient) and `glow` its soft shadow
-function Social({ href, label, bg, glow, children }: { href: string; label: string; bg: string; glow: string; children: React.ReactNode }) {
-  const cls = `flex h-12 w-12 items-center justify-center rounded-full text-[22px] text-white ring-2 ring-white/70 transition active:scale-95 ${bg} ${glow}`;
+// a round light-blue tile with a one-colour (navy) icon
+function Social({ href, label, children }: { href: string; label: string; children: React.ReactNode }) {
+  const cls = `flex h-8 w-8 items-center justify-center rounded-full text-[15px] bg-[#dbeafe] text-[#2c3da0] transition active:scale-95`;
   return href ? (
     <a href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className={cls}>
       {children}
@@ -31,9 +32,16 @@ function openMaps(e: React.MouseEvent<HTMLAnchorElement>) {
   if (/iPhone|iPad|iPod|Macintosh/i.test(navigator.userAgent)) { e.preventDefault(); window.open(APPLE_MAP, "_blank", "noopener,noreferrer"); }
 }
 
+const LINKS = [
+  { title: "Quick Links", items: [{ label: "Book a court", href: "/book" }, { label: "Gamezone", href: "/gamezone" }, { label: "Membership", href: "/member" }, { label: "Tournaments", href: "/tournaments" }] },
+  { title: "About", items: [{ label: "About Us", href: "/about" }, { label: "Rules & Regulations", href: "/rules" }, { label: "Help", href: "/help" }, { label: "Complaints", href: "/complaints" }] },
+  { title: "Updates", items: [{ label: "Promos", href: "/promos" }, { label: "Points", href: "/points" }, { label: "Refer & Earn", href: "/refer" }, { label: "Children's Academy", href: "/academy" }] },
+];
+
 const heading = "text-xs font-bold uppercase tracking-[0.2em] text-[#0c0b5d]";
 
 export default function Footer() {
+  const [openGroup, setOpenGroup] = useState(""); // which footer dropdown is open
   const [more, setMore] = useState(false); // the founder message: short by default, "Read More" shows the rest
   const t = useT();
   return (
@@ -101,104 +109,97 @@ export default function Footer() {
         </div>
       </section>
 
-      <div className="mt-10 space-y-10 desk:grid desk:grid-cols-2 desk:gap-10 desk:space-y-0">
-        <div>
-          <h2 className={heading}>{t("Connect with us")}</h2>
-          <ul className="mt-4 space-y-3 text-sm font-medium text-slate-600">
-            <li>
-              <a href={`tel:${site.phone}`} className="flex items-center gap-3">
-                <span className="glass flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-500">
-                  <PhoneCall size={18} />
-                </span>
-                {site.phone}
-              </a>
-            </li>
-            <li>
-              <a href={`mailto:${site.email}`} className="flex items-center gap-3">
-                <span className="glass flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-500">
-                  <Mail size={18} />
-                </span>
-                <span className="break-all">{site.email}</span>
-              </a>
-            </li>
-            <li className="flex items-center gap-3">
-              <span className="glass flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-500">
-                <MapPin size={18} />
-              </span>
-              {site.address}
-            </li>
-          </ul>
-          <div className="mt-5 border-t border-slate-200/80 pt-4">
-            <p className="text-sm font-medium text-slate-600">{t("Connect with our Social Media Profile")}</p>
-          <div className="mt-3 flex gap-3">
-            <Social href={site.whatsapp} label="WhatsApp" bg="bg-gradient-to-br from-[#3be07a] to-[#12a150]" glow="shadow-[0_8px_16px_-6px_rgba(18,161,80,0.7)]">
-              <FaWhatsapp />
-            </Social>
-            <Social href={site.facebook} label="Facebook" bg="bg-gradient-to-br from-[#3b8bff] to-[#1250c8]" glow="shadow-[0_8px_16px_-6px_rgba(24,119,242,0.7)]">
-              <FaFacebookF className="text-xl" />
-            </Social>
-            <Social href={site.instagram} label="Instagram" bg="bg-gradient-to-tr from-[#f9a825] via-[#e1306c] to-[#7b3fe4]" glow="shadow-[0_8px_16px_-6px_rgba(225,48,108,0.7)]">
-              <FaInstagram />
-            </Social>
-            <Social href={site.tiktok} label="TikTok" bg="bg-gradient-to-br from-[#2a2a33] to-black" glow="shadow-[0_8px_16px_-6px_rgba(0,0,0,0.6)]">
-              <FaTiktok className="text-xl" />
-            </Social>
+      {/* Find us: right under the Google review */}
+      <div className="mt-10">
+        <h2 className={heading}>{t("Find us")}</h2>
+        <a href={GOOGLE_MAP} onClick={openMaps} target="_blank" rel="noopener noreferrer" aria-label={`Track ${site.name} on the map`}
+          className="relative mt-3 block overflow-hidden rounded-2xl bg-gradient-to-br from-[#eaf3ff] via-[#dbeaff] to-[#cbe0ff] p-3.5 text-[#0c0b5d] shadow-[0_14px_28px_-16px_rgba(59,130,246,0.5)] ring-2 ring-white/80 transition active:scale-[0.98]">
+          <span aria-hidden className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white opacity-70 blur-3xl" />
+          <span aria-hidden className="pointer-events-none absolute -bottom-12 -left-8 h-28 w-28 rounded-full border border-white/70" />
+          <span aria-hidden className="pointer-events-none absolute -bottom-6 -left-2 h-16 w-16 rounded-full border border-white/70" />
+          <div className="relative flex items-center gap-3">
+            <span className="relative flex h-11 w-11 shrink-0 items-center justify-center">
+              <span aria-hidden className="absolute inset-0 animate-ping rounded-full bg-[#3345b0]/15 motion-reduce:animate-none" />
+              <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#3345b0] shadow-[0_5px_12px_-6px_rgba(51,69,176,0.5)] ring-2 ring-white"><MapPin size={20} /></span>
+            </span>
+            <div className="min-w-0">
+              <p className="inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-[#3345b0]"><span aria-hidden className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Live location</p>
+              <p className="text-base font-bold leading-tight">{site.name}</p>
+              <p className="text-[11px] leading-snug text-[#334155]">{site.address}</p>
+            </div>
           </div>
+          <span className="relative mt-3 flex items-center justify-center gap-1.5 rounded-full bg-white px-4 py-2 text-[13px] font-bold shadow-[0_4px_10px_-6px_rgba(59,130,246,0.6)] ring-1 ring-white" style={{ color: "#2c3da0" }}>
+            <Navigation size={14} /> {t("Track us")} <span aria-hidden>→</span>
+          </span>
+        </a>
+      </div>
+
+      {/* the site map: one dropdown at a time */}
+      <nav aria-label="Footer links" className="mt-10 rounded-3xl border border-[#e8ebf2] bg-white px-5 py-1 desk:px-8">
+        {LINKS.map((g, i) => {
+          const open = openGroup === g.title;
+          return (
+            <div key={g.title} className={i > 0 ? "border-t border-[#eef0f6]" : ""}>
+              <button type="button" onClick={() => setOpenGroup(open ? "" : g.title)} aria-expanded={open} className="flex w-full items-center justify-between gap-3 py-4 text-left text-base font-bold text-[#0c0b5d]">
+                {t(g.title)}
+                <ChevronDown size={18} aria-hidden className={`shrink-0 text-[#3345b0] transition-transform ${open ? "rotate-180" : ""}`} />
+              </button>
+              {open && (
+                <ul className="list-disc space-y-2.5 pb-4 pl-5 marker:text-[#3345b0]">
+                  {g.items.map((l) => (
+                    <li key={l.href} className="pl-1 text-sm font-medium"><Link href={l.href} className="text-[#2c3da0]">{t(l.label)}</Link></li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          );
+        })}
+      </nav>
+
+      {/* Connect with us: compact, one card */}
+      <section aria-label="Connect with us" className="mt-6 rounded-3xl border border-[#e8ebf2] bg-white p-4 desk:p-6">
+        <h2 className={heading}>{t("Connect with us")}</h2>
+        <ul className="mt-3 space-y-2 text-sm font-medium text-slate-700">
+          <li><a href={`tel:${site.phone}`} className="flex items-center gap-3"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dbeafe] text-[#2c3da0]"><PhoneCall size={16} /></span>{site.phone}</a></li>
+          <li><a href={`mailto:${site.email}`} className="flex items-center gap-3"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dbeafe] text-[#2c3da0]"><Mail size={16} /></span><span className="break-all">{site.email}</span></a></li>
+          <li className="flex items-center gap-3"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dbeafe] text-[#2c3da0]"><MapPin size={16} /></span><span className="leading-snug">{site.address}</span></li>
+        </ul>
+        <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#eef0f6] pt-3">
+          <p className="text-xs font-medium text-slate-500">{t("Connect with our Social Media Profile")}</p>
+          <div className="flex shrink-0 gap-1.5">
+            <Social href={site.whatsapp} label="WhatsApp"><FaWhatsapp /></Social>
+            <Social href={site.facebook} label="Facebook"><FaFacebookF className="text-sm" /></Social>
+            <Social href={site.instagram} label="Instagram"><FaInstagram /></Social>
+            <Social href={site.tiktok} label="TikTok"><FaTiktok className="text-sm" /></Social>
           </div>
         </div>
+      </section>
 
-        <div className="space-y-6">
-          {/* Go Digital Go Paperless section */}
-          <section aria-label="Environmental commitment" className="rounded-2xl bg-white p-3 shadow-md ring-1 ring-slate-200">
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-center gap-4">
-                <div className="flex items-center gap-2.5">
-                  <Smartphone size={18} className="text-[#0c0b5d]" />
-                  <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wide text-[#0c0b5d]">Go Digital</h3>
-                    <p className="text-[11px] text-[#0c0b5d] font-semibold">Go Paperless</p>
-                  </div>
-                </div>
-                <div className="h-7 w-px bg-slate-300" />
-                <div className="flex items-center gap-2.5">
-                  <Leaf size={18} className="text-[#0c0b5d]" />
-                  <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wide text-[#0c0b5d]">Save</h3>
-                    <p className="text-[11px] text-[#0c0b5d] font-semibold">Environment</p>
-                  </div>
-                </div>
-              </div>
-              <div className="border-t border-slate-200 pt-2.5">
-                <p className="text-center text-[10.5px] leading-snug text-[#0c0b5d]">At Unique Futsal, we believe in making everyday operations smarter and easier through digital technology. From bookings and payments to records and daily management, we handle almost everything digitally, reducing the need for paper and printed documents while creating a more efficient, eco-friendly, and sustainable environment.</p>
-              </div>
+    {/* Go Digital Go Paperless section */}
+    <section aria-label="Environmental commitment" className="mt-6 rounded-2xl bg-white p-3 shadow-md ring-1 ring-slate-200">
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center gap-2.5">
+            <Smartphone size={18} className="text-[#0c0b5d]" />
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wide text-[#0c0b5d]">Go Digital</h3>
+              <p className="text-[11px] text-[#0c0b5d] font-semibold">Go Paperless</p>
             </div>
-          </section>
-
-          <div>
-            <h2 className={heading}>{t("Find us")}</h2>
-            <a href={GOOGLE_MAP} onClick={openMaps} target="_blank" rel="noopener noreferrer" aria-label={`Track ${site.name} on the map`}
-              className="relative mt-3 block overflow-hidden rounded-2xl bg-gradient-to-br from-[#eaf3ff] via-[#dbeaff] to-[#cbe0ff] p-3.5 text-[#0c0b5d] shadow-[0_14px_28px_-16px_rgba(59,130,246,0.5)] ring-2 ring-white/80 transition active:scale-[0.98]">
-              <span aria-hidden className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white opacity-70 blur-3xl" />
-              <span aria-hidden className="pointer-events-none absolute -bottom-12 -left-8 h-28 w-28 rounded-full border border-white/70" />
-              <span aria-hidden className="pointer-events-none absolute -bottom-6 -left-2 h-16 w-16 rounded-full border border-white/70" />
-              <div className="relative flex items-center gap-3">
-                <span className="relative flex h-11 w-11 shrink-0 items-center justify-center">
-                  <span aria-hidden className="absolute inset-0 animate-ping rounded-full bg-[#3345b0]/15 motion-reduce:animate-none" />
-                  <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#3345b0] shadow-[0_5px_12px_-6px_rgba(51,69,176,0.5)] ring-2 ring-white"><MapPin size={20} /></span>
-                </span>
-                <div className="min-w-0">
-                  <p className="inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-[#3345b0]"><span aria-hidden className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Live location</p>
-                  <p className="text-base font-bold leading-tight">{site.name}</p>
-                  <p className="text-[11px] leading-snug text-[#334155]">{site.address}</p>
-                </div>
-              </div>
-              <span className="relative mt-3 flex items-center justify-center gap-1.5 rounded-full bg-white px-4 py-2 text-[13px] font-bold shadow-[0_4px_10px_-6px_rgba(59,130,246,0.6)] ring-1 ring-white" style={{ color: "#2c3da0" }}>
-                <Navigation size={14} /> {t("Track us")} <span aria-hidden>→</span>
-              </span>
-            </a>
           </div>
+          <div className="h-7 w-px bg-slate-300" />
+          <div className="flex items-center gap-2.5">
+            <Leaf size={18} className="text-[#0c0b5d]" />
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wide text-[#0c0b5d]">Save</h3>
+              <p className="text-[11px] text-[#0c0b5d] font-semibold">Environment</p>
+            </div>
+          </div>
+        </div>
+        <div className="border-t border-slate-200 pt-2.5">
+          <p className="text-center text-[10.5px] leading-snug text-[#0c0b5d]">At Unique Futsal, we believe in making everyday operations smarter and easier through digital technology. From bookings and payments to records and daily management, we handle almost everything digitally, reducing the need for paper and printed documents while creating a more efficient, eco-friendly, and sustainable environment.</p>
         </div>
       </div>
+    </section>
 
 
       <div className="mt-8 flex items-center justify-between gap-4 border-t border-slate-200 pt-5">

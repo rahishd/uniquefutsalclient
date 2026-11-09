@@ -15,25 +15,26 @@ export function weatherWord(code: number) {
   return "Rain";
 }
 
-// Home: the venue weather and date as plain text (no card), and the customer's last played game (when there is one) under them.
-export default function TodayCard() {
+// Home: the venue weather and date. On the phone it sits inside the account card (`inCard`, components/HomeTop.tsx); on desktop it is its own card.
+export default function TodayCard({ inCard = false, dark = false }: { inCard?: boolean; dark?: boolean }) {
   const today = useNepaliToday();
   const weather = useWeather();
   const t = useT();
   const code = weather ? weather.code : 2;
+  const sub = inCard && dark ? "text-sky-200" : "text-[#3345b0]"; // the lighter blue lines; sky blue on the dark VIP card
 
   return (
-    <section aria-label="Today at the venue" className="uf-keep relative order-1 mt-2.5 rounded-2xl bg-white px-4 py-3 text-[#0c0b5d] shadow-[0_8px_20px_-12px_rgba(59,130,246,0.45)] ring-1 ring-[#bfd7ff] desk:col-span-6 desk:mt-0">
+    <section aria-label="Today at the venue" className={inCard ? `relative mt-3 border-t pt-3 desk:hidden ${dark ? "border-white/20 text-white" : "border-[#e3e6f4] text-[#0c0b5d]"}` : "uf-keep relative order-1 mt-2.5 hidden rounded-2xl bg-white px-4 py-3 text-[#0c0b5d] shadow-[0_8px_20px_-12px_rgba(59,130,246,0.45)] ring-1 ring-[#bfd7ff] desk:col-span-6 desk:col-start-7 desk:mt-0 desk:block"}>
       <div className="relative flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="flex items-baseline gap-0.5 text-[30px] font-bold leading-none tracking-tight">
-            {weather ? weather.temp : "--"}<span className="text-base font-semibold text-[#3345b0]">°C</span>
+            {weather ? weather.temp : "--"}<span className={`text-base font-semibold ${sub}`}>°C</span>
           </p>
-          <p className="mt-0.5 text-xs font-semibold text-[#3345b0]">{t(weatherWord(code))}</p>
+          <p className={`mt-0.5 text-xs font-semibold ${sub}`}>{t(weatherWord(code))}</p>
         </div>
         <div className="min-w-0 text-right">
-          <p className="flex items-center justify-end gap-1.5 text-sm font-bold"><CalendarDays size={15} className="shrink-0 text-[#3345b0]" /><span className="truncate">{today.en || " "}</span></p>
-          <p className="mt-0.5 flex items-center justify-end gap-1.5 text-xs font-semibold text-[#3345b0]"><MapPin size={14} className="shrink-0" /><span className="truncate">{weather?.place ?? PLACE}</span></p>
+          <p className="flex items-center justify-end gap-1.5 text-sm font-bold"><CalendarDays size={15} className={`shrink-0 ${sub}`} /><span className="truncate">{today.en || " "}</span></p>
+          <p className={`mt-0.5 flex items-center justify-end gap-1.5 text-xs font-semibold ${sub}`}><MapPin size={14} className="shrink-0" /><span className="truncate">{weather?.place ?? PLACE}</span></p>
         </div>
       </div>
     </section>

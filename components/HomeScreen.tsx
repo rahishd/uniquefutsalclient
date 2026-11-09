@@ -1,15 +1,13 @@
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import HomeHero from "@/components/HomeHero";
-import UserBadge, { QuickIcons } from "@/components/UserBadge";
+import UserBadge from "@/components/UserBadge";
 import LastPlayed from "@/components/LastPlayed";
 import TodayCard from "@/components/TodayCard";
 import EmergencyReminder from "@/components/emergency/EmergencyReminder";
 import HealthReminder from "@/components/health/HealthReminder";
-import HeaderPoints from "@/components/HeaderPoints";
-import NotificationBell from "@/components/NotificationBell";
+import HomeTop from "@/components/HomeTop";
 import StickyHomeBar from "@/components/StickyHomeBar";
-import { site } from "@/lib/site";
 import QuickRebook from "@/components/QuickRebook";
 import PopularGrid from "@/components/PopularGrid";
 import GoalRushCard from "@/components/goalrush/GoalRushCard";
@@ -17,7 +15,7 @@ import PromoCodes from "@/components/PromoCodes";
 import BannerOffer from "@/components/BannerOffer";
 import TournamentSection from "@/components/TournamentSection";
 import KidSkills from "@/components/KidSkills";
-import AdStrip from "@/components/ads/AdStrip";
+import AdCarousel from "@/components/ads/AdCarousel";
 import GallerySection from "@/components/ads/GallerySection";
 import GiftOffers from "@/components/points/OfferCard";
 
@@ -33,27 +31,14 @@ export default function HomeScreen() {
       <StickyHomeBar />
     <div className="uf-home flex flex-col tab:grid tab:grid-cols-12 tab:items-start tab:gap-x-6 desk:items-stretch desk:gap-x-8 desk:gap-y-6">
       <div className="uf-home-left contents tab:col-span-6 tab:block desk:contents">
-        {/* Who is signed in. The bell lives in the page header (components/CompanyHeader.tsx). */}
-        <header className="uf-navy-card order-1 -mx-5 -mt-5 overflow-hidden rounded-b-[2rem] border-2 border-t-0 border-white/80 bg-[#0c0b5d] tab:mx-0 tab:mt-0 tab:rounded-3xl text-white shadow-[0_10px_30px_rgba(12,11,93,0.4)] desk:hidden">
-          {/* phone: the logo, points and bell sit on the top row of this one card (on desktop the bar above does this) */}
-          <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-[max(calc(env(safe-area-inset-top)_-_0.625rem),0.5rem)] desk:hidden">
-            <div className="flex min-w-0 items-center gap-2.5">
-              <img src="/logo-mark-white.png" alt="" aria-hidden className="h-9 w-auto shrink-0" />
-              <span className="whitespace-nowrap text-sm font-extrabold uppercase tracking-wide">{site.name}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <HeaderPoints />
-              <NotificationBell />
-            </div>
-          </div>
-</header>
+        {/* phone: white header and account card (components/HomeTop.tsx); desktop: the bar above and the profile card below */}
+        <HomeTop />
 
-        {/* the profile card: soft blue for a regular customer, dark blue for a VIP (see components/UserBadge.tsx) */}
+        {/* desktop profile card: soft blue for a regular customer, dark blue for a VIP (see components/UserBadge.tsx) */}
         <UserBadge />
 
         <TodayCard />
         <LastPlayed />
-        <QuickIcons />
 
         {/* no emergency contact on the account yet (older or Google accounts): a reminder with a link to add it */}
         <EmergencyReminder className="order-1 mx-3 mt-3 desk:col-span-12 desk:mx-0 desk:mt-0" />
@@ -61,6 +46,9 @@ export default function HomeScreen() {
 
         {/* the search bar: on its own, full width on desktop */}
         <div className="order-2 tab:mt-3 tab:[&>*]:mt-0 desk:col-span-12 desk:mt-0 desk:[&>*]:mt-0"><HomeHero /></div>
+
+        {/* the offers and ads, right under the search bar: swipe left or right (components/ads/AdCarousel.tsx) */}
+        <div className="order-2 mt-3 empty:hidden desk:col-span-12 desk:mx-auto desk:w-full desk:max-w-4xl"><AdCarousel /></div>
 
         {/* points the venue offered: right under the search bar until the customer adds them */}
         <GiftOffers className="order-[3] mt-4 empty:hidden desk:col-span-12 desk:mt-0" />
@@ -89,7 +77,6 @@ export default function HomeScreen() {
 
       <aside className="uf-home-side contents tab:col-span-6 tab:flex tab:flex-col tab:gap-4 desk:sticky desk:top-28 desk:order-[6] desk:col-span-4 desk:gap-5 desk:self-start">
         <div className="order-[6] empty:hidden tab:[&>*]:mt-0 desk:[&>*]:mt-0"><QuickRebook /></div>
-        <div className="order-[8] mt-5 empty:hidden tab:mt-0 desk:mt-0"><AdStrip placement="inline" /></div>
         <div className="order-[9] empty:hidden tab:[&>*]:mt-0 desk:[&>*]:mt-0"><PromoCodes /></div>
         <div className="order-[10] empty:hidden tab:[&>*]:mt-0 desk:[&>*]:mt-0"><TournamentSection /></div>
       </aside>
