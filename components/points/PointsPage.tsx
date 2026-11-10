@@ -238,7 +238,8 @@ export default function PointsPage() {
           </div>
         )}
         <h2 className="text-base font-semibold">Claim a free game</h2>
-        <p className="mt-1 text-xs text-slate-500">Pick any shift you have enough points for. It books one regular game and can&apos;t be used to host a challenge.</p>
+        <p className="mt-1 text-xs text-slate-500">Pick any shift you have enough points for. It books one regular game and can&apos;t be used to host a challenge.{loy.freeLimit && <> Even with lots of points, you can claim up to {loy.freeLimit.perDay} free games a day and {loy.freeLimit.perWeek} a week (claimed today {loy.freeLimit.day}/{loy.freeLimit.perDay}, last 7 days {loy.freeLimit.week}/{loy.freeLimit.perWeek}).</>}</p>
+        {loy.claimOpen?.reason && <p className="mt-3 rounded-2xl bg-amber-500/10 px-3 py-2 text-xs text-amber-700">{loy.claimOpen.reason}</p>}
         {error && <p role="alert" className="mt-3 rounded-2xl bg-rose-500/10 px-3 py-2 text-xs text-rose-600">{error}</p>}
         <ul className="mt-4 space-y-2">
           {loy.shifts.map((s) => {
@@ -258,7 +259,7 @@ export default function PointsPage() {
                   </div>
                 ) : (
                   <button type="button" disabled={!s.canClaim} onClick={() => { setError(null); setConfirming(s.period); }} className="glass-btn rounded-full px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">
-                    {s.canClaim ? "Claim" : `Need ${fmtPts(s.cost - loy.remaining)} more`}
+                    {s.canClaim ? "Claim" : s.shiftOff ? "Not available" : loy.claimOpen?.reason ? "Closed now" : loy.remaining >= s.cost && loy.freeLimit ? (loy.freeLimit.day >= loy.freeLimit.perDay ? "Daily limit reached" : "Weekly limit reached") : `Need ${fmtPts(s.cost - loy.remaining)} more`}
                   </button>
                 )}
               </li>

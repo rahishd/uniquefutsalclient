@@ -11,6 +11,7 @@ import {
 } from "../../utils/loyaltyPoints";
 import { addDaysKey } from "../../utils/dates";
 import logger from "../../config/logger";
+import { claimClosedReason, getClaimRules, ClaimRules } from "./claimRules";
 
 // Prisma Decimal -> number
 const num = (d: Prisma.Decimal | number) => Number(d);
@@ -41,6 +42,20 @@ export class LoyaltyService {
     return e ? `/points?hl=${e.id}` : "/points";
   }
 
+  // How many free games the customer has claimed today and in the last 7 days (cancelled claims do not count).
+  async freeClaimCounts(userId: string, rules: ClaimRules, today = todayKey(), db: Tx | typeof prisma = prisma) {
+    const since = new Date(Date.now() - 8 * 86400000);
+    const rows = await db.freeGameVoucher.findMany({ where: { userId, status: { not: "void" }, claimedAt: { gte: since } }, select: { claimedAt: true } });
+    const weekStart = addDaysKey(today, -6);
+    let day = 0, week = 0;
+    for (const r of rows) {
+      const k = todayKey(r.claimedAt);
+      if (k >= weekStart && k <= today) week++;
+      if (k === today) day++;
+    }
+    return { day, week, perDay: rules.perDay, perWeek: rules.perWeek };
+  }
+
   async ledger(userId: string, db: Tx | typeof prisma = prisma): Promise<LedgerRow[]> {
     const rows = await db.loyaltyEntry.findMany({ where: { userId }, orderBy: { createdAt: "asc" } });
     return rows.map((r) => ({
@@ -60,13 +75,19 @@ export class LoyaltyService {
       prisma.freeGameVoucher.findMany({ where: { userId, status: "unused" }, orderBy: { claimedAt: "asc" } }),
     ]);
     const summary = summarize(ledger, today);
+    const rules = await getClaimRules();
+    const free = await this.freeClaimCounts(userId, rules, today);
+    const closed = claimClosedReason(rules);
+    const room = !closed && free.day < free.perDay && free.week < free.perWeek;
     const offers = await prisma.pointsOffer.findMany({ where: { userId, status: "pending" }, orderBy: { createdAt: "asc" } });
     const cheapest = Math.min(...shifts.map((s) => s.cost));
     return {
       ...summary,
       cheapestCost: cheapest,
       toNext: r1(Math.max(0, cheapest - summary.remaining)),
-      shifts: shifts.map((s) => ({ ...s, canClaim: summary.remaining >= s.cost })),
+      shifts: shifts.map((s) => ({ ...s, canClaim: summary.remaining >= s.cost && room && rules.shifts.includes(s.period), shiftOff: !rules.shifts.includes(s.period) })),
+      freeLimit: free,
+      claimOpen: { open: !closed, reason: closed, from: rules.from, to: rules.to, shifts: rules.shifts },
       vouchers: vouchers.map((v) => ({ id: v.id, period: v.period, cost: num(v.cost), claimedAt: v.claimedAt })),
       share: { min: SHARE_MIN, max: SHARE_MAX, minBalance: SHARE_MIN_BALANCE, perDay: SHARE_PER_DAY },
       offers: offers.map((o) => ({ id: o.id, points: num(o.points), reason: o.reason, createdAt: o.createdAt })),
@@ -275,6 +296,12 @@ export class LoyaltyService {
 
     return prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${"loyalty:" + userId}))`;
+      const rules = await getClaimRules();
+      const closed = claimClosedReason(rules, new Date(), period);
+      if (closed) throw new AppError(409, closed);
+      const free = await this.freeClaimCounts(userId, rules, today, tx);
+      if (free.day >= free.perDay) throw new AppError(409, `You can claim up to ${free.perDay} free games a day. Try again tomorrow.`);
+      if (free.week >= free.perWeek) throw new AppError(409, `You can claim up to ${free.perWeek} free games a week. Try again when a day drops out of the last 7 days.`);
       const ledger = await this.ledger(userId, tx);
       const summary = summarize(ledger, today);
       if (summary.remaining < cost) {

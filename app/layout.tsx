@@ -9,6 +9,7 @@ import InstallPrompt from "@/components/InstallPrompt";
 import ArrivalPrompt from "@/components/ArrivalPrompt";
 import ForcePasswordChange from "@/components/ForcePasswordChange";
 import WinPrompt from "@/components/captain/WinPrompt";
+import ThankYouPrompt from "@/components/ThankYouPrompt";
 import AdPopup from "@/components/ads/AdPopup";
 import VisitTracker from "@/components/VisitTracker";
 import { LangSync } from "@/components/HeaderToggles";
@@ -60,6 +61,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ArrivalPrompt />
         <ForcePasswordChange />
         <WinPrompt />
+        <ThankYouPrompt />
         <AdPopup />
         <VisitTracker />
       </body>

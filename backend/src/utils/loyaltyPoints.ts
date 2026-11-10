@@ -51,6 +51,11 @@ export const SHARE_MAX = 10; // one share sends exactly this many points (min = 
 export const SHARE_MIN_BALANCE = 100; // a customer needs at least this many points before they can share any
 export const SHARE_PER_DAY = 3; // shares one customer can send in 24 hours
 
+// Free games: even with plenty of points (say 1000), a customer can claim at most this many free games a day and a week.
+// The week is the last 7 days including today. A claim cancelled by the customer does not count.
+export const FREE_PER_DAY = 2;
+export const FREE_PER_WEEK = 5;
+
 export const r1 = (n: number) => Math.round(n * 10) / 10;
 
 export function pointsForGame(priceRs: number): number {

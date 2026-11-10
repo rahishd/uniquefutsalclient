@@ -27,32 +27,52 @@ const SHOW_KEY = "uf_show_points";
 // The untyped rest stays in place (invisible), so the line never jumps. With "reduce motion" on it is just shown.
 const TYPE_MS = 1000;
 const ROUND_MS = 4000;
+const WELCOME = "The pitch is waiting for You.";
 function TypedGreeting({ first }: { first: string }) {
   const lead = "Hi, ";
-  const full = lead + first + "!";
+  const full = lead + first + ".";
   const [n, setN] = useState(full.length);
   const [blink, setBlink] = useState(false);
+  const [welcome, setWelcome] = useState(false);
+  const [blinkYou, setBlinkYou] = useState(false);
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const timers: ReturnType<typeof setTimeout>[] = [];
+    const type = (text: string, ms: number, at: number) => {
+      const step = ms / text.length;
+      for (let i = 1; i <= text.length; i++) timers.push(setTimeout(() => setN(i), at + step * i));
+    };
+    // greeting types (1s), name blinks (3s), then "The pitch is waiting for you" types and stays, then back to the greeting
     const round = () => {
+      setWelcome(false);
       setN(0);
       setBlink(false);
-      const step = TYPE_MS / full.length;
-      for (let i = 1; i <= full.length; i++) timers.push(setTimeout(() => setN(i), step * i));
+      setBlinkYou(false);
+      type(full, TYPE_MS, 0);
       timers.push(setTimeout(() => setBlink(true), TYPE_MS));
-      timers.push(setTimeout(round, ROUND_MS));
+      timers.push(setTimeout(() => { setBlink(false); setWelcome(true); setN(0); }, ROUND_MS));
+      type(WELCOME, 1200, ROUND_MS);
+      timers.push(setTimeout(() => setBlinkYou(true), ROUND_MS + 1200));
+      timers.push(setTimeout(round, ROUND_MS + 1200 + 2000));
     };
     timers.push(setTimeout(round, 0));
     return () => timers.forEach(clearTimeout);
   }, [full]);
-  const shown = full.slice(0, n);
-  const rest = full.slice(n);
+  const text = welcome ? WELCOME : full;
+  const shown = text.slice(0, n);
+  const rest = text.slice(n);
   const part = (text: string, from: number) => {
     // the name sits between the lead and the "!"
+    if (welcome) {
+      // "you" is highlighted and blinks for 2 seconds once the message is fully typed
+      const cut = WELCOME.length - 4; // "You."
+      const head = text.slice(0, cut);
+      const you = text.slice(cut);
+      return [head, you && <span key="y" className={blinkYou ? "uf-you-blink" : undefined}>{you}</span>];
+    }
     const out: React.ReactNode[] = [];
     const a = text.slice(0, Math.max(0, lead.length - from));
-    const nameEnd = lead.length + first.length;
+    const nameEnd = full.length; // the name and its "."
     const b = text.slice(a.length, Math.max(a.length, nameEnd - from));
     const c = text.slice(a.length + b.length);
     if (a) out.push(a);
@@ -61,7 +81,7 @@ function TypedGreeting({ first }: { first: string }) {
     return out;
   };
   return (
-    <span aria-label={full}>
+    <span aria-label={full} className={welcome ? undefined : "text-[17px] font-semibold"}>
       <span aria-hidden>
         {part(shown, 0)}
         <span className="invisible">{rest}</span>
@@ -145,22 +165,19 @@ export default function HomeTop() {
           <span className="truncate text-[17px] font-extrabold uppercase leading-none tracking-tight text-[#0c0b5d]">Unique Futsal</span>
         </div>
         <div className="flex shrink-0 items-center gap-2.5 [&_button[aria-label^=Notifications]]:!h-11 [&_button[aria-label^=Notifications]]:!w-11 [&_button[aria-label^=Notifications]]:!bg-white [&_button[aria-label^=Notifications]]:!shadow-none [&_button[aria-label^=Notifications]]:!ring-0">
-          <div className="text-right leading-none text-[#0c0b5d]">
-            <div className="flex items-center justify-end gap-0.5 text-[15px] font-bold">
-              <Link href="/points" aria-label="Loyalty points" className="flex items-center gap-1"><Star size={14} className="fill-[#f5822a] text-[#f5822a]" aria-hidden /> <span className="tabular-nums">{hidden ? "••••" : points === null ? "--" : fmtPts(points)}</span></Link>
-              <button type="button" onClick={toggleHidden} aria-label={hidden ? "Show loyalty points" : "Hide loyalty points"} aria-pressed={hidden} className="flex h-6 w-6 items-center justify-center rounded-full !bg-transparent text-[#4b4b66]">{hidden ? <EyeOff size={14} /> : <Eye size={14} />}</button>
-            </div>
-            <span className="block pr-1 text-[10px] font-medium text-[#4b4b66]">Loyalty points</span>
-          </div>
           <NotificationBell />
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-between gap-3 px-4">
-        <p className="min-w-0 truncate text-sm font-medium leading-tight text-[#14142b]"><TypedGreeting first={first} /></p>
-        <Link href={registered ? "/profile" : "/login"} className="inline-flex shrink-0 items-center gap-1 pb-0.5 text-sm font-medium text-[#3345b0]">
-          {registered ? "My Account" : "Sign in"} <ChevronDown size={15} aria-hidden />
-        </Link>
+      <div className="mt-6 flex items-center justify-between gap-1.5 px-1">
+        <p className="min-w-0 whitespace-nowrap text-sm font-medium leading-tight text-[#14142b]"><TypedGreeting first={first} /></p>
+        <div className="shrink-0 text-right leading-none text-[#0c0b5d]">
+          <div className="flex items-center justify-end gap-0.5 text-[15px] font-bold">
+            <Link href="/points" aria-label="Loyalty points" className="flex items-center gap-1"><Star size={14} className="fill-[#f5822a] text-[#f5822a]" aria-hidden /> <span className="tabular-nums">{hidden ? "••••" : points === null ? "--" : fmtPts(points)}</span></Link>
+            <button type="button" onClick={toggleHidden} aria-label={hidden ? "Show loyalty points" : "Hide loyalty points"} aria-pressed={hidden} className="flex h-6 w-6 items-center justify-center rounded-full !bg-transparent text-[#4b4b66]">{hidden ? <EyeOff size={14} /> : <Eye size={14} />}</button>
+          </div>
+          <span className="block pr-1 text-[10px] font-medium text-[#4b4b66]">Loyalty points</span>
+        </div>
       </div>
       </div>
 

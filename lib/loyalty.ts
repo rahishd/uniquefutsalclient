@@ -38,8 +38,10 @@ export interface Loyalty {
   rows: LoyaltyRow[];
   cheapestCost: number;
   toNext: number;
-  shifts: { period: Period; price: number; perGame: number; cost: number; canClaim: boolean }[];
+  shifts: { period: Period; price: number; perGame: number; cost: number; canClaim: boolean; shiftOff?: boolean }[];
   vouchers: Voucher[];
+  claimOpen?: { open: boolean; reason: string | null; from: string; to: string; shifts: Period[] }; // set by staff (admin Loyalty Points > Customized)
+  freeLimit?: { day: number; week: number; perDay: number; perWeek: number }; // free games claimed today / in the last 7 days, and the limits
   share?: ShareRules;
   offers?: PointsOffer[]; // points the venue offered, waiting for the customer to add them
 }

@@ -45,6 +45,37 @@ export async function sendAppReminders(now = Date.now()): Promise<number> {
   return sent;
 }
 
+// After the game: a thank-you in the customer's bell (court bookings and Gamezone sessions), with an invitation to book again. Sent once per
+// game (dedupe key) within 3 hours after it ended, so old games never get one. The app also shows it as a pop-up (components/ThankYouPrompt.tsx).
+// The message carries no booking code on purpose, so the notice opens the booking page instead of the old booking.
+export const THANKS_WINDOW_MS = 3 * HOUR;
+export async function sendThankYouNotices(now = Date.now()): Promise<number> {
+  const today = todayKey(new Date(now));
+  const yesterday = addDaysKey(today, -1);
+  let sent = 0;
+  const message = "Thank you for choosing us. Have a great day ahead! Will you book again for the coming days?";
+
+  const bookings = await prisma.booking.findMany({ where: { date: { in: [yesterday, today] }, status: { in: ["confirmed", "completed"] }, userId: { not: null }, AND: [{ OR: [{ notes: null }, { NOT: { notes: { contains: "MEMBERSHIP_" } } }] }] } });
+  for (const b of bookings) {
+    const startHour = parseInt(b.startTime.split(":")[0], 10);
+    let endHour = parseInt(b.endTime.split(":")[0], 10);
+    if (endHour <= startHour) endHour += 24; // a game ending at midnight
+    const end = startsAtMs(b.date, endHour);
+    if (end > now || now - end > THANKS_WINDOW_MS) continue;
+    await notificationService.notify({ userId: b.userId!, type: "booking", title: "Thank you for choosing us", message, href: "/book", dedupeKey: `thanks-${b.id}` });
+    sent++;
+  }
+
+  const sessions = await prisma.gzBooking.findMany({ where: { date: { in: [yesterday, today] }, status: { in: ["confirmed", "completed"] }, userId: { not: null } } });
+  for (const g of sessions) {
+    const end = startsAtMs(g.date, g.startHour + g.hours);
+    if (end > now || now - end > THANKS_WINDOW_MS) continue;
+    await notificationService.notify({ userId: g.userId!, type: "gamezone", title: "Thank you for choosing us", message, href: "/gamezone", dedupeKey: `thanks-${g.code}` });
+    sent++;
+  }
+  return sent;
+}
+
 // A started Gamezone session: about 5 minutes before the booked time ends the customer is warned that extra time will be charged per
 // minute, and once it has ended they are told the per-minute charge has started. Each notice is sent once (dedupe key), so running this
 // every minute is safe. Needs the minute job: the warning window is only 5 minutes wide.
@@ -97,6 +128,7 @@ export async function runAppJobs(which: "minute" | "tenMinutes" | "daily") {
       if (pr) logger.info(`Settled ${pr} Find Player requests`);
     } else if (which === "tenMinutes") {
       await sendAppReminders();
+      await sendThankYouNotices();
       await expireChallenges();
       await clubService.remindExpiring();
       await goalRushService.abandonStale();
