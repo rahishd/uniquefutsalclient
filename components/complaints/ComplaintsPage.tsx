@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { forgetRecall, useRecallState } from "@/lib/recall";
 import { CheckCircle2, ImagePlus, Loader2, MessageSquareWarning, UserRound, X } from "lucide-react";
 import { openSignIn, useSession } from "@/lib/session";
 import { errorText } from "@/lib/api";
@@ -15,14 +16,18 @@ export default function ComplaintsPage() {
   const session = useSession();
   const [rules, setRules] = useState<ComplaintRules>(FALLBACK_RULES);
   const [mine, setMine] = useState<Complaint[] | null>(null);
-  const [category, setCategory] = useState("");
-  const [message, setMessage] = useState("");
-  const [bookingCode, setBookingCode] = useState("");
+  const [category, setCategory] = useRecallState("complaints.category", "");
+  const [message, setMessage] = useRecallState("complaints.message", "");
+  const [bookingCode, setBookingCode] = useRecallState("complaints.booking", "");
   const [photos, setPhotos] = useState<string[]>([]); // already shrunk, ready to send
   const [busy, setBusy] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState<Complaint | null>(null);
+  // a finished request is not remembered: the next visit starts fresh
+  useEffect(() => {
+    if (sent) forgetRecall("complaints.");
+  }, [sent]);
   const picker = useRef<HTMLInputElement>(null);
 
   const registered = session?.registered === true;

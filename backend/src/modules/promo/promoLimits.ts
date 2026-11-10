@@ -17,6 +17,11 @@ export async function promoUsedUp(promo: PromoCode): Promise<boolean> {
   return !!promo.maxUses && (await uses(promo.code)) >= promo.maxUses;
 }
 
+// How many uses of the code are left for everyone together (null = no total limit). Shown on the offer card as "first N customers".
+export async function totalUsesLeft(promo: PromoCode): Promise<number | null> {
+  return promo.maxUses ? Math.max(0, promo.maxUses - (await uses(promo.code))) : null;
+}
+
 // Throws a clear message when the code has no uses left, for everyone or for this customer
 export async function assertPromoLimits(promo: PromoCode, userId?: string | null): Promise<void> {
   if (promo.maxUses && (await uses(promo.code)) >= promo.maxUses) throw new AppError(400, "This promo code has been fully used.");

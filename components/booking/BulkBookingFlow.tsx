@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { forgetRecall, useRecallState } from "@/lib/recall";
 import Link from "next/link";
 import { Check, ChevronLeft, Layers, Loader2, Lock, ShieldCheck, Sparkles, Tag, X } from "lucide-react";
 import PaymentQr from "@/components/payment/PaymentQr";
@@ -38,17 +39,21 @@ export default function BulkBookingFlow() {
     return Array.from({ length: BULK_WINDOW_DAYS + 1 }, (_, i) => new Date(base.getFullYear(), base.getMonth(), base.getDate() + i));
   }, [today]);
 
-  const [step, setStep] = useState<0 | 1 | 2>(0);
-  const [activeDate, setActiveDate] = useState(today);
+  const [step, setStep] = useRecallState<0 | 1 | 2>("bulk.step", 0, { save: (v) => (v === 2 ? 1 : v) });
+  const [activeDate, setActiveDate] = useRecallState("bulk.date", today);
   const [slotsByDate, setSlotsByDate] = useState<Record<string, Slot[] | "error">>({});
-  const [picked, setPicked] = useState<BulkSlot[]>([]);
-  const [promoInput, setPromoInput] = useState("");
-  const [code, setCode] = useState("");
+  const [picked, setPicked] = useRecallState<BulkSlot[]>("bulk.picked", []);
+  const [promoInput, setPromoInput] = useRecallState("bulk.promoInput", "");
+  const [code, setCode] = useRecallState("bulk.code", "");
   const [quoteState, setQuoteState] = useState<{ key: string; q: BulkQuote | null; error: string | null } | null>(null);
-  const [mode, setMode] = useState<BulkMode>("advance");
+  const [mode, setMode] = useRecallState<BulkMode>("bulk.mode", "advance");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BulkResult | null>(null);
+  // a finished request is not remembered: the next visit starts fresh
+  useEffect(() => {
+    if (result) forgetRecall("bulk.");
+  }, [result]);
   const [paid, setPaid] = useState(false);
   const [allowance, setAllowance] = useState<BulkAllowance | null>(null); // bulk games already held, per week
   const isRegistered = session?.registered === true;

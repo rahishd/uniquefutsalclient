@@ -80,7 +80,7 @@ Times use Nepal time. Dates are `YYYY-MM-DD`. Money is whole rupees.
 
 | Method | Path | Who | Notes |
 |---|---|---|---|
-| GET | `/promos` | Guest | `code,title,description,discount,kind,until,daysLeft,terms,status` |
+| GET | `/promos` | Guest | `code,title,description,discount,kind,until,daysLeft,terms,status,maxUses,usesLeft,maxPerCustomer,slotFrom,slotTo,validDays` |
 | POST | `/promos/validate` | Guest | `{code,date,startTime}` |
 | GET | `/loyalty/me` | User | `remaining, earned, claimed, expired, expiringSoon, byType, rows[], shifts[{period,price,perGame,cost,canClaim}], vouchers[], toNext` |
 | POST | `/loyalty/offers/:id/claim` | User | Take points the venue offered ("Add to my points"). 404 if the offer is not yours, 409 if already added or withdrawn. Adds a `game` entry worded `Adjustment: <reason>` once. `GET /loyalty/me` also returns `offers:[{id,points,reason,createdAt}]` (pending only). Staff create offers in the admin portal (Top up points) |

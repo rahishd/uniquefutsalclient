@@ -8,7 +8,7 @@ import SettingsService from "../settings/settings.service";
 import BookingService from "../booking/booking.service";
 import { daysBetweenKeys, todayKey } from "../../utils/dates";
 import { PromoCode } from "../settings/settings.dto";
-import { promoUsedUp } from "./promoLimits";
+import { promoUsedUp, totalUsesLeft } from "./promoLimits";
 
 const router = Router();
 
@@ -35,9 +35,11 @@ router.get(
     const promos = await SettingsService.getPromoCodes();
     // a code that has no uses left is not offered any more
     const usedUp = await Promise.all(promos.map((p) => promoUsedUp(p)));
+    const left = await Promise.all(promos.map((p) => totalUsesLeft(p)));
     const items = promos
-      .filter((p, i) => p.isActive !== false && !usedUp[i])
-      .map((p) => {
+      .map((p, i) => ({ p, left: left[i], used: usedUp[i] }))
+      .filter(({ p, used }) => p.isActive !== false && !used)
+      .map(({ p, left: usesLeft }) => {
         const until = p.expiryDate ? p.expiryDate.slice(0, 10) : null;
         const status = until && until < today ? "expired" : "active";
         return {
@@ -50,6 +52,13 @@ router.get(
           until,
           daysLeft: until ? daysBetweenKeys(today, until) : null,
           terms: termsOf(p),
+          // the limits staff set, so the card can show them: first N customers (and how many are left), uses each, slot hours, weekdays
+          maxUses: p.maxUses ?? null,
+          usesLeft,
+          maxPerCustomer: p.maxPerCustomer ?? null,
+          slotFrom: p.startTime ?? null,
+          slotTo: p.endTime ?? null,
+          validDays: p.validDays ?? [],
           status,
         };
       });

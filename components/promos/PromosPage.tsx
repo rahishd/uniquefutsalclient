@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRecallState } from "@/lib/recall";
 import Link from "next/link";
 import { Check, Copy, Crown, Gamepad2 } from "lucide-react";
 import { fmtDay, promosStore, type Promo } from "@/lib/promos";
@@ -21,7 +22,7 @@ function when(p: Promo) {
 
 export default function PromosPage() {
   const store = promosStore.use();
-  const [tab, setTab] = useState<Tab>("active");
+  const [tab, setTab] = useRecallState<Tab>("promos.tab", "active");
   const [copied, setCopied] = useState<string | null>(null);
 
   async function copy(code: string) {

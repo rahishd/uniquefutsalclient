@@ -1,6 +1,7 @@
 "use client";
 
 import CharityLine from "@/components/CharityLine";
+import { forgetRecall, useRecallState } from "@/lib/recall";
 import { clubOff, clubStore } from "@/lib/club";
 import { BadgeCheck } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -58,23 +59,27 @@ function Current({ s }: { s: MySubscription }) {
 
 function RequestForm({ plans }: { plans: MembershipPlan[] }) {
   const tomorrow = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return dateKey(d); })();
-  const [planId, setPlanId] = useState(plans.find((p) => p.featured)?.id ?? plans[0]?.id ?? "");
-  const [duration, setDuration] = useState<Duration>("1_month");
-  const [startDate, setStartDate] = useState(tomorrow);
+  const [planId, setPlanId] = useRecallState("membership.plan", plans.find((p) => p.featured)?.id ?? plans[0]?.id ?? "");
+  const [duration, setDuration] = useRecallState<Duration>("membership.duration", "1_month");
+  const [startDate, setStartDate] = useRecallState("membership.start", tomorrow);
   const [slots, setSlots] = useState<SlotInfo[] | null>(null);
-  const [slot, setSlot] = useState("");
+  const [slot, setSlot] = useRecallState("membership.slot", "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState<{ total: number; advance: number | null } | null>(null);
-  const [payment, setPayment] = useState<"full" | "advance">("full");
+  const [payment, setPayment] = useRecallState<"full" | "advance">("membership.payment", "full");
+  // a finished request is not remembered: the next visit starts fresh
+  useEffect(() => {
+    if (sent) forgetRecall("membership.");
+  }, [sent]);
 
   useEffect(() => {
     let alive = true;
     fetchSlots(startDate)
-      .then((s) => { if (alive) { setSlots(s.filter((x) => !PEAK_SLOTS.includes(x.slot))); setSlot(""); } })
+      .then((s) => { if (alive) { const list = s.filter((x) => !PEAK_SLOTS.includes(x.slot)); setSlots(list); setSlot((cur) => (list.some((x) => x.slot === cur) ? cur : "")); } })
       .catch((e) => { if (alive) { setSlots([]); setError(errorText(e)); } });
     return () => { alive = false; };
-  }, [startDate]);
+  }, [startDate, setSlot]);
 
   const plan = plans.find((p) => p.id === planId);
   // Unique Club: a member pays 10% less for the 1-month plan only (the server takes the same amount off)

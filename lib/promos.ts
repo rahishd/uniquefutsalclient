@@ -15,6 +15,13 @@ export interface Promo {
   daysLeft: number | null;
   terms: string;
   status: "active" | "expired";
+  // the limits staff set on the code (all optional): first N customers and how many are left, uses each, slot hours, weekdays
+  maxUses?: number | null;
+  usesLeft?: number | null;
+  maxPerCustomer?: number | null;
+  slotFrom?: string | null;
+  slotTo?: string | null;
+  validDays?: string[];
 }
 
 export const promosStore = createRemoteStore<Promo[]>(() => api<Promo[]>("/promos", { auth: "none" }));

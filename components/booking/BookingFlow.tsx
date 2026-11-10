@@ -1,6 +1,7 @@
 "use client";
 
 import ShareBooking, { bookingShareText } from "@/components/ShareBooking";
+import { forgetRecall, useRecallState } from "@/lib/recall";
 import CharityLine from "@/components/CharityLine";
 import CourtScene from "@/components/booking/CourtScene";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
@@ -107,24 +108,30 @@ export default function BookingFlow({ initialDate, initialHour }: { initialDate?
   const session = useSession();
   const loyalty = loyaltyStore.use().data ?? null;
 
-  const [step, setStep] = useState<0 | 1 | 2>(0);
-  const [selDate, setSelDate] = useState<string | null>(initialDate ?? null);
-  const [selHour, setSelHour] = useState<number | null>(initialHour ?? null);
+  // what the customer chose is remembered for a minute (lib/recall.ts); a link that already picked a date or hour wins over it
+  const linked = initialDate !== undefined || initialHour !== undefined;
+  const [step, setStep] = useRecallState<0 | 1 | 2>("booking.step", 0, { skip: linked, save: (v) => (v === 2 ? 1 : v) });
+  const [selDate, setSelDate] = useRecallState<string | null>("booking.date", initialDate ?? null, { skip: linked });
+  const [selHour, setSelHour] = useRecallState<number | null>("booking.hour", initialHour ?? null, { skip: linked });
   const [version, setVersion] = useState(0);
-  const [promoInput, setPromoInput] = useState("");
-  const [appliedCode, setAppliedCode] = useState("");
+  const [promoInput, setPromoInput] = useRecallState("booking.promoInput", "");
+  const [appliedCode, setAppliedCode] = useRecallState("booking.promo", "");
   const [showCodes, setShowCodes] = useState(false);
   const offers = (promosStore.use().data ?? []).filter((p) => p.kind === "booking" && p.status === "active");
   const [quote, setQuote] = useState<{ key: string; q: Quote | null; error: string | null } | null>(null);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [method, setMethod] = useState<PayMethod>("fonepay");
-  const [useFree, setUseFree] = useState(false);
+  const [name, setName] = useRecallState("booking.name", "");
+  const [phone, setPhone] = useRecallState("booking.phone", "");
+  const [method, setMethod] = useRecallState<PayMethod>("booking.method", "fonepay");
+  const [useFree, setUseFree] = useRecallState("booking.useFree", false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<Booking | null>(null);
   const [freeBooking, setFreeBooking] = useState(false);
   const [qr, setQr] = useState<CheckoutResult | null>(null);
+  // a finished booking is not remembered: the next visit starts fresh
+  useEffect(() => {
+    if (done) forgetRecall("booking.");
+  }, [done]);
 
   const today = now ? dateKey(now) : "";
   const days = now

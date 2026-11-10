@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { forgetRecall, useRecallState } from "@/lib/recall";
 import { CheckCircle2, GraduationCap, Loader2, UserRound } from "lucide-react";
 import { openSignIn, useSession } from "@/lib/session";
 import { errorText } from "@/lib/api";
@@ -18,10 +19,14 @@ export default function AcademyPage() {
   const [info, setInfo] = useState<AcademyInfo | null>(null);
   const [mine, setMine] = useState<Enrollment[] | null>(null);
   const [loadErr, setLoadErr] = useState(false);
-  const [f, setF] = useState(EMPTY);
+  const [f, setF] = useRecallState("academy.form", EMPTY);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<Enrollment | null>(null);
+  // a finished request is not remembered: the next visit starts fresh
+  useEffect(() => {
+    if (done) forgetRecall("academy.");
+  }, [done]);
   const set = (k: keyof typeof EMPTY, v: string | boolean) => setF((p) => ({ ...p, [k]: v }));
 
   const loadAll = useCallback(() => loadInfo().then((i) => { setInfo(i); setLoadErr(false); }).catch(() => setLoadErr(true)), []);

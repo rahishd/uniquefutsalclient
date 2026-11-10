@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { forgetRecall, useRecallState } from "@/lib/recall";
 import { CalendarPlus, CheckCircle2, ChevronDown, HeartHandshake, Loader2, UserRound } from "lucide-react";
 import { openSignIn, useSession } from "@/lib/session";
 import { errorText } from "@/lib/api";
@@ -17,15 +18,19 @@ export default function ReferPage() {
   const registered = session?.registered === true;
   const [rules, setRules] = useState<ReferRules | null>(null);
   const [me, setMe] = useState<ReferMe | null>(null);
-  const [open, setOpen] = useState<"friend" | "game" | null>(null); // which option is opened (none at first)
+  const [open, setOpen] = useRecallState<"friend" | "game" | null>("refer.open", null); // which option is opened (none at first)
   const [date, setDate] = useState("");
   const [slots, setSlots] = useState<Slot[] | null>(null);
   const [startTime, setStartTime] = useState("");
-  const [friendPhone, setFriendPhone] = useState("");
-  const [friendName, setFriendName] = useState("");
+  const [friendPhone, setFriendPhone] = useRecallState("refer.friendPhone", "");
+  const [friendName, setFriendName] = useRecallState("refer.friendName", "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  // a finished request is not remembered: the next visit starts fresh
+  useEffect(() => {
+    if (sent) forgetRecall("refer.");
+  }, [sent]);
 
   useEffect(() => { loadRules().then(setRules).catch(() => {}); }, []);
   const refresh = useCallback(() => loadMe().then((m) => { setMe(m); setRules(m.rules); }).catch(() => {}), []);

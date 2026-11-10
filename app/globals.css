@@ -508,3 +508,8 @@ html.dark img.uf-hdr-logo { filter: none; }
 @media (prefers-reduced-motion: reduce) {
   .uf-nav-glass { transition: none; }
 }
+
+/* Home greeting (components/HomeTop.tsx): the name pulses in a soft highlight for 3 seconds after "Hi, name!" has been typed. */
+.uf-name-blink { border-radius: 0.375rem; padding: 0 0.2em; margin: 0 -0.2em; animation: uf-name-blink 0.75s ease-in-out 4; }
+@keyframes uf-name-blink { 0%, 100% { background-color: transparent; } 50% { background-color: #cfe0ff; } }
+@media (prefers-reduced-motion: reduce) { .uf-name-blink { animation: none; } }

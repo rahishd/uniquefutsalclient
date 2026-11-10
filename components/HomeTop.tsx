@@ -23,6 +23,53 @@ import RulesButton from "@/components/rules/RulesButton";
 
 const NONE: never[] = [];
 const SHOW_KEY = "uf_show_points";
+// "Hi, name!" is typed out over 1 second, then the name blinks in a soft highlight for 3 seconds, and the 4-second round repeats.
+// The untyped rest stays in place (invisible), so the line never jumps. With "reduce motion" on it is just shown.
+const TYPE_MS = 1000;
+const ROUND_MS = 4000;
+function TypedGreeting({ first }: { first: string }) {
+  const lead = "Hi, ";
+  const full = lead + first + "!";
+  const [n, setN] = useState(full.length);
+  const [blink, setBlink] = useState(false);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const round = () => {
+      setN(0);
+      setBlink(false);
+      const step = TYPE_MS / full.length;
+      for (let i = 1; i <= full.length; i++) timers.push(setTimeout(() => setN(i), step * i));
+      timers.push(setTimeout(() => setBlink(true), TYPE_MS));
+      timers.push(setTimeout(round, ROUND_MS));
+    };
+    timers.push(setTimeout(round, 0));
+    return () => timers.forEach(clearTimeout);
+  }, [full]);
+  const shown = full.slice(0, n);
+  const rest = full.slice(n);
+  const part = (text: string, from: number) => {
+    // the name sits between the lead and the "!"
+    const out: React.ReactNode[] = [];
+    const a = text.slice(0, Math.max(0, lead.length - from));
+    const nameEnd = lead.length + first.length;
+    const b = text.slice(a.length, Math.max(a.length, nameEnd - from));
+    const c = text.slice(a.length + b.length);
+    if (a) out.push(a);
+    if (b) out.push(<span key="n" className={blink ? "uf-name-blink" : undefined}>{b}</span>);
+    if (c) out.push(c);
+    return out;
+  };
+  return (
+    <span aria-label={full}>
+      <span aria-hidden>
+        {part(shown, 0)}
+        <span className="invisible">{rest}</span>
+      </span>
+    </span>
+  );
+}
+
 const dayFmt = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" });
 
 // The top of Home on the phone: a clean white header (name and status pill on the left, search, bell and photo on the right, then
@@ -79,9 +126,9 @@ export default function HomeTop() {
       <div className="uf-plain order-1 -mx-5 -mt-5 bg-white px-5 pb-4 tab:mx-0 tab:mt-0 tab:rounded-3xl desk:contents">
         <div className="desk:hidden">
           {logoRow}
-          {/* the weather and date at the top, then the banner and the invitation */}
-          <div className="mt-4"><TodayCard compact /></div>
+          {/* the banner, the weather and date just under it, then the invitation */}
           <div className="relative -mx-5 mt-3 overflow-hidden tab:mx-0"><MobileHero /></div>
+          <div className="mt-3"><TodayCard compact /></div>
           <GuestPrompt />
         </div>
       </div>
@@ -98,12 +145,19 @@ export default function HomeTop() {
           <span className="truncate text-[17px] font-extrabold uppercase leading-none tracking-tight text-[#0c0b5d]">Unique Futsal</span>
         </div>
         <div className="flex shrink-0 items-center gap-2.5 [&_button[aria-label^=Notifications]]:!h-11 [&_button[aria-label^=Notifications]]:!w-11 [&_button[aria-label^=Notifications]]:!bg-white [&_button[aria-label^=Notifications]]:!shadow-none [&_button[aria-label^=Notifications]]:!ring-0">
+          <div className="text-right leading-none text-[#0c0b5d]">
+            <div className="flex items-center justify-end gap-0.5 text-[15px] font-bold">
+              <Link href="/points" aria-label="Loyalty points" className="flex items-center gap-1"><Star size={14} className="fill-[#f5822a] text-[#f5822a]" aria-hidden /> <span className="tabular-nums">{hidden ? "••••" : points === null ? "--" : fmtPts(points)}</span></Link>
+              <button type="button" onClick={toggleHidden} aria-label={hidden ? "Show loyalty points" : "Hide loyalty points"} aria-pressed={hidden} className="flex h-6 w-6 items-center justify-center rounded-full !bg-transparent text-[#4b4b66]">{hidden ? <EyeOff size={14} /> : <Eye size={14} />}</button>
+            </div>
+            <span className="block pr-1 text-[10px] font-medium text-[#4b4b66]">Loyalty points</span>
+          </div>
           <NotificationBell />
         </div>
       </div>
 
-      <div className="mt-6 flex items-end justify-between gap-3 px-4">
-        <p className="min-w-0 truncate text-[22px] font-medium leading-tight text-[#14142b]">Hi, {first}!</p>
+      <div className="mt-6 flex items-center justify-between gap-3 px-4">
+        <p className="min-w-0 truncate text-sm font-medium leading-tight text-[#14142b]"><TypedGreeting first={first} /></p>
         <Link href={registered ? "/profile" : "/login"} className="inline-flex shrink-0 items-center gap-1 pb-0.5 text-sm font-medium text-[#3345b0]">
           {registered ? "My Account" : "Sign in"} <ChevronDown size={15} aria-hidden />
         </Link>
@@ -120,13 +174,7 @@ export default function HomeTop() {
             <p className={`mt-0.5 text-sm tabular-nums ${dark ? "text-white/75" : "text-[#6b6b80]"}`}>{session?.registered ? session.phone : site.phone}</p>
           </div>
           {registered && (
-            <div className="shrink-0 text-right">
-              <div className="flex items-center justify-end gap-1 text-lg font-bold leading-tight">
-                <Link href="/points" aria-label="Loyalty points" className="flex items-center gap-1"><Star size={17} className="fill-[#f5822a] text-[#f5822a]" aria-hidden /> <span className="tabular-nums">{hidden ? "••••" : points === null ? "--" : fmtPts(points)}</span></Link>
-                <button type="button" onClick={toggleHidden} aria-label={hidden ? "Show loyalty points" : "Hide loyalty points"} aria-pressed={hidden} className={`flex h-6 w-6 items-center justify-center rounded-full ${dark ? "text-white/80" : "text-[#6b6b80]"}`}>{hidden ? <EyeOff size={15} /> : <Eye size={15} />}</button>
-              </div>
-              <span className={`block text-xs ${dark ? "text-white/75" : "text-[#6b6b80]"}`}>Loyalty points</span>
-            </div>
+            <div className="flex shrink-0 items-center gap-1.5 [&>a]:!h-9 [&>a]:!w-9 [&>a]:!rounded-lg [&>button]:!h-9 [&>button]:!w-9 [&>button]:!rounded-lg [&>a]:!bg-[#eaf1ff] [&>button]:!bg-[#eaf1ff] [&>a]:!shadow-none [&>button]:!shadow-none [&>a>svg]:!h-[18px] [&>a>svg]:!w-[18px] [&>button>svg]:!h-[18px] [&>button>svg]:!w-[18px]"><WifiButton /><OrderButton /><RulesButton /><DigitalIdButton /></div>
           )}
         </div>
 
@@ -141,9 +189,9 @@ export default function HomeTop() {
         )}
 
         {/* the weather and date, then the last games, inside the card (desktop shows them as their own cards, see HomeScreen) */}
-        <TodayCard inCard dark={dark} />
-        {/* the venue banner, just under the weather and date (desktop shows it as the hero instead) */}
+        {/* the venue banner first (desktop shows it as the hero instead), the weather and date just under it */}
         <div className="relative -mx-3.5 mt-3 overflow-hidden desk:hidden"><MobileHero /></div>
+        <TodayCard inCard dark={dark} />
         <LastPlayed embedded dark={dark} />
 
         <div className={`mt-3 flex items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 ${dark ? "border-white/25" : "border-[#dcdcf0]"}`}>
@@ -157,9 +205,6 @@ export default function HomeTop() {
             {registered ? "My Games" : "Sign in"} <ChevronDown size={16} aria-hidden />
           </Link>
         </div>
-
-        {/* the quick icons, just under the next game */}
-        <div className="mt-3 flex items-center justify-evenly gap-2 [&>a]:!h-11 [&>a]:!w-11 [&>a]:!rounded-xl [&>button]:!h-11 [&>button]:!w-11 [&>button]:!rounded-xl [&>a]:!bg-[#eaf1ff] [&>button]:!bg-[#eaf1ff] [&>a>svg]:!h-5 [&>a>svg]:!w-5 [&>button>svg]:!h-5 [&>button>svg]:!w-5"><OrderButton /><RulesButton /><WifiButton /><DigitalIdButton /></div>
       </section>
     </div>
   );

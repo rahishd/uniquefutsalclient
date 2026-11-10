@@ -1,6 +1,7 @@
 "use client";
 
 import ShareBooking, { bookingShareText } from "@/components/ShareBooking";
+import { forgetRecall, useRecallState } from "@/lib/recall";
 import CharityLine from "@/components/CharityLine";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
@@ -74,21 +75,26 @@ function Flow({ catalog }: { catalog: Catalog }) {
   const now = useMemo(() => (tick ? new Date() : null), [tick]);
   const session = useSession();
 
-  const [step, setStep] = useState<0 | 1 | 2>(0);
-  const [selDate, setSelDate] = useState<string | null>(null);
-  const [players, setPlayers] = useState<number>(1);
-  const [hours, setHours] = useState(1);
-  const [selHour, setSelHour] = useState<number | null>(null);
-  const [selConsole, setSelConsole] = useState<string | null>(null);
-  const [selGame, setSelGame] = useState<string | null>(null);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [method, setMethod] = useState<PayMethod>("fonepay");
+  // what the customer chose is remembered for a minute (lib/recall.ts)
+  const [step, setStep] = useRecallState<0 | 1 | 2>("gamezone.step", 0, { save: (v) => (v === 2 ? 1 : v) });
+  const [selDate, setSelDate] = useRecallState<string | null>("gamezone.date", null);
+  const [players, setPlayers] = useRecallState<number>("gamezone.players", 1);
+  const [hours, setHours] = useRecallState("gamezone.hours", 1);
+  const [selHour, setSelHour] = useRecallState<number | null>("gamezone.hour", null);
+  const [selConsole, setSelConsole] = useRecallState<string | null>("gamezone.console", null);
+  const [selGame, setSelGame] = useRecallState<string | null>("gamezone.game", null);
+  const [name, setName] = useRecallState("gamezone.name", "");
+  const [phone, setPhone] = useRecallState("gamezone.phone", "");
+  const [method, setMethod] = useRecallState<PayMethod>("gamezone.method", "fonepay");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<GzBooking | null>(null);
   const [qr, setQr] = useState<GzCheckout | null>(null);
   const [version, setVersion] = useState(0);
+  // a finished booking is not remembered: the next visit starts fresh
+  useEffect(() => {
+    if (done) forgetRecall("gamezone.");
+  }, [done]);
 
   const today = now ? dateKey(now) : "";
   const days = now
