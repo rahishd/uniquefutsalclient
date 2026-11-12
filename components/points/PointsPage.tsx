@@ -14,6 +14,8 @@ import { RULES as WE_RULES, watchEarnStore } from "@/lib/watchearn";
 import { RULES as GR_RULES, goalRushStore } from "@/lib/goalrush";
 import { FALLBACK_SHARE, cancelVoucher, claimFreeGame, loyaltyStore, progressPct, type LoyaltyRow, type Period } from "@/lib/loyalty";
 import { OfferCard } from "@/components/points/OfferCard";
+import PartnerBanners from "@/components/marketplace/PartnerBanners";
+import LoyaltyCardView from "@/components/marketplace/LoyaltyCardView";
 import { askConfirm } from "@/lib/confirm";
 import { formatRs } from "@/lib/booking";
 import { fmtDay } from "@/lib/promos";
@@ -103,6 +105,9 @@ export default function PointsPage() {
     <div className="space-y-5 pb-4 desk:grid desk:grid-cols-2 desk:items-start desk:gap-6 desk:space-y-0">
       <h1 className="text-2xl font-semibold desk:col-span-2 desk:text-3xl">Loyalty points</h1>
 
+      {/* the partners' banners, like the offers banner on Home (nothing shows while no partnership is live) */}
+      <div className="empty:hidden desk:col-span-2 desk:mx-auto desk:w-full desk:max-w-4xl"><PartnerBanners /></div>
+
       {/* Balance */}
       {(loy.offers ?? []).map((o) => <OfferCard key={o.id} offer={o} className="desk:col-span-2" />)}
 
@@ -143,6 +148,12 @@ export default function PointsPage() {
       </section>
 
       {sharing && <SharePoints loy={loy} onClose={() => setSharing(false)} />}
+
+      {/* My loyalty card: proof of the points earned on my bills, to show a partner. Links to the partners' offers. */}
+      <div className="space-y-2 desk:col-span-2">
+        <LoyaltyCardView />
+        <Link href="/marketplace" className="flex items-center justify-between rounded-2xl bg-white/70 px-4 py-3 text-sm font-semibold text-[#0c0b5d] shadow-sm">Use my points at our partners <ChevronRight size={16} /></Link>
+      </div>
 
       {/* Why more points = more free games, and where the points come from */}
       <section className="glass rounded-3xl p-5 desk:col-span-2" aria-label="More loyalty points, more free games">

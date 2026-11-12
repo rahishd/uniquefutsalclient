@@ -222,6 +222,7 @@ export const helpTopics: HelpTopic[] = [
       "To use them: open Points, pick a shift and tap Claim. Then book that shift and tap \"Use a free game voucher\".",
       "Even with a lot of points, you can claim up to 2 free games a day and 5 a week (the last 7 days). A claim you cancel does not count. Staff can also close claiming for some days, hours or shifts, and the Points page says when it is closed.",
       "Free games work for regular bookings only, not for hosting a challenge.",
+      "Partner offers: our partners (for example a cafe or a swimming pool) give you a discount for loyalty points. Open Points and tap Use my points at our partners, or the Partners tile in Quick Access, pick an offer and tap the points button. You get a card with a code: show it at the partner. Your loyalty card on the Points page shows your points and the latest points you earned on your bills, as proof.",
       "A gift from the venue: when Unique Futsal offers you loyalty points, a pink gift card appears at the top of Points with the amount and the reason. Tap Add to my points to take them. Until you do, they are not added.",
       "To share points: you need at least 100 points. Open Points, tap Share points with a friend, enter their mobile number (they need an account) and send. Every share is 10 points. Their points keep the same expiry date. Sent points can't be taken back, and you can share up to 3 times a day.",
     ],

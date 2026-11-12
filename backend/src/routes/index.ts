@@ -18,6 +18,7 @@ import { analyticsRouter } from "../modules/analytics";
 import { notificationRoutes } from "../modules/notification";
 import { auditRouter } from "../modules/audit";
 import { loyaltyRouter } from "../modules/loyalty";
+import { marketplaceRouter } from "../modules/marketplace";
 import { paymentRouter } from "../modules/payment";
 import { promoRouter } from "../modules/promo";
 import { profileRouter } from "../modules/profile";
@@ -65,6 +66,7 @@ router.use("/analytics", analyticsRouter);
 router.use("/notifications", notificationRoutes);
 router.use("/audit", auditRouter);
 router.use("/loyalty", loyaltyRouter);
+router.use("/marketplace", marketplaceRouter);
 router.use("/payments", paymentRouter);
 router.use("/promos", promoRouter);
 router.use("/me/digital-id", digitalIdRouter); // before /me so it is matched first

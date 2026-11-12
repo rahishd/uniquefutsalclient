@@ -12,6 +12,7 @@ import GuestPrompt from "@/components/GuestPrompt";
 import StickyHomeBar from "@/components/StickyHomeBar";
 import QuickRebook from "@/components/QuickRebook";
 import PopularGrid from "@/components/PopularGrid";
+import PartnerRewards from "@/components/marketplace/PartnerRewards";
 import WhyUnique from "@/components/WhyUnique";
 import GoalRushCard from "@/components/goalrush/GoalRushCard";
 import PromoCodes from "@/components/PromoCodes";
@@ -77,7 +78,11 @@ export default function HomeScreen() {
         <div className="uf-promo-col hidden empty:hidden desk:order-[6] desk:col-span-4 desk:block desk:[&>*]:mt-0"><PromoCodes /></div>
 
         {/* desktop: Quick Access on its own full-width row (2 rows of tiles), under the banner and the promo codes */}
-        <div className="uf-home-quick order-[7] desk:col-span-12 desk:mb-10"><PopularGrid /></div>
+        <div className="uf-home-quick order-[7] desk:col-span-12 desk:mb-10">
+          <PopularGrid />
+          {/* the partner offers (spend loyalty points for a discount), the same banners as on the Loyalty points page; nothing shows without a live partner */}
+          <div className="mt-6 empty:hidden desk:mx-auto desk:max-w-4xl"><PartnerRewards /></div>
+        </div>
 
         {/* photos from games and tournaments: only shows once photos are uploaded (components/ads/GallerySection.tsx); desktop: full width, corner to corner */}
         <div className="order-[7] empty:hidden desk:order-[10] desk:col-span-12 desk:mt-10"><GallerySection /></div>

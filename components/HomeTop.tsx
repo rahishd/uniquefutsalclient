@@ -13,6 +13,7 @@ import { useTeams } from "@/lib/teams";
 import { site } from "@/lib/site";
 import LastPlayed from "@/components/LastPlayed";
 import TodayCard from "@/components/TodayCard";
+import LiveMatchStrip from "@/components/LiveMatchStrip";
 import { MobileHero } from "@/components/DeskHero";
 import GuestPrompt from "@/components/GuestPrompt";
 import NotificationBell from "@/components/NotificationBell";
@@ -148,6 +149,7 @@ export default function HomeTop() {
           {logoRow}
           {/* the banner, the weather and date just under it, then the invitation */}
           <div className="relative -mx-5 mt-3 overflow-hidden tab:mx-0"><MobileHero /></div>
+          <LiveMatchStrip className="mt-3" />
           <div className="mt-3"><TodayCard compact /></div>
           <GuestPrompt />
         </div>
@@ -208,6 +210,7 @@ export default function HomeTop() {
         {/* the weather and date, then the last games, inside the card (desktop shows them as their own cards, see HomeScreen) */}
         {/* the venue banner first (desktop shows it as the hero instead), the weather and date just under it */}
         <div className="relative -mx-3.5 mt-3 overflow-hidden desk:hidden"><MobileHero /></div>
+        <LiveMatchStrip className="mt-3 desk:hidden" />
         <TodayCard inCard dark={dark} />
         <LastPlayed embedded dark={dark} />
 

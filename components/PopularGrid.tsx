@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Accessibility, BarChart3, CalendarDays, Clapperboard, ChevronRight, CircleHelp, Crown, Gamepad2, Gift, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, UserSearch, Zap, BadgeCheck, Lock, ShieldCheck, ShieldPlus } from "lucide-react";
+import { Accessibility, BarChart3, CalendarDays, Clapperboard, ChevronRight, CircleHelp, Crown, Gamepad2, Gift, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, UserSearch, Zap, BadgeCheck, Lock, ShieldCheck, ShieldPlus , Store } from "lucide-react";
 import EvCarIcon from "@/components/ev/EvCarIcon";
 import { markReadByTypes, noticesStore, type NoticeType } from "@/lib/notifications";
+import { partnersStore } from "@/lib/marketplace";
 import { openSignIn, useSession } from "@/lib/session";
 import { pendingActions, useTeams } from "@/lib/teams";
 import { useT } from "@/lib/i18n";
@@ -54,7 +55,14 @@ const GUEST_OK = new Set(["/book", "/gamezone", "/help", "/verify"]);
 
 const NO_UNREAD: Partial<Record<NoticeType, number>> = {};
 
+// shown only while a Partner Marketplace partnership is live (an agreement running, with an offer that is on)
+const PARTNER_TILE: Tile = { label: "Partners", href: "/marketplace", icon: Store, tone: "text-brand" };
+
 export default function PopularGrid() {
+  const hasPartners = (partnersStore.use().data?.length ?? 0) > 0;
+  const at = TILES.findIndex((x) => x.label === "Points") + 1;
+  const tiles = hasPartners ? [...TILES.slice(0, at), PARTNER_TILE, ...TILES.slice(at)] : TILES;
+  const deskTiles = DESK_TILES + (hasPartners ? 1 : 0); // the desktop row grows by the one tile
   const unread = noticesStore.use().data?.unreadByType ?? NO_UNREAD;
   const teams = useTeams();
   const session = useSession();
@@ -90,8 +98,8 @@ export default function PopularGrid() {
         </div>
       )}
       {/* desktop: the tiles fill two rows across the whole width (9 + 8 for 17 tiles, 10 + 10 for 20) */}
-      <ul style={{ "--qa-cols": DESK_TILES } as React.CSSProperties} className="mt-4 grid grid-cols-4 gap-x-3 gap-y-5 desk:[grid-template-columns:repeat(var(--qa-cols),minmax(0,1fr))] desk:gap-x-4 desk:gap-y-6">
-        {TILES.map((t, i) => {
+      <ul style={{ "--qa-cols": deskTiles } as React.CSSProperties} className="mt-4 grid grid-cols-4 gap-x-3 gap-y-5 desk:[grid-template-columns:repeat(var(--qa-cols),minmax(0,1fr))] desk:gap-x-4 desk:gap-y-6">
+        {tiles.map((t, i) => {
           const count = countFor(t);
           const Icon = t.icon;
           const locked = guest && !GUEST_OK.has(t.href);
@@ -122,7 +130,7 @@ export default function PopularGrid() {
             </>
           );
           return (
-            <li key={t.label} className={i >= DESK_TILES ? "desk:hidden" : undefined}>
+            <li key={t.label} className={i >= deskTiles ? "desk:hidden" : undefined}>
               {locked ? (
                 <button type="button" onClick={openSignIn} aria-label={`${t.label}: sign in to use`} className="group flex w-full flex-col items-center gap-2">
                   {face}

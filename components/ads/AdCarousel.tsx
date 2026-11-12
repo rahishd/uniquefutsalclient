@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { Sparkles } from "lucide-react";
 import { mediaUrl, trackAd, useContent, type AdItem } from "@/lib/content";
 
 // The Home banner, right under the search bar: every live "In the Home page" ad as a slide. The customer swipes left or right
@@ -61,7 +62,7 @@ export default function AdCarousel() {
   if (!count) return null;
   return (
     <section aria-label="For You">
-      <h2 className="mb-2 px-1.5 text-lg font-bold text-[#0c0b5d] desk:text-xl">For You</h2>
+      <h2 className="mb-2 flex items-center gap-1.5 px-1.5 text-lg font-bold text-[#0c0b5d] desk:text-xl"><Sparkles size={16} strokeWidth={2.2} className="text-brand" aria-hidden />For You</h2>
       <div className="relative overflow-hidden rounded-none bg-white/60">
         <div
           ref={track}
