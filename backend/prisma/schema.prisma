@@ -250,6 +250,7 @@ model Tournament {
   prizePool     Float
   minTeams      Int
   maxTeams      Int
+  registrationClosed Boolean @default(false) // the organizer closed team registration by hand
   startDate     String
   endDate       String
   isActive      Boolean        @default(true)
@@ -671,6 +672,7 @@ model TournamentMatch {
   note      String?
   startsAt  DateTime?
   venue     String?
+  liveUrl   String? // Facebook Live link the tournament organizer pasted (shown as "Watch live")
   round     TournamentRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
   follows   MatchFollow[]
   goals     MatchGoal[]

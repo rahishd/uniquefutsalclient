@@ -15,7 +15,7 @@ export const MAX_PLAYERS = 30;
 const PHONE = /^9\d{9}$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-type T = { id: string; name: string; startDate: string; endDate: string; isActive: boolean; status: string; maxTeams: number; prizePool: number; entryFee: number; hostedEvent: boolean; hostName: string | null; description: string | null };
+type T = { id: string; name: string; startDate: string; endDate: string; isActive: boolean; status: string; maxTeams: number; registrationClosed?: boolean; prizePool: number; entryFee: number; hostedEvent: boolean; hostName: string | null; description: string | null };
 
 const counted = { status: { not: "rejected" } } as const;
 
@@ -26,6 +26,7 @@ export async function registrationState(t: T) {
   let closedReason: string | null = null;
   if (!t.isActive || t.status === "cancelled") closedReason = "Registration for this tournament is closed.";
   else if (t.status === "completed" || t.endDate < todayKey()) closedReason = "This tournament has finished.";
+  else if (t.registrationClosed) closedReason = "The organizer has closed registration for this tournament.";
   // once the first day has started, the team list is fixed: no sign-ups while the tournament runs
   else if (t.startDate <= todayKey()) closedReason = "Registration is closed because the tournament has started.";
   else if (limit !== null && registered >= limit) closedReason = "All team places are taken.";

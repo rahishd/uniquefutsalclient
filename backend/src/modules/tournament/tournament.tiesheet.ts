@@ -11,12 +11,36 @@ import { AuditService } from "../audit";
 import { prisma } from "../../config/db";
 import { todayKey } from "../../utils/dates";
 
+// Facebook's player only plays the full video address (facebook.com/<page>/videos/<id>), not the short links people copy
+// (facebook.com/share/v/..., fb.watch/...). Follow the short link once and remember the answer.
+const canonicalCache = new Map<string, { url: string; at: number }>();
+async function canonicalLive(url: string | null): Promise<string | null> {
+  if (!url) return null;
+  const hit = canonicalCache.get(url);
+  if (hit && Date.now() - hit.at < 6 * 3600_000) return hit.url;
+  let out = url;
+  if (/\/share\/|fb\.watch|fb\.gg|\/watch\/?\?|vm\.tiktok\.com|tiktok\.com\/t\/|vt\.tiktok\.com|instagr\.am/i.test(url)) {
+    try {
+      const r = await fetch(url, { redirect: "follow", headers: { "user-agent": "Mozilla/5.0" }, signal: AbortSignal.timeout(6000) });
+      const u = new URL(r.url);
+      const known = /(^|\.)(facebook|tiktok|instagram)\.com$/i.test(u.hostname);
+      if (known && /\/videos\/|\/reel\/|\/video\/|\/live|\/p\/|\/tv\//.test(u.pathname)) out = `${u.origin}${u.pathname}`;
+    } catch {
+      return url; // try again next time
+    }
+  }
+  canonicalCache.set(url, { url: out, at: Date.now() });
+  return out;
+}
+
 // The customer view of a tournament: scores and the tie-sheet. Registrations (team phone numbers and emails)
 // and the venue's costs are never part of this public view.
 export async function publicTournament(t: { id: string; name: string; prizePool: number; minTeams: number; maxTeams: number; startDate: string; endDate: string; isActive: boolean; status: string; description: string | null; hostedEvent?: boolean; hostName?: string | null; entryFee?: number }) {
   const rounds = await prisma.tournamentRound.findMany({ where: { tournamentId: t.id }, orderBy: { position: "asc" }, include: { matches: { orderBy: { startsAt: "asc" }, include: { goals: { orderBy: [{ minute: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }] } } } } });
   // an event the venue hosts for a manager: who hosts it and the hours of each day (the manager phone number and the bill stay private)
   const days = t.hostedEvent ? await prisma.tournamentDay.findMany({ where: { tournamentId: t.id }, orderBy: { date: "asc" } }) : [];
+  const liveLinks = new Map<string, string | null>();
+  for (const m of rounds.flatMap((r) => r.matches)) if (m.liveUrl && m.status !== "finished") liveLinks.set(m.id, await canonicalLive(m.liveUrl));
   const hosted = t.hostedEvent ? { hostName: t.hostName ?? null, days: days.map((d) => ({ date: d.date, startHour: d.startHour, endHour: d.endHour })) } : undefined;
   const today = todayKey();
   const status = t.status === "completed" ? "completed" : t.startDate > today ? "upcoming" : "live";
@@ -33,8 +57,8 @@ export async function publicTournament(t: { id: string; name: string; prizePool:
     id: t.id, name: t.name, status, startDate: t.startDate, endDate: t.endDate, teams: t.maxTeams, prizePool: t.prizePool, entryFee: t.entryFee ?? 0, prizes, format, hosted,
     rounds: rounds.map((r) => ({
       id: r.id, name: r.name,
-      matches: r.matches.map((m) => ({ id: m.id, status: m.status, home: m.home, away: m.away, homeScore: m.homeScore, awayScore: m.awayScore, note: m.note, startsAt: m.startsAt, venue: m.venue,
-        goals: m.goals.map((g) => ({ side: g.side, minute: g.minute, scorer: g.scorer })),
+      matches: r.matches.map((m) => ({ id: m.id, status: m.status, home: m.home, away: m.away, homeScore: m.homeScore, awayScore: m.awayScore, note: m.note, startsAt: m.startsAt, venue: m.venue, liveUrl: liveLinks.get(m.id) ?? null,
+        goals: m.goals.map((g) => ({ side: g.side, minute: g.minute, scorer: g.scorer, at: g.createdAt })), // at: the clock time the goal was entered
       })),
     })),
   };
@@ -48,7 +72,12 @@ router.get(
   asyncHandler(async (_req: Request, res: Response) => {
     const list = await prisma.tournament.findMany({ where: { isActive: true, status: { not: "completed" } }, orderBy: { startDate: "asc" } });
     const today = todayKey();
-    const live = list.find((t) => t.startDate <= today && t.endDate >= today) ?? list.find((t) => t.startDate > today) ?? null;
+    // a tournament with a match being played now (live, or with its Facebook Live video) comes first, so Home can show it
+    const playing = await prisma.tournamentMatch.findFirst({
+      where: { OR: [{ status: "live" }, { status: { not: "finished" }, liveUrl: { not: null } }], round: { tournamentId: { in: list.map((t) => t.id) } } },
+      orderBy: { status: "desc" }, select: { round: { select: { tournamentId: true } } },
+    });
+    const live = list.find((t) => t.id === playing?.round.tournamentId) ?? list.find((t) => t.startDate <= today && t.endDate >= today) ?? list.find((t) => t.startDate > today) ?? null;
     res.json(ApiResponseUtil.success(200, "Current tournament", live ? await publicTournament(live) : null));
   }),
 );
