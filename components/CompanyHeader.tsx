@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { site } from "@/lib/site";
 import AdStrip from "@/components/ads/AdStrip";
@@ -23,22 +23,30 @@ export default function CompanyHeader() {
   const home = path === "/";
   // the sign-in page needs no greeting bar: the person is not signed in yet
   const signIn = path === "/login" || path.startsWith("/login/");
+  // Home, desktop: the bar sits on the hero picture (see components/DeskHero.tsx), see-through with white text, until the page is scrolled
+  const [atTop, setAtTop] = useState(true);
+  useEffect(() => {
+    const on = () => setAtTop(window.scrollY < 24);
+    const first = setTimeout(on, 0);
+    window.addEventListener("scroll", on, { passive: true });
+    return () => { clearTimeout(first); window.removeEventListener("scroll", on); };
+  }, []);
   // remember that the visitor has been inside the app in this tab, so the sign-in page can tell a cold start (see AuthForm)
   useEffect(() => { if (!signIn) { try { sessionStorage.setItem("uf-in-app", "1"); } catch { /* private mode */ } } }, [signIn]);
   return (
     <>
       {!home && !signIn && <PageInfoBar />}
-      <div className={`hidden desk:block uf-navy-header sticky top-0 z-30 pt-[calc(env(safe-area-inset-top)+1.5rem)] desk:pt-[env(safe-area-inset-top)] shadow-[0_8px_24px_-14px_rgba(12,11,93,0.45)]`}>
+      <div className={`hidden desk:block uf-navy-header ${home && atTop ? "uf-hdr-over" : ""} sticky top-0 z-30 pt-[calc(env(safe-area-inset-top)+1.5rem)] desk:pt-[env(safe-area-inset-top)] shadow-[0_8px_24px_-14px_rgba(12,11,93,0.45)]`}>
       <div className="mx-auto w-full max-w-md px-5 tab:max-w-3xl tab:px-8 desk:max-w-[1320px] desk:px-10">
-        <div className="flex min-h-0 items-center gap-3 py-2.5 tab:gap-4 pr-1 desk:gap-3 2xl:gap-6">
-          <Link href="/" aria-label={`${site.name} home`} className="flex min-w-0 items-center gap-2.5 desk:shrink-0">
+        <div className="flex min-h-0 items-center gap-3 py-2.5 tab:gap-4 pr-1 desk:gap-3 desk:py-4 2xl:gap-6">
+          <Link href="/" aria-label={`${site.name} home`} className="flex min-w-0 items-center gap-2.5 desk:mr-6 desk:shrink-0 2xl:mr-10">
             {/* The kicking player alone, in navy on the white bar, with no tile behind it (public/logo-mark-navy.png) */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo-mark-navy.png" alt="" aria-hidden className="uf-hdr-logo shrink-0" style={{ "--s": "28px" } as React.CSSProperties} />
             <span className="whitespace-nowrap text-[13px] font-bold uppercase tracking-[0.08em] text-[#0c0b5d]">{site.name}</span>
           </Link>
           <DeskNav />
-          <div className="-mr-2 ml-auto flex shrink-0 items-center gap-0 desk:ml-0"><HeaderPoints plain /><HeaderChat /><div className="[&_button[aria-label^=Notifications]]:!h-9 [&_button[aria-label^=Notifications]]:!w-8 [&_button[aria-label^=Notifications]]:!rounded-md [&_button[aria-label^=Notifications]]:!bg-transparent [&_button[aria-label^=Notifications]]:!text-white [&_button[aria-label^=Notifications]]:!shadow-none [&_button[aria-label^=Notifications]]:!ring-0 [&_button[aria-label^=Notifications]]:!border-0 [&_button[aria-label^=Notifications]>svg]:!h-4 [&_button[aria-label^=Notifications]>svg]:!w-4"><NotificationBell /></div><HeaderLogout /></div>
+          <div className="-mr-2 ml-auto flex shrink-0 items-center gap-0 desk:ml-0 desk:gap-1.5"><HeaderPoints plain /><HeaderChat /><span aria-hidden className="mx-1 hidden h-5 w-px bg-[#0c0b5d]/25 desk:block" /><div className="desk:mr-3.5 [&_button[aria-label^=Notifications]]:!h-8 [&_button[aria-label^=Notifications]]:!w-8 [&_button[aria-label^=Notifications]]:!rounded-md [&_button[aria-label^=Notifications]]:!bg-transparent [&_button[aria-label^=Notifications]]:!text-white [&_button[aria-label^=Notifications]]:!shadow-none [&_button[aria-label^=Notifications]]:!ring-0 [&_button[aria-label^=Notifications]]:!border-0 [&_button[aria-label^=Notifications]>svg]:!h-[18px] [&_button[aria-label^=Notifications]>svg]:!w-[18px] [&_.uf-badge-ping]:!h-4 [&_.uf-badge-ping]:!w-4 [&_.uf-badge-blink]:!h-4 [&_.uf-badge-blink]:!min-w-4 [&_.uf-badge-blink]:!px-0.5 [&_.uf-badge-blink]:!text-[9.5px]"><NotificationBell /></div><HeaderLogout /></div>
         </div>
         <div className="empty:hidden pb-2"><AdStrip placement="header" /></div>
       </div>

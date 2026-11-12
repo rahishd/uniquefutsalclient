@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { BadgeCheck, ChevronDown, Eye, EyeOff, Pencil, Star } from "lucide-react";
+import { BadgeCheck, CalendarClock, ChevronDown, Eye, EyeOff, Pencil, Star } from "lucide-react";
 import { clubStore } from "@/lib/club";
 import { profileStore } from "@/lib/profile";
 import { loyaltyStore } from "@/lib/loyalty";
@@ -29,7 +29,7 @@ const SHOW_KEY = "uf_show_points";
 const TYPE_MS = 1000;
 const ROUND_MS = 4000;
 const WELCOME = "The pitch is waiting for You.";
-function TypedGreeting({ first }: { first: string }) {
+function TypedGreeting({ first, textClass = "text-[17px] font-semibold" }: { first: string; textClass?: string }) {
   const lead = "Hi, ";
   const full = lead + first + ".";
   const [n, setN] = useState(full.length);
@@ -82,13 +82,48 @@ function TypedGreeting({ first }: { first: string }) {
     return out;
   };
   return (
-    <span aria-label={full} className={welcome ? undefined : "text-[17px] font-semibold"}>
+    <span aria-label={full} className={welcome ? undefined : textClass}>
       <span aria-hidden>
         {part(shown, 0)}
         <span className="invisible">{rest}</span>
       </span>
     </span>
   );
+}
+
+// Desktop, on the hero picture (passed into components/DeskHero.tsx): five short lines typed one after the other, 2 seconds each, on one row (no name is shown):
+// "Book Now.", "For Today.", "For Tomorrow.", "Anywhere.", "Anytime.", and round again. With "reduce motion" on nothing is typed: the lines just swap every 2 seconds.
+const DESK_LINES = ["Book Now.", "For Today.", "For Tomorrow.", "Anywhere.", "Anytime."];
+const LINE_MS = 2000; // how long each line stays (typing it takes about the first half)
+function DeskTyping() {
+  const [line, setLine] = useState("");
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const round = () => {
+      DESK_LINES.forEach((text, i) => {
+        const at = i * LINE_MS;
+        if (reduce) { timers.push(setTimeout(() => setLine(text), at)); return; }
+        const step = Math.min(900, text.length * 75) / text.length;
+        timers.push(setTimeout(() => setLine(""), at));
+        for (let k = 1; k <= text.length; k++) timers.push(setTimeout(() => setLine(text.slice(0, k)), at + step * k));
+      });
+      timers.push(setTimeout(round, DESK_LINES.length * LINE_MS));
+    };
+    timers.push(setTimeout(round, 0));
+    return () => timers.forEach(clearTimeout);
+  }, []);
+  // the longest line is kept in place (invisible), so nothing around it moves while the text is typed
+  return (
+    <span className="relative inline-block whitespace-nowrap" aria-label={DESK_LINES.join(" ")}>
+      <span aria-hidden className="invisible">For Tomorrow.</span>
+      <span aria-hidden className="absolute left-0 top-0">{line}<span className="uf-caret ml-0.5 inline-block h-[0.95em] w-[2px] translate-y-[0.12em] bg-white/90" /></span>
+    </span>
+  );
+}
+
+export function DeskGreeting({ className = "" }: { className?: string }) {
+  return <p className={`whitespace-nowrap text-[clamp(1.3rem,2.2vw,2.1rem)] font-bold leading-none ${className}`}><DeskTyping /></p>;
 }
 
 const dayFmt = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" });
@@ -214,14 +249,20 @@ export default function HomeTop() {
         <TodayCard inCard dark={dark} />
         <LastPlayed embedded dark={dark} />
 
-        <div className={`mt-3 flex items-center justify-between gap-3 rounded-2xl border px-3 py-2.5 ${dark ? "border-white/25" : "border-[#dcdcf0]"}`}>
-          <div className="min-w-0">
-            <p className={`text-xs font-medium uppercase tracking-wide ${dark ? "text-white/70" : "text-[#6b6b80]"}`}>Next game</p>
-            <p className={`mt-0.5 text-sm font-semibold leading-snug ${dark ? "text-white" : "text-[#14142b]"}`}>
-              {!registered ? "Sign in to book" : next ? <>{dayFmt.format(parseKey(next.date))}, {formatHour(parseInt(next.startTime, 10))}</> : "No game booked"}
-            </p>
+        {/* the next game: a navy card with an orange accent, so it is the first thing the eye finds */}
+        <div className="relative mt-3 flex items-center justify-between gap-3 overflow-hidden rounded-2xl px-3.5 py-3 shadow-[0_14px_28px_-16px_rgba(12,11,93,0.8)]" style={{ background: "linear-gradient(135deg, #0c0b5d 0%, #1b2090 55%, #3345b0 100%)", color: "#ffffff" }}>
+          <span aria-hidden className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full" style={{ background: "rgba(255,255,255,0.08)" }} />
+          <span aria-hidden className="pointer-events-none absolute -bottom-12 left-16 h-24 w-24 rounded-full" style={{ background: "rgba(245,130,42,0.18)" }} />
+          <div className="relative flex min-w-0 items-center gap-3">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl shadow-md" style={{ background: "linear-gradient(135deg, #f5822a, #ff9a4d)", color: "#ffffff" }}><CalendarClock size={22} aria-hidden /></span>
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: "#ffb273" }}>Next game</p>
+              <p className="mt-0.5 text-[15px] font-bold leading-snug" style={{ color: "#ffffff" }}>
+                {!registered ? "Sign in to book" : next ? <>{dayFmt.format(parseKey(next.date))}, {formatHour(parseInt(next.startTime, 10))}</> : "No game booked"}
+              </p>
+            </div>
           </div>
-          <Link href={registered ? "/profile/bookings" : "/login"} className={`inline-flex shrink-0 items-center gap-1 rounded-xl border px-3 py-2 text-sm font-medium ${dark ? "border-white/40 text-white" : "border-[#dcdcf0] text-[#3345b0]"}`}>
+          <Link href={registered ? "/profile/bookings" : "/login"} className="relative inline-flex shrink-0 items-center gap-1 rounded-full px-3.5 py-2 text-sm font-bold shadow-md" style={{ background: "#ffffff", color: "#0c0b5d" }}>
             {registered ? "My Games" : "Sign in"} <ChevronDown size={16} aria-hidden />
           </Link>
         </div>

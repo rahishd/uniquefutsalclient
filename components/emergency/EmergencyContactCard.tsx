@@ -51,25 +51,25 @@ export default function EmergencyContactCard() {
   }
 
   return (
-    <section id="emergency" aria-label="Emergency contact" className={`glass scroll-mt-28 rounded-3xl p-5 desk:col-span-2 ${saved ? "" : "ring-2 ring-rose-300"}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-600"><HeartPulse size={22} /></span>
+    <section id="emergency" aria-label="Emergency contact" className={`glass scroll-mt-28 rounded-2xl px-3.5 py-2.5 desk:col-span-2 ${saved ? "" : "uf-blink-red border-2 border-rose-500"}`}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600"><HeartPulse size={18} /></span>
           <div className="min-w-0">
-            <p className="font-medium">Emergency contact</p>
+            <p className="text-sm font-semibold leading-tight">Emergency contact</p>
             {saved ? (
-              <p className="text-sm text-slate-500">
+              <p className="truncate text-xs text-slate-500">
                 {profile.emergencyName}{profile.emergencyRelation ? ` (${profile.emergencyRelation})` : ""} · {profile.emergencyPhone}
               </p>
             ) : (
-              <p className="text-sm font-medium text-rose-600">Not added yet. Add someone we can call if you get hurt at the venue.</p>
+              <p className="text-xs font-semibold leading-snug text-rose-600">Not added yet.<span className="block font-medium">Add someone we can call if you get hurt.</span></p>
             )}
           </div>
         </div>
         {!editing && (
           <button type="button" onClick={open} aria-label={saved ? "Change emergency contact" : "Add emergency contact"}
-            className={saved ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/60 text-brand" : "shrink-0 rounded-full bg-rose-600 px-4 py-2 text-xs font-bold text-white"}>
-            {saved ? <Pencil size={18} /> : "Add now"}
+            className={saved ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/60 text-brand" : "shrink-0 rounded-full bg-rose-600 px-3.5 py-1.5 text-xs font-bold text-white"}>
+            {saved ? <Pencil size={16} /> : "Add now"}
           </button>
         )}
       </div>

@@ -465,7 +465,8 @@ export default function BookingFlow({ initialDate, initialHour }: { initialDate?
         {/* eight Unique Futsal players passing and showing their skills on the court (components/booking/CourtScene.tsx) */}
         <CourtScene />
         {/* what the court offers */}
-        <ul aria-label="Court specifications" className="mt-2.5 grid grid-cols-4 gap-1.5 desk:max-w-xl desk:gap-2">
+        {/* the four tiles take exactly the width of the turf above them (the scene is max-w-3xl and centred, and so is this row) */}
+        <ul aria-label="Court specifications" className="mt-2.5 grid grid-cols-4 gap-1.5 desk:mx-auto desk:max-w-3xl desk:gap-2 desk:px-[0.75%]">
           {([[Users, "5A Side"], [Award, "FIFA Grade Turf"], [Armchair, "250+ Sitting"], [ShieldCheck, "Health Insurance"]] as const).map(([Icon, label]) => (
             <li key={label} className="flex flex-col items-center gap-1 rounded-xl border border-slate-200 bg-white px-1 py-2 text-center">
               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-700 text-white"><Icon size={15} strokeWidth={1.9} aria-hidden /></span>
@@ -480,7 +481,7 @@ export default function BookingFlow({ initialDate, initialHour }: { initialDate?
 
       <Link
         href="/book/bulk"
-        className="group flex items-center gap-3 rounded-2xl bg-emerald-700 px-3 py-2.5 text-white transition active:scale-[0.99] desk:max-w-xl"
+        className="group flex items-center gap-3 rounded-2xl bg-emerald-700 px-3 py-2.5 text-white transition active:scale-[0.99] desk:mx-auto desk:max-w-[46.8rem]"
       >
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-emerald-700"><Layers size={18} /></span>
         <span className="min-w-0 flex-1">

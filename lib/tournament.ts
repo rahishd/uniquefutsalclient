@@ -17,6 +17,7 @@ export interface TieMatch {
   note: string | null; // e.g. penalties
   startsAt: string | null;
   venue: string | null;
+  liveUrl?: string | null; // the Facebook Live video of this match, when the organizer added one
   goals?: TieGoal[]; // in minute order, entered by the venue
 }
 
@@ -24,6 +25,7 @@ export interface TieGoal {
   side: "home" | "away";
   minute: number | null;
   scorer: string | null;
+  at?: string; // when the goal was entered (the clock time the organizer tapped it)
 }
 
 export interface TieRound {
@@ -54,7 +56,10 @@ export const hoursLabel = (d: { startHour: number; endHour: number }) => `${h12(
 export interface HostedEvent { id: string; name: string; hostName: string | null; entryFee?: number; startDate: string; endDate: string; days: { date: string; startHour: number; endHour: number }[] }
 export const eventsStore = createRemoteStore<HostedEvent[]>(() => api<HostedEvent[]>("/tournaments/events", { auth: "none" }), { pollMs: 60000 });
 
-export const tournamentStore = createRemoteStore<Tournament | null>(() => api<Tournament | null>("/tournaments/current", { auth: "none" }), { pollMs: 30000 });
+// refreshed every 8 seconds, so a goal the organizer taps shows on the customer's screen within a few seconds
+export const tournamentStore = createRemoteStore<Tournament | null>(() => api<Tournament | null>("/tournaments/current", { auth: "none" }), { pollMs: 8000 });
+/** The clock time (Nepal) of a goal, like "10:23 AM". */
+export const goalClock = (at?: string) => (at ? new Date(at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Kathmandu" }) : "");
 
 export const matchTime = (m: TieMatch) => (m.startsAt ? new Date(m.startsAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "");
 

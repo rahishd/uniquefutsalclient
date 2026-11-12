@@ -17,7 +17,7 @@ export default function HeaderChat() {
       href="/chat"
       aria-current={active ? "page" : undefined}
       aria-label={unread > 0 ? `${t("Chat")}, ${unread}` : t("Chat")}
-      className={`relative hidden items-center gap-1.5 whitespace-nowrap px-2.5 py-2 text-xs !bg-transparent transition-colors desk:flex ${active ? "font-semibold text-white" : "font-medium text-white/85 hover:text-white"}`}
+      className="uf-hdr-orange relative hidden items-center gap-1.5 whitespace-nowrap text-[13px] transition-colors desk:flex"
     >
       <MessageCircle size={14} strokeWidth={2.2} />
       {t("Chat")}

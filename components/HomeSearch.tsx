@@ -76,7 +76,8 @@ const matches = (q: string, ...fields: (string | undefined)[]) => {
 };
 
 // The Home search box: finds a slot (type a day and time), an offer or promo code, a team, a page or a help topic. The filter button narrows the kind.
-export default function HomeSearch() {
+// `up`: the results open above the box instead of below it (for the search box at the bottom of the Home banner)
+export default function HomeSearch({ up = false }: { up?: boolean }) {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState<Kind | "all">("all");
@@ -116,7 +117,7 @@ export default function HomeSearch() {
             type="search" value={q} placeholder="Search a slot, offer or team…" aria-label="Search" autoComplete="off" enterKeyHint="search"
             onChange={(e) => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)}
             onKeyDown={(e) => { if (e.key === "Escape") { setOpen(false); (e.target as HTMLInputElement).blur(); } }}
-            className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400 [&::-webkit-search-cancel-button]:hidden"
+            className="w-full bg-transparent text-sm text-[#0c0b5d] outline-none placeholder:text-slate-400 [&::-webkit-search-cancel-button]:hidden"
             style={{ border: "none" }}
           />
           {q ? <button type="button" aria-label="Clear search" onClick={() => setQ("")} className="text-slate-500"><X size={20} /></button> : <Search size={20} className="text-slate-500" />}
@@ -128,7 +129,7 @@ export default function HomeSearch() {
       </div>
 
       {showPanel && (
-        <div className="absolute left-0 right-0 z-30 mt-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl">
+        <div className={`absolute left-0 right-0 z-30 ${up ? "bottom-full mb-2" : "mt-2"} rounded-2xl border border-slate-200 bg-white p-3 text-[#0c0b5d] shadow-xl`}>
           {filters && (
             <div className="mb-2 flex flex-wrap gap-1.5" role="group" aria-label="Search filters">
               {KINDS.map((k) => (

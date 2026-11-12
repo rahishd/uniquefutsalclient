@@ -15,10 +15,10 @@ export default function HeaderPoints({ plain = false }: { plain?: boolean }) {
     <Link
       href="/points"
       aria-label={points === null ? "Loyalty points" : `${fmtPts(points)} loyalty points available`}
-      className={plain ? "inline-flex items-center gap-1 px-2.5 py-2 font-bold !bg-transparent" : "inline-flex items-center gap-1.5 rounded-full bg-white py-1.5 pl-2.5 pr-3 font-extrabold text-[#0c0b5d]"}
+      className={plain ? "uf-hdr-orange inline-flex items-center gap-1.5 whitespace-nowrap" : "inline-flex items-center gap-1.5 rounded-full bg-white py-1.5 pl-2.5 pr-3 font-extrabold text-[#0c0b5d]"}
     >
-      <Star size={plain ? 12 : 15} className="fill-[#f5822a] text-[#f5822a]" />
-      <span className={`${plain ? "text-xs" : "text-sm"} leading-none tabular-nums`}>{points === null ? "--" : fmtPts(points)}</span>
+      <Star size={plain ? 13 : 15} className={plain ? "fill-white text-white" : "fill-[#f5822a] text-[#f5822a]"} />
+      <span className={`${plain ? "text-[13px]" : "text-sm"} leading-none tabular-nums`}>{points === null ? "--" : fmtPts(points)}</span>
       <span className="text-[11px] font-semibold leading-none opacity-80">pts</span>
     </Link>
   );

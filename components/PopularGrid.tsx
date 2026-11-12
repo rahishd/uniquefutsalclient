@@ -26,6 +26,9 @@ const NO_NEW_TAG = new Set(["Book", "Gamezone", "Points", "Tournaments"]);
 
 // the desktop shows the first row of tiles only (the phone shows all of them)
 const DESK_TILES = 10;
+// the pages that already have a button in the desktop top bar (components/DeskNav.tsx): their tiles are left out of Quick Access on the desktop
+// (EV Charging is also left out of the desktop row)
+const IN_DESK_NAV = new Set(["/", "/book", "/opponent", "/gamezone", "/member", "/tournaments", "/points", "/profile", "/ev"]);
 
 const TILES: Tile[] = [
   { label: "Book", href: "/book", icon: CalendarDays, tone: "text-brand", types: ["booking", "reminder", "payment"] },
@@ -62,7 +65,9 @@ export default function PopularGrid() {
   const hasPartners = (partnersStore.use().data?.length ?? 0) > 0;
   const at = TILES.findIndex((x) => x.label === "Points") + 1;
   const tiles = hasPartners ? [...TILES.slice(0, at), PARTNER_TILE, ...TILES.slice(at)] : TILES;
-  const deskTiles = DESK_TILES + (hasPartners ? 1 : 0); // the desktop row grows by the one tile
+  const deskTiles = DESK_TILES; // the desktop row: ten tiles
+  const deskList = tiles.filter((t) => !IN_DESK_NAV.has(t.href)); // what the desktop shows: no tile that the top bar already has
+  const deskCols = Math.max(1, Math.min(deskTiles, deskList.length));
   const unread = noticesStore.use().data?.unreadByType ?? NO_UNREAD;
   const teams = useTeams();
   const session = useSession();
@@ -87,7 +92,7 @@ export default function PopularGrid() {
           <Zap size={16} strokeWidth={2.2} className="text-brand" aria-hidden />
           {tr("Quick Access")}
         </h2>
-        <Link href="/profile" className="flex items-center text-sm text-brand">
+        <Link href="/profile" className="flex items-center text-sm text-brand desk:hidden">
           {tr("See all")} <ChevronRight size={16} />
         </Link>
       </div>
@@ -98,8 +103,8 @@ export default function PopularGrid() {
         </div>
       )}
       {/* desktop: the tiles fill two rows across the whole width (9 + 8 for 17 tiles, 10 + 10 for 20) */}
-      <ul style={{ "--qa-cols": deskTiles } as React.CSSProperties} className="mt-4 grid grid-cols-4 gap-x-3 gap-y-5 desk:[grid-template-columns:repeat(var(--qa-cols),minmax(0,1fr))] desk:gap-x-4 desk:gap-y-6">
-        {tiles.map((t, i) => {
+      <ul style={{ "--qa-cols": deskCols } as React.CSSProperties} className="mt-4 grid grid-cols-4 gap-x-3 gap-y-5 desk:[grid-template-columns:repeat(var(--qa-cols),minmax(0,1fr))] desk:gap-x-4 desk:gap-y-6">
+        {tiles.map((t) => {
           const count = countFor(t);
           const Icon = t.icon;
           const locked = guest && !GUEST_OK.has(t.href);
@@ -130,7 +135,7 @@ export default function PopularGrid() {
             </>
           );
           return (
-            <li key={t.label} className={i >= deskTiles ? "desk:hidden" : undefined}>
+            <li key={t.label} className={deskList.indexOf(t) < 0 || deskList.indexOf(t) >= deskTiles ? "desk:hidden" : undefined}>
               {locked ? (
                 <button type="button" onClick={openSignIn} aria-label={`${t.label}: sign in to use`} className="group flex w-full flex-col items-center gap-2">
                   {face}

@@ -3,11 +3,11 @@ import { CalendarDays } from "lucide-react";
 import HomeHero from "@/components/HomeHero";
 import UserBadge from "@/components/UserBadge";
 import LastPlayed from "@/components/LastPlayed";
-import TodayCard from "@/components/TodayCard";
 import EmergencyReminder from "@/components/emergency/EmergencyReminder";
 import HealthReminder from "@/components/health/HealthReminder";
-import HomeTop from "@/components/HomeTop";
+import HomeTop, { DeskGreeting } from "@/components/HomeTop";
 import DeskHero from "@/components/DeskHero";
+import DeskMembersOnly from "@/components/DeskMembersOnly";
 import GuestPrompt from "@/components/GuestPrompt";
 import StickyHomeBar from "@/components/StickyHomeBar";
 import QuickRebook from "@/components/QuickRebook";
@@ -38,29 +38,17 @@ export default function HomeScreen() {
         {/* phone: white header and account card (components/HomeTop.tsx); desktop: the bar above and the profile card below */}
         <HomeTop />
         {/* desktop only: the venue banner in place of the account and weather cards */}
-        <DeskHero />
-        <GuestPrompt className="order-1 hidden desk:col-span-12 desk:block" />
+        <DeskHero><DeskGreeting className="text-white [text-shadow:0_2px_10px_rgba(0,0,0,0.7)]" /></DeskHero>
 
-        {/* desktop profile card: soft blue for a regular customer, dark blue for a VIP (see components/UserBadge.tsx) */}
-        <UserBadge />
-
-        <TodayCard />
-        <LastPlayed />
-
-        {/* no emergency contact on the account yet (older or Google accounts): a reminder with a link to add it */}
-        <EmergencyReminder className="order-1 mx-3 mt-3 desk:order-2 desk:col-span-12 desk:mx-0 desk:mt-0" />
-        <HealthReminder className="order-1 mx-0 mt-2.5 desk:order-2 desk:col-span-12 desk:mt-0" />
-
-        {/* the search bar: on its own, full width on desktop */}
-        <div className="order-2 tab:mt-3 tab:[&>*]:mt-0 desk:order-1 desk:col-span-8 desk:self-center desk:mt-0 desk:[&>*]:mt-0"><HomeHero /></div>
-
-        {/* the offers and ads, right under the search bar: swipe left or right (components/ads/AdCarousel.tsx) */}
-        <div className="order-2 mt-3 empty:hidden desk:col-span-12 desk:mx-auto desk:w-full desk:max-w-4xl"><AdCarousel /></div>
-
-        {/* points the venue offered: right under the search bar until the customer adds them */}
-        <GiftOffers className="order-[3] mt-4 empty:hidden desk:col-span-12 desk:mt-0" />
-
-        <div className="uf-home-main contents desk:order-[5] desk:col-span-8 desk:block">
+        {/* Quick Access (and the partner offers) in one full-width row. Desktop: right under the venue banner, and only for signed-in customers.
+            Phone: where it always was, after the offers (order-[7]). */}
+        <DeskMembersOnly className="uf-home-quick order-[7] desk:order-1 desk:col-span-12 desk:[&>section]:mt-0">
+          <PopularGrid />
+        </DeskMembersOnly>
+        {/* desktop, right under Quick Access, in one row: the deals banner on the left (8 of 12), the live promo codes on the right (4 of 12). The weather, the
+            search bar and the Nepali date are on the hero picture (components/DeskHero.tsx). The phone and tablet keep their own places: the weather in the account
+            card, the search bar under it, the banner further down, the promo codes in the side column. With no promo code the banner takes the whole row. */}
+        <div className="uf-home-main contents desk:order-1 desk:col-span-8 desk:block">
         {/* Promo banner */}
         <section className="relative order-5 mt-5 min-h-[230px] overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c0b5d] via-[#16167f] to-[#2a2aa8] p-5 text-white shadow-[0_10px_30px_rgba(12,11,93,0.35)] desk:mt-0 desk:min-h-[300px] desk:p-10">
           <div className="relative z-10 max-w-[56%] desk:max-w-[52%]">
@@ -73,16 +61,32 @@ export default function HomeScreen() {
           <KidSkills className="pointer-events-none absolute bottom-0 right-0 h-[230px] w-auto desk:right-10 desk:h-[300px]" />
         </section>
         </div>
-
-        {/* desktop: the live promo codes sit right beside the banner (one code at a time, a slider when there are more); on the phone and tablet they stay in the side column below */}
-        <div className="uf-promo-col hidden empty:hidden desk:order-[6] desk:col-span-4 desk:block desk:[&>*]:mt-0"><PromoCodes /></div>
-
-        {/* desktop: Quick Access on its own full-width row (2 rows of tiles), under the banner and the promo codes */}
-        <div className="uf-home-quick order-[7] desk:col-span-12 desk:mb-10">
-          <PopularGrid />
-          {/* the partner offers (spend loyalty points for a discount), the same banners as on the Loyalty points page; nothing shows without a live partner */}
-          <div className="mt-6 empty:hidden desk:mx-auto desk:max-w-4xl"><PartnerRewards /></div>
+        <div className="uf-desk-top contents">
+          <div className="uf-desk-left contents desk:hidden">
+            <div className="uf-desk-search order-2 tab:mt-3 tab:[&>*]:mt-0"><HomeHero /></div>
+          </div>
+          <div className="uf-promo-col hidden empty:hidden desk:relative desk:order-1 desk:col-span-4 desk:block desk:[&>*]:mt-0"><PromoCodes /></div>
         </div>
+        {/* the partner offers (spend loyalty points for a discount), the same banners as on the Loyalty points page; nothing shows without a live partner.
+            Desktop: under the weather, search and promo codes, for signed-in customers. Phone: right after Quick Access, as before. */}
+        <DeskMembersOnly className="uf-desk-partner order-[7] mt-6 empty:hidden desk:order-1 desk:col-span-6 desk:mt-0 desk:self-start"><PartnerRewards /></DeskMembersOnly>
+        {/* the offers and ads (swipe left or right, components/ads/AdCarousel.tsx). Desktop: in the same row as the partner offers, half each; alone (guests, or no
+            partner offer) it takes the whole row. */}
+        <div className="uf-desk-foryou order-2 mt-3 empty:hidden desk:order-1 desk:col-span-6 desk:mt-0 desk:self-start"><AdCarousel /></div>
+        <GuestPrompt className="order-1 hidden desk:col-span-12 desk:block" />
+
+        {/* desktop profile card: soft blue for a regular customer, dark blue for a VIP (see components/UserBadge.tsx) */}
+        <UserBadge />
+
+        <LastPlayed />
+
+        {/* no emergency contact on the account yet (older or Google accounts): a reminder with a link to add it */}
+        <EmergencyReminder className="order-1 mx-3 mt-3 desk:order-2 desk:col-span-12 desk:mx-0 desk:mt-0" />
+        <HealthReminder className="order-1 mx-0 mt-2.5 desk:order-2 desk:col-span-12 desk:mt-0" />
+
+        {/* points the venue offered: right under the search bar until the customer adds them */}
+        <GiftOffers className="order-[3] mt-4 empty:hidden desk:col-span-12 desk:mt-0" />
+
 
         {/* photos from games and tournaments: only shows once photos are uploaded (components/ads/GallerySection.tsx); desktop: full width, corner to corner */}
         <div className="order-[7] empty:hidden desk:order-[10] desk:col-span-12 desk:mt-10"><GallerySection /></div>
@@ -94,7 +98,8 @@ export default function HomeScreen() {
       </div>
 
       <aside className="uf-home-side contents tab:col-span-6 tab:flex tab:flex-col tab:gap-4 desk:order-[9] desk:col-span-4 desk:flex desk:flex-col desk:gap-5">
-        <div className="uf-rest-col order-[6] empty:hidden tab:[&>*]:mt-0 desk:[&>*]:mt-0"><QuickRebook /></div>
+        {/* phone and tablet only: on the desktop "Book again" sits on the hero picture (components/DeskHero.tsx) */}
+        <div className="order-[6] empty:hidden tab:[&>*]:mt-0 desk:hidden"><QuickRebook /></div>
         <div className="order-[9] empty:hidden tab:[&>*]:mt-0 desk:hidden"><PromoCodes /></div>
         <div className="uf-rest-col order-[10] empty:hidden tab:[&>*]:mt-0 desk:[&>*]:mt-0"><TournamentSection /></div>
         {/* desktop: beside the Goal Rush card; `uf-rest-col` keeps the side column open (see the :has() rule in globals.css) */}

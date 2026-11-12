@@ -14,8 +14,6 @@ const LINKS = [
   { label: "Gamezone", href: "/gamezone" },
   { label: "Membership", href: "/member" },
   { label: "Tournaments", href: "/tournaments" },
-  { label: "Points", href: "/points" },
-  { label: "Profile", href: "/profile" },
 ];
 
 // the page you are on is marked with a line under it and a faint liquid-glass sheen; both glide (with a little overshoot) to the next page you open

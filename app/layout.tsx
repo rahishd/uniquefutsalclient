@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Poppins } from "next/font/google";
+import { Anton, Poppins } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
 import FooterGate from "@/components/FooterGate";
@@ -19,6 +19,8 @@ import LoginSplash from "@/components/LoginSplash";
 import CallHost from "@/components/chat/CallHost";
 import ChatPopup from "@/components/chat/ChatPopup";
 
+// the tall bold letters of the Home banner heading (components/DeskHero.tsx)
+const anton = Anton({ variable: "--font-anton", subsets: ["latin"], weight: "400" });
 const poppins = Poppins({ variable: "--font-poppins", subsets: ["latin"], weight: ["300", "400", "500", "600", "700"] });
 
 export const metadata: Metadata = {
@@ -38,7 +40,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${poppins.variable} h-full antialiased`}>
+    <html lang="en" suppressHydrationWarning className={`${poppins.variable} ${anton.variable} h-full antialiased`}>
       <head>
         {/* apply the saved light/dark choice before the first paint, so there is no flash */}
         <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem("uf-theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}` }} />

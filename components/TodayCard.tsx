@@ -16,7 +16,7 @@ export function weatherWord(code: number) {
 }
 
 // a small icon for the weather code
-function weatherIcon(code: number, size: number) {
+export function weatherIcon(code: number, size: number) {
   if (code === 0 || code === 1) return <Sun size={size} aria-hidden />;
   if (code === 2) return <CloudSun size={size} aria-hidden />;
   if (code === 3) return <Cloud size={size} aria-hidden />;
@@ -53,7 +53,7 @@ export default function TodayCard({ inCard = false, dark = false, compact = fals
   }
 
   return (
-    <section aria-label="Today at the venue" className={inCard ? `relative mt-3 border-t pt-3 desk:hidden ${dark ? "border-white/20 text-white" : "border-[#e3e6f4] text-[#0c0b5d]"}` : "uf-keep relative order-1 mt-2.5 hidden rounded-2xl bg-white px-4 py-3 text-[#0c0b5d] shadow-[0_8px_20px_-12px_rgba(59,130,246,0.45)] ring-1 ring-[#bfd7ff] desk:col-span-4 desk:col-start-1 desk:mt-0 desk:flex desk:items-center"}>
+    <section aria-label="Today at the venue" className={inCard ? `relative mt-3 border-t pt-3 desk:hidden ${dark ? "border-white/20 text-white" : "border-[#e3e6f4] text-[#0c0b5d]"}` : "uf-keep relative order-1 mt-2.5 hidden rounded-2xl bg-white px-4 py-3 text-[#0c0b5d] shadow-[0_8px_20px_-12px_rgba(59,130,246,0.45)] ring-1 ring-[#bfd7ff] desk:col-span-12 desk:mt-0 desk:flex desk:items-center"}>
       <div className="relative flex w-full items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="flex items-baseline gap-0.5 text-[30px] font-bold leading-none tracking-tight">

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { CalendarDays, Check, ChevronLeft, ChevronRight, Copy, Info, X } from "lucide-react";
+import { CalendarDays, Check, ChevronRight, Copy, Info, X } from "lucide-react";
 import { fmtDay, promosStore, type Promo } from "@/lib/promos";
 import { useSession } from "@/lib/session";
 
@@ -116,8 +116,6 @@ function PromoDetails({ p, pal, amount, valid, copied, onCopy, onClose }: { p: P
 export default function PromoCodes() {
   const session = useSession();
   const [copied, setCopied] = useState<string | null>(null);
-  const track = useRef<HTMLUListElement>(null);
-  const [at, setAt] = useState(0); // desktop slider: which code is showing
   const live = (promosStore.use().data ?? []).filter((p) => p.status === "active");
 
   async function copy(code: string) {
@@ -130,16 +128,12 @@ export default function PromoCodes() {
     }
   }
 
-  // desktop slider: one code at a time, arrows and dots when there is more than one
-  const slide = (by: number) => { const el = track.current; if (el) el.scrollBy({ left: by * el.clientWidth, behavior: "smooth" }); };
-  const onSlide = () => { const el = track.current; if (el && el.clientWidth) setAt(Math.round(el.scrollLeft / el.clientWidth)); };
-
   // promo codes are for signed-in customers; a guest pays the full price
   if (live.length === 0 || session?.registered !== true) return null;
 
   return (
-    <section className="mt-8 desk:mt-10" aria-label="Live promo codes">
-      <div className="flex items-center justify-between">
+    <section className="mt-8 desk:absolute desk:inset-0 desk:mt-0 desk:flex desk:flex-col" aria-label="Live promo codes">
+      <div className="flex shrink-0 items-center justify-between">
         <h2 className="flex items-center gap-2 text-lg font-medium">
           <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" /> Live promo codes
         </h2>
@@ -148,16 +142,10 @@ export default function PromoCodes() {
         </Link>
       </div>
 
-      <ul ref={track} onScroll={onSlide} className="-mx-5 mt-4 flex snap-x gap-3 overflow-x-auto px-5 pb-2 desk:mx-0 desk:snap-mandatory desk:gap-0 desk:px-0 desk:pb-1 desk:[scrollbar-width:none] desk:[&::-webkit-scrollbar]:hidden">
+      {/* phone: a row to swipe sideways. Desktop: a column that scrolls up and down inside the height of the banner beside it, with a thin scroll bar */}
+      <ul className="-mx-5 mt-4 flex snap-x gap-3 overflow-x-auto px-5 pb-2 desk:mx-0 desk:mt-3 desk:min-h-0 desk:flex-1 desk:snap-none desk:flex-col desk:overflow-y-auto desk:overflow-x-hidden desk:px-0 desk:pb-0 desk:pr-2 desk:[scrollbar-color:#9aa6e0_transparent] desk:[scrollbar-width:thin]">
         {live.map((p) => <PromoCard key={p.code} p={p} copied={copied === p.code} onCopy={() => copy(p.code)} />)}
       </ul>
-      {live.length > 1 && (
-        <div className="mt-2 hidden items-center justify-center gap-3 desk:flex">
-          <button type="button" onClick={() => slide(-1)} aria-label="Previous code" className="grid h-7 w-7 place-items-center rounded-full bg-white/70 text-brand shadow-sm"><ChevronLeft size={16} /></button>
-          <div className="flex gap-1.5" aria-hidden>{live.map((p, i) => <span key={p.code} className={`h-1.5 rounded-full transition-all ${i === at ? "w-4 bg-brand" : "w-1.5 bg-slate-300"}`} />)}</div>
-          <button type="button" onClick={() => slide(1)} aria-label="Next code" className="grid h-7 w-7 place-items-center rounded-full bg-white/70 text-brand shadow-sm"><ChevronRight size={16} /></button>
-        </div>
-      )}
     </section>
   );
 }

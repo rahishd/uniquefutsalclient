@@ -6,7 +6,7 @@ import { Bell, BellRing, Radio } from "lucide-react";
 import { errorText } from "@/lib/api";
 import { enablePush, pushState } from "@/lib/push";
 import { useSession } from "@/lib/session";
-import { followStore, matchTime, setFollowing, type TieGoal, type TieMatch, type TieRound } from "@/lib/tournament";
+import { followStore, goalClock, matchTime, setFollowing, type TieGoal, type TieMatch, type TieRound } from "@/lib/tournament";
 
 function Row({ name, score, winner }: { name: string | null; score?: number | null; winner: boolean }) {
   return (
@@ -14,7 +14,7 @@ function Row({ name, score, winner }: { name: string | null; score?: number | nu
       <span className={`truncate text-sm ${name ? (winner ? "font-semibold" : "text-slate-600") : "italic text-slate-400"}`}>
         {name ?? "To be decided"}
       </span>
-      <span className={`text-sm tabular-nums ${winner ? "font-semibold text-brand" : "text-slate-500"}`}>
+      <span className={`grid min-w-8 place-items-center rounded-lg px-2 py-0.5 text-base font-bold tabular-nums ${winner ? "bg-brand text-white" : "bg-slate-100 text-slate-700"}`}>
         {score ?? "–"}
       </span>
     </div>
@@ -55,12 +55,13 @@ function Follow({ m, following, onNote }: { m: TieMatch; following: boolean; onN
 
 // Who scored: the home side's goals on the left, the away side's on the right, in minute order.
 function Scorers({ goals }: { goals: TieGoal[] }) {
+  // every goal is listed with the minute, or the clock time it was entered when there is no minute ("Goal 10:23 AM"), so a customer sees it the moment it happens
   if (goals.length === 0) return null;
   const line = (g: TieGoal, i: number) => (
-    <li key={i} className="truncate">{g.scorer || "Goal"}{g.minute !== null && <span className="text-slate-400"> {g.minute}&prime;</span>}</li>
+    <li key={i} className="truncate">{g.scorer || "Goal"}<span className="text-slate-400"> {g.minute !== null ? <>{g.minute}&prime;</> : goalClock(g.at)}</span></li>
   );
   return (
-    <div className="mt-2 grid grid-cols-2 gap-3 border-t border-white/60 pt-2 text-[11px] text-slate-500" aria-label="Goal scorers">
+    <div className="mt-2.5 grid grid-cols-2 gap-3 border-t border-slate-200/70 pt-2 text-[11px] text-slate-500" aria-label="Goal scorers">
       <ul className="space-y-0.5">{goals.filter((g) => g.side === "home").map(line)}</ul>
       <ul className="space-y-0.5 text-right">{goals.filter((g) => g.side === "away").map(line)}</ul>
     </div>
@@ -73,8 +74,8 @@ function MatchCard({ m, following, onNote }: { m: TieMatch; following: boolean; 
   const awayWins = done && (m.awayScore ?? 0) > (m.homeScore ?? 0);
   // level score after a shoot-out: the note says who won, keep both unbolded
   return (
-    <div className="glass w-60 shrink-0 rounded-2xl p-4">
-      <div className="space-y-2">
+    <div className={`glass w-60 shrink-0 rounded-2xl p-4 ${m.status === "live" ? "ring-1 ring-rose-300" : ""}`}>
+      <div className="space-y-2.5">
         <Row name={m.home} score={m.homeScore} winner={homeWins} />
         <Row name={m.away} score={m.awayScore} winner={awayWins} />
       </div>
