@@ -6,17 +6,16 @@ import { usePathname } from "next/navigation";
 import { site } from "@/lib/site";
 import AdStrip from "@/components/ads/AdStrip";
 import DeskNav from "@/components/DeskNav";
+import PageScrollBar from "@/components/PageScrollBar";
 import NotificationBell from "@/components/NotificationBell";
 import HeaderPoints from "@/components/HeaderPoints";
 import HeaderChat from "@/components/HeaderChat";
 import HeaderLogout from "@/components/HeaderLogout";
-import PageInfoBar from "@/components/PageInfoBar";
 
 // Top bar: transparent over the page. Once the page scrolls it turns into a frosted white strip, so the name and buttons stay readable over anything.
 // (Old note: clean and white.) The logo and name sit on the left with some air around them, and the theme, language and
 // notification buttons on the right. It always stays pinned at the top while the page scrolls.
-// On the phone the full bar is shown on Home only; every other page shows a slim bar instead (greeting, Nepali date,
-// temperature and the bell: components/PageInfoBar.tsx). In desktop mode (see `desk:` in globals.css) the bar is on every page, because it
+// On the phone the full bar is shown on Home only; other pages have no bar at the top; a slim one slides in only while scrolling down (components/PageScrollBar.tsx). In desktop mode (see `desk:` in globals.css) the bar is on every page, because it
 // carries the main navigation there (the bottom bar is hidden).
 export default function CompanyHeader() {
   const path = usePathname();
@@ -35,7 +34,10 @@ export default function CompanyHeader() {
   useEffect(() => { if (!signIn) { try { sessionStorage.setItem("uf-in-app", "1"); } catch { /* private mode */ } } }, [signIn]);
   return (
     <>
-      {!home && !signIn && <PageInfoBar />}
+      {/* phone, every page but Home: no greeting bar any more (Home already shows it). Only room for the phone's status bar is kept, so the page does not start under it. */}
+      {!home && !signIn && <div aria-hidden className="desk:hidden" style={{ height: "env(safe-area-inset-top)" }} />}
+      {/* the slim bar that shows only while scrolling down within the page (hidden when a page opens, gone at once when scrolling up) */}
+      {!home && !signIn && <PageScrollBar key={path} />}
       <div className={`hidden desk:block uf-navy-header ${home && atTop ? "uf-hdr-over" : ""} sticky top-0 z-30 pt-[calc(env(safe-area-inset-top)+1.5rem)] desk:pt-[env(safe-area-inset-top)] shadow-[0_8px_24px_-14px_rgba(12,11,93,0.45)]`}>
       <div className="mx-auto w-full max-w-md px-5 tab:max-w-3xl tab:px-8 desk:max-w-[1320px] desk:px-10">
         <div className="flex min-h-0 items-center gap-3 py-2.5 tab:gap-4 pr-1 desk:gap-3 desk:py-4 2xl:gap-6">

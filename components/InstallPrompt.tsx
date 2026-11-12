@@ -15,7 +15,7 @@ interface BeforeInstallPromptEvent extends Event {
 const DISMISS_KEY = "uf-install-dismissed-visit";
 const OLD_DISMISS_KEY = "uf-install-dismissed"; // earlier versions hid the popup forever
 const SHOW_DELAY_MS = 1500;
-const AUTO_CLOSE_S = 5; // the popup closes by itself after this many seconds, with a countdown
+const AUTO_CLOSE_S = 3; // the popup closes by itself after this many seconds, with a countdown
 const AUTO_CLOSE_STEPS_S = 10; // the browser-menu steps take longer to read
 const ANDROID_FALLBACK_MS = 4000; // some Android browsers never fire the install event; show the menu steps instead
 

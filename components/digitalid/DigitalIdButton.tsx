@@ -7,15 +7,17 @@ import LockedIcon from "@/components/LockedIcon";
 import DigitalIdSheet from "@/components/digitalid/DigitalIdSheet";
 
 // Small QR button (next to "Hello" on Home) or a full row (Profile) that opens the customer's Digital ID card. Registered customers only.
-export default function DigitalIdButton({ variant = "icon" }: { variant?: "icon" | "row" }) {
+// `text`: the icon variant as a small card with the word under the icon (the account card on the phone Home page).
+export default function DigitalIdButton({ variant = "icon", text }: { variant?: "icon" | "row"; text?: string }) {
   const session = useSession();
   const [open, setOpen] = useState(false);
   if (!session?.registered) return variant === "icon" ? <LockedIcon label="My Digital ID" message="Sign in to view your Digital ID."><QrCode size={18} /></LockedIcon> : null;
   return (
     <>
       {variant === "icon" ? (
-        <button type="button" onClick={() => setOpen(true)} aria-label="My Digital ID" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dcebff] text-black shadow-sm">
-          <QrCode size={18} />
+        <button type="button" onClick={() => setOpen(true)} aria-label="My Digital ID" className={text ? "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1.5 rounded-2xl bg-[#eaf1ff] px-2 py-3 text-[#0c0b5d]" : "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dcebff] text-black shadow-sm"}>
+          <QrCode size={text ? 22 : 18} />
+          {text && <span className="text-[12px] font-semibold leading-none">{text}</span>}
         </button>
       ) : (
         <button type="button" onClick={() => setOpen(true)} className="glass flex w-full items-center gap-3 rounded-3xl p-4 text-left">

@@ -10,7 +10,6 @@ import { fmtPts } from "@/lib/points";
 import { formatHour, isUpcoming, myBookingsStore, parseKey, startsAtMs } from "@/lib/booking";
 import { useSession } from "@/lib/session";
 import { useTeams } from "@/lib/teams";
-import { site } from "@/lib/site";
 import LastPlayed from "@/components/LastPlayed";
 import TodayCard from "@/components/TodayCard";
 import LiveMatchStrip from "@/components/LiveMatchStrip";
@@ -20,77 +19,9 @@ import NotificationBell from "@/components/NotificationBell";
 import DigitalIdButton from "@/components/digitalid/DigitalIdButton";
 import WifiButton from "@/components/wifi/WifiButton";
 import OrderButton from "@/components/order/OrderButton";
-import RulesButton from "@/components/rules/RulesButton";
 
 const NONE: never[] = [];
 const SHOW_KEY = "uf_show_points";
-// "Hi, name!" is typed out over 1 second, then the name blinks in a soft highlight for 3 seconds, and the 4-second round repeats.
-// The untyped rest stays in place (invisible), so the line never jumps. With "reduce motion" on it is just shown.
-const TYPE_MS = 1000;
-const ROUND_MS = 4000;
-const WELCOME = "The pitch is waiting for You.";
-function TypedGreeting({ first, textClass = "text-[17px] font-semibold" }: { first: string; textClass?: string }) {
-  const lead = "Hi, ";
-  const full = lead + first + ".";
-  const [n, setN] = useState(full.length);
-  const [blink, setBlink] = useState(false);
-  const [welcome, setWelcome] = useState(false);
-  const [blinkYou, setBlinkYou] = useState(false);
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    const type = (text: string, ms: number, at: number) => {
-      const step = ms / text.length;
-      for (let i = 1; i <= text.length; i++) timers.push(setTimeout(() => setN(i), at + step * i));
-    };
-    // greeting types (1s), name blinks (3s), then "The pitch is waiting for you" types and stays, then back to the greeting
-    const round = () => {
-      setWelcome(false);
-      setN(0);
-      setBlink(false);
-      setBlinkYou(false);
-      type(full, TYPE_MS, 0);
-      timers.push(setTimeout(() => setBlink(true), TYPE_MS));
-      timers.push(setTimeout(() => { setBlink(false); setWelcome(true); setN(0); }, ROUND_MS));
-      type(WELCOME, 1200, ROUND_MS);
-      timers.push(setTimeout(() => setBlinkYou(true), ROUND_MS + 1200));
-      timers.push(setTimeout(round, ROUND_MS + 1200 + 2000));
-    };
-    timers.push(setTimeout(round, 0));
-    return () => timers.forEach(clearTimeout);
-  }, [full]);
-  const text = welcome ? WELCOME : full;
-  const shown = text.slice(0, n);
-  const rest = text.slice(n);
-  const part = (text: string, from: number) => {
-    // the name sits between the lead and the "!"
-    if (welcome) {
-      // "you" is highlighted and blinks for 2 seconds once the message is fully typed
-      const cut = WELCOME.length - 4; // "You."
-      const head = text.slice(0, cut);
-      const you = text.slice(cut);
-      return [head, you && <span key="y" className={blinkYou ? "uf-you-blink" : undefined}>{you}</span>];
-    }
-    const out: React.ReactNode[] = [];
-    const a = text.slice(0, Math.max(0, lead.length - from));
-    const nameEnd = full.length; // the name and its "."
-    const b = text.slice(a.length, Math.max(a.length, nameEnd - from));
-    const c = text.slice(a.length + b.length);
-    if (a) out.push(a);
-    if (b) out.push(<span key="n" className={blink ? "uf-name-blink" : undefined}>{b}</span>);
-    if (c) out.push(c);
-    return out;
-  };
-  return (
-    <span aria-label={full} className={welcome ? undefined : textClass}>
-      <span aria-hidden>
-        {part(shown, 0)}
-        <span className="invisible">{rest}</span>
-      </span>
-    </span>
-  );
-}
-
 // Desktop, on the hero picture (passed into components/DeskHero.tsx): five short lines typed one after the other, 2 seconds each, on one row (no name is shown):
 // "Book Now.", "For Today.", "For Tomorrow.", "Anywhere.", "Anytime.", and round again. With "reduce motion" on nothing is typed: the lines just swap every 2 seconds.
 const DESK_LINES = ["Book Now.", "For Today.", "For Tomorrow.", "Anywhere.", "Anytime."];
@@ -155,7 +86,6 @@ export default function HomeTop() {
   const toggleHidden = () => setHidden((v) => { try { if (v) sessionStorage.setItem(SHOW_KEY, accountId); else sessionStorage.removeItem(SHOW_KEY); } catch { /* not remembered */ } return !v; });
   const registered = Boolean(session?.registered);
   const name = session?.registered ? session.name : "Guest";
-  const first = name.trim().split(/\s+/)[0];
   const captain = Boolean(session?.registered && teams?.mode === "captain");
   const vip = Boolean(session?.registered && profile?.vip);
   const member = Boolean(session?.registered && club?.member);
@@ -207,7 +137,13 @@ export default function HomeTop() {
       </div>
 
       <div className="mt-6 flex items-center justify-between gap-1.5 px-1">
-        <p className="min-w-0 whitespace-nowrap text-sm font-medium leading-tight text-[#14142b]"><TypedGreeting first={first} /></p>
+        <div className="min-w-0">
+          <p className="flex items-center gap-1.5 text-[17px] font-semibold leading-tight text-[#14142b]">
+            <span className="truncate">{name}</span>
+            {registered && <Link href="/profile" aria-label="Edit profile" className="text-[#4b4b66]"><Pencil size={14} /></Link>}
+          </p>
+          <p className="mt-0.5 text-sm tabular-nums text-[#6b6b80]">{session?.registered ? session.phone : ""}</p>
+        </div>
         <div className="shrink-0 text-right leading-none text-[#0c0b5d]">
           <div className="flex items-center justify-end gap-0.5 text-[15px] font-bold">
             <Link href="/points" aria-label="Loyalty points" className="flex items-center gap-1"><Star size={14} className="fill-[#f5822a] text-[#f5822a]" aria-hidden /> <span className="tabular-nums">{hidden ? "••••" : points === null ? "--" : fmtPts(points)}</span></Link>
@@ -219,16 +155,9 @@ export default function HomeTop() {
       </div>
 
       <section aria-label="My account" className={`order-1 mt-3 rounded-[1.75rem] border p-3.5 desk:hidden shadow-[0_8px_22px_-14px_rgba(12,11,93,0.5)] ${dark ? "border-[#0c0b5d] bg-gradient-to-br from-[#0c0b5d] via-[#08084a] to-[#050a2b] text-white" : "border-[#dcdcf0] bg-white text-[#14142b]"}`}>
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="flex items-center gap-2 text-base font-semibold leading-tight">
-              <span className="truncate">{registered ? name : "Unique Futsal"}</span>
-              {registered && <Link href="/profile" aria-label="Edit profile" className={dark ? "text-white/80" : "text-[#4b4b66]"}><Pencil size={15} /></Link>}
-            </p>
-            <p className={`mt-0.5 text-sm tabular-nums ${dark ? "text-white/75" : "text-[#6b6b80]"}`}>{session?.registered ? session.phone : site.phone}</p>
-          </div>
+        <div className="flex items-start justify-start gap-3">
           {registered && (
-            <div className="flex shrink-0 items-center gap-1.5 [&>a]:!h-9 [&>a]:!w-9 [&>a]:!rounded-lg [&>button]:!h-9 [&>button]:!w-9 [&>button]:!rounded-lg [&>a]:!bg-[#eaf1ff] [&>button]:!bg-[#eaf1ff] [&>a]:!shadow-none [&>button]:!shadow-none [&>a>svg]:!h-[18px] [&>a>svg]:!w-[18px] [&>button>svg]:!h-[18px] [&>button>svg]:!w-[18px]"><WifiButton /><OrderButton /><RulesButton /><DigitalIdButton /></div>
+            <div className="flex w-full items-stretch gap-2"><WifiButton text="Wi-Fi" /><OrderButton text="Order" /><DigitalIdButton text="Digital ID" /></div>
           )}
         </div>
 
@@ -249,20 +178,18 @@ export default function HomeTop() {
         <TodayCard inCard dark={dark} />
         <LastPlayed embedded dark={dark} />
 
-        {/* the next game: a navy card with an orange accent, so it is the first thing the eye finds */}
-        <div className="relative mt-3 flex items-center justify-between gap-3 overflow-hidden rounded-2xl px-3.5 py-3 shadow-[0_14px_28px_-16px_rgba(12,11,93,0.8)]" style={{ background: "linear-gradient(135deg, #0c0b5d 0%, #1b2090 55%, #3345b0 100%)", color: "#ffffff" }}>
-          <span aria-hidden className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full" style={{ background: "rgba(255,255,255,0.08)" }} />
-          <span aria-hidden className="pointer-events-none absolute -bottom-12 left-16 h-24 w-24 rounded-full" style={{ background: "rgba(245,130,42,0.18)" }} />
+        {/* the next game: a calm solid navy card, white text, no accent colours */}
+        <div className="relative mt-3 flex items-center justify-between gap-3 overflow-hidden rounded-2xl px-3.5 py-3 shadow-[0_10px_22px_-16px_rgba(12,11,93,0.7)]" style={{ background: "#0c0b5d", color: "#ffffff" }}>
           <div className="relative flex min-w-0 items-center gap-3">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl shadow-md" style={{ background: "linear-gradient(135deg, #f5822a, #ff9a4d)", color: "#ffffff" }}><CalendarClock size={22} aria-hidden /></span>
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl" style={{ background: "rgba(255,255,255,0.12)", color: "#ffffff" }}><CalendarClock size={22} aria-hidden /></span>
             <div className="min-w-0">
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: "#ffb273" }}>Next game</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: "rgba(255,255,255,0.65)" }}>Next game</p>
               <p className="mt-0.5 text-[15px] font-bold leading-snug" style={{ color: "#ffffff" }}>
                 {!registered ? "Sign in to book" : next ? <>{dayFmt.format(parseKey(next.date))}, {formatHour(parseInt(next.startTime, 10))}</> : "No game booked"}
               </p>
             </div>
           </div>
-          <Link href={registered ? "/profile/bookings" : "/login"} className="relative inline-flex shrink-0 items-center gap-1 rounded-full px-3.5 py-2 text-sm font-bold shadow-md" style={{ background: "#ffffff", color: "#0c0b5d" }}>
+          <Link href={registered ? "/profile/bookings" : "/login"} className="relative inline-flex shrink-0 items-center gap-1 rounded-full px-3.5 py-2 text-sm font-bold" style={{ background: "#ffffff", color: "#0c0b5d" }}>
             {registered ? "My Games" : "Sign in"} <ChevronDown size={16} aria-hidden />
           </Link>
         </div>
