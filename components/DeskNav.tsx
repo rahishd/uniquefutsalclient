@@ -51,7 +51,7 @@ export default function DeskNav() {
             key={l.href}
             href={l.href}
             aria-current={active ? "page" : undefined}
-            className={`relative whitespace-nowrap rounded-md border-0 px-2.5 py-2 text-xs !bg-transparent transition-colors ${active ? "font-semibold text-white" : "font-medium text-white/70 hover:text-white"}`}
+            className={`relative whitespace-nowrap rounded-md border-0 px-1.5 py-1 text-[12px] !bg-transparent transition-colors ${active ? "font-semibold text-white" : "font-medium text-white/70 hover:text-white"}`}
           >
             {t(l.label)}
           </Link>

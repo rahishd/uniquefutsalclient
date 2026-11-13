@@ -449,7 +449,9 @@ html.dark img.uf-hdr-logo { filter: none; }
 .uf-navy-header.uf-hdr-over a:not(.uf-hdr-orange),
 .uf-navy-header.uf-hdr-over button { color: #ffffff !important; background-color: transparent !important; }
 .uf-navy-header.uf-hdr-over a:not(.uf-hdr-orange) span { color: #ffffff !important; }
-.uf-navy-header.uf-hdr-over .uf-hdr-logo { filter: brightness(0) invert(1); }
+.uf-navy-header.uf-hdr-over .uf-hdr-logo,
+.uf-navy-header.uf-hdr-over .uf-hdr-charity { filter: brightness(0) invert(1); }
+.uf-hdr-charity { transition: filter 0.25s ease; }
 .uf-navy-header.uf-hdr-over .uf-hdr-outline { border-color: #ffffff; }
 .uf-navy-header.uf-hdr-over .uf-nav-glass { background: rgba(255, 255, 255, 0.18) !important; border-color: rgba(255, 255, 255, 0.4) !important; }
 .uf-navy-header.uf-hdr-over .uf-nav-glass[class*="h-0.5"] { background: #ffffff !important; }

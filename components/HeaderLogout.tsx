@@ -23,8 +23,8 @@ export default function HeaderLogout() {
   }
   const here = pathname === "/profile" || pathname.startsWith("/profile/");
   return (
-    <Link href="/profile" aria-current={here ? "page" : undefined} className="uf-hdr-outline hidden items-center gap-1.5 whitespace-nowrap text-[13px] transition-colors desk:flex">
-      <User size={14} aria-hidden /> {t("Profile")}
+    <Link href="/profile" aria-label={t("Profile")} title={t("Profile")} aria-current={here ? "page" : undefined} className="uf-hdr-outline hidden h-9 w-9 items-center justify-center rounded-full transition-colors desk:flex">
+      <User size={18} aria-hidden />
     </Link>
   );
 }

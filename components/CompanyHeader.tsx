@@ -46,6 +46,10 @@ export default function CompanyHeader() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo-mark-navy.png" alt="" aria-hidden className="uf-hdr-logo shrink-0" style={{ "--s": "28px" } as React.CSSProperties} />
             <span className="whitespace-nowrap text-[13px] font-bold uppercase tracking-[0.08em] text-[#0c0b5d]">{site.name}</span>
+            {/* the 3% Charity mark, after the name, with a thin line between (desktop only). No box: it turns white on the dark hero, like the logo beside it. */}
+            <span aria-hidden className="ml-1 hidden h-9 w-px shrink-0 bg-white/50 desk:block" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/charity-3pct.png" alt="3% Charity" className="uf-hdr-charity hidden h-12 w-auto shrink-0 desk:block" />
           </Link>
           <DeskNav />
           <div className="-mr-2 ml-auto flex shrink-0 items-center gap-0 desk:ml-0 desk:gap-1.5"><HeaderPoints plain /><HeaderChat /><span aria-hidden className="mx-1 hidden h-5 w-px bg-[#0c0b5d]/25 desk:block" /><div className="desk:mr-3.5 [&_button[aria-label^=Notifications]]:!h-8 [&_button[aria-label^=Notifications]]:!w-8 [&_button[aria-label^=Notifications]]:!rounded-md [&_button[aria-label^=Notifications]]:!bg-transparent [&_button[aria-label^=Notifications]]:!text-white [&_button[aria-label^=Notifications]]:!shadow-none [&_button[aria-label^=Notifications]]:!ring-0 [&_button[aria-label^=Notifications]]:!border-0 [&_button[aria-label^=Notifications]>svg]:!h-[18px] [&_button[aria-label^=Notifications]>svg]:!w-[18px] [&_.uf-badge-ping]:!h-4 [&_.uf-badge-ping]:!w-4 [&_.uf-badge-blink]:!h-4 [&_.uf-badge-blink]:!min-w-4 [&_.uf-badge-blink]:!px-0.5 [&_.uf-badge-blink]:!text-[9.5px]"><NotificationBell /></div><HeaderLogout /></div>
