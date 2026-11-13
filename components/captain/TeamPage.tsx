@@ -77,7 +77,7 @@ function Roster({ team }: { team: MyTeam }) {
   return (
     <div className="space-y-5 desk:mx-auto desk:max-w-3xl">
       <header>
-        <p className="text-xs font-semibold uppercase tracking-wider text-amber-600">Captain profile</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-red-600">Captain profile</p>
         <h1 className="mt-1 text-2xl font-semibold">{team.name}</h1>
       </header>
 
@@ -113,7 +113,7 @@ function Roster({ team }: { team: MyTeam }) {
                 <div className="min-w-0">
                   <p className="flex items-center gap-2 truncate text-sm font-medium">
                     {m.name}
-                    {isCaptain && <span className="rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-bold text-[#0c0b5d]" title="Captain">C</span>}
+                    {isCaptain && <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white" title="Captain">C</span>}
                   </p>
                   <p className="text-xs text-slate-400">{m.position}</p>
                 </div>

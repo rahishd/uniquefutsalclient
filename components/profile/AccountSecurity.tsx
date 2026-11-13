@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { errorText } from "@/lib/api";
 import { disablePush, enablePush, pushState, type PushState } from "@/lib/push";
 import { changeMyPassword } from "@/lib/google";
-import { enablePasskey, listPasskeys, passkeyCancelled, passkeyName, passkeySupported, removePasskey, type PasskeyRow } from "@/lib/passkey";
 
 function Switch({ checked, onChange, label, disabled }: { checked: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }) {
   return (
@@ -22,23 +21,17 @@ function Switch({ checked, onChange, label, disabled }: { checked: boolean; onCh
   );
 }
 
-// Account settings rows: password, Face ID sign-in and alerts when the app is closed (Web Push).
+// Account settings rows: password and alerts when the app is closed (Web Push). (The Face ID sign-in switch was taken off this page.)
 export default function AccountSecurity() {
   const [push, setPush] = useState<PushState | null>(null);
   const [pushError, setPushError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [pw, setPw] = useState<{ cur: string; next: string } | null>(null);
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const [faceOk, setFaceOk] = useState(false); // this device can use Face ID / fingerprint
-  const [keys, setKeys] = useState<PasskeyRow[] | null>(null);
-  const [faceBusy, setFaceBusy] = useState(false);
-  const [faceError, setFaceError] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
     pushState().then((s) => alive && setPush(s));
-    passkeySupported().then((s) => alive && setFaceOk(s));
-    listPasskeys().then((r) => alive && setKeys(r)).catch(() => {});
     return () => {
       alive = false;
     };
@@ -62,20 +55,6 @@ export default function AccountSecurity() {
     }
   }
 
-  async function toggleFace(on: boolean) {
-    setFaceBusy(true);
-    setFaceError(null);
-    try {
-      if (on) await enablePasskey();
-      else await Promise.all((keys ?? []).map((k) => removePasskey(k.id)));
-    } catch (e) {
-      if (!passkeyCancelled(e)) setFaceError(errorText(e));
-    } finally {
-      setKeys(await listPasskeys().catch(() => keys));
-      setFaceBusy(false);
-    }
-  }
-
   async function savePw() {
     if (!pw) return;
     setPwMsg(null);
@@ -93,6 +72,18 @@ export default function AccountSecurity() {
       <li>
         <div className="flex items-center justify-between gap-4">
           <span>
+            Alerts when the app is closed
+            <span className="block text-xs text-slate-400">Booking, payment and game reminders on this phone. On iPhone, add the app to your Home Screen first.</span>
+          </span>
+          <Switch checked={push === "on"} disabled={busy || push === null || push === "unsupported"} onChange={togglePush} label="Alerts when the app is closed" />
+        </div>
+        {push === "unsupported" && <p className="mt-1 text-xs text-slate-400">This browser cannot receive them.</p>}
+        {push === "denied" && <p className="mt-1 text-xs text-amber-600">Blocked. Allow notifications for this site in your browser settings.</p>}
+        {pushError && <p role="alert" className="mt-1 text-xs text-rose-600">{pushError}</p>}
+      </li>
+      <li>
+        <div className="flex items-center justify-between gap-4">
+          <span>
             Password
             <span className="block text-xs text-slate-400">Forgot your current password? Contact the admin and they will set a new one for you.</span>
           </span>
@@ -106,30 +97,6 @@ export default function AccountSecurity() {
           </div>
         )}
         {pwMsg && <p role="alert" className={`mt-1 text-xs ${pwMsg.ok ? "text-brand" : "text-rose-600"}`}>{pwMsg.text}</p>}
-      </li>
-      <li>
-        <div className="flex items-center justify-between gap-4">
-          <span>
-            {passkeyName()} sign-in
-            <span className="block text-xs text-slate-400">Sign in without typing your password. Turn it on while signed in; it works on this device only.</span>
-          </span>
-          <Switch checked={(keys?.length ?? 0) > 0} disabled={faceBusy || keys === null || !faceOk} onChange={toggleFace} label={`${passkeyName()} sign-in`} />
-        </div>
-        {keys && keys.length > 0 && <p className="mt-1 text-xs text-slate-400">On for: {keys.map((k) => k.deviceName || "a device").join(", ")}. Turning it off removes it from every device.</p>}
-        {!faceOk && <p className="mt-1 text-xs text-slate-400">This device or browser does not support it.</p>}
-        {faceError && <p role="alert" className="mt-1 text-xs text-rose-600">{faceError}</p>}
-      </li>
-      <li>
-        <div className="flex items-center justify-between gap-4">
-          <span>
-            Alerts when the app is closed
-            <span className="block text-xs text-slate-400">Booking, payment and game reminders on this phone. On iPhone, add the app to your Home Screen first.</span>
-          </span>
-          <Switch checked={push === "on"} disabled={busy || push === null || push === "unsupported"} onChange={togglePush} label="Alerts when the app is closed" />
-        </div>
-        {push === "unsupported" && <p className="mt-1 text-xs text-slate-400">This browser cannot receive them.</p>}
-        {push === "denied" && <p className="mt-1 text-xs text-amber-600">Blocked. Allow notifications for this site in your browser settings.</p>}
-        {pushError && <p role="alert" className="mt-1 text-xs text-rose-600">{pushError}</p>}
       </li>
     </>
   );

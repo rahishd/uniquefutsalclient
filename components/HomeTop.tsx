@@ -132,6 +132,12 @@ export default function HomeTop() {
           <span className="truncate text-[17px] font-extrabold uppercase leading-none tracking-tight text-[#0c0b5d]">Unique Futsal</span>
         </div>
         <div className="flex shrink-0 items-center gap-2.5 [&_button[aria-label^=Notifications]]:!h-11 [&_button[aria-label^=Notifications]]:!w-11 [&_button[aria-label^=Notifications]]:!bg-white [&_button[aria-label^=Notifications]]:!shadow-none [&_button[aria-label^=Notifications]]:!ring-0">
+          {/* a captain: the round "(C)" badge, the same size as the bell, just left of it */}
+          {captain && (
+            <span role="img" aria-label="Captain" title="Captain" className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-red-300 bg-red-100">
+              <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full bg-red-500 text-sm font-extrabold leading-none text-white">C</span>
+            </span>
+          )}
           <NotificationBell />
         </div>
       </div>
@@ -142,7 +148,7 @@ export default function HomeTop() {
             <span className="truncate">{name}</span>
             {registered && <Link href="/profile" aria-label="Edit profile" className="text-[#4b4b66]"><Pencil size={14} /></Link>}
           </p>
-          <p className="mt-0.5 text-sm tabular-nums text-[#6b6b80]">{session?.registered ? session.phone : ""}</p>
+          <p className="mt-0.5 text-sm tabular-nums text-[#6b6b80]">{session?.registered ? (hidden ? "••••••••••" : session.phone) : ""}</p>
         </div>
         <div className="shrink-0 text-right leading-none text-[#0c0b5d]">
           <div className="flex items-center justify-end gap-0.5 text-[15px] font-bold">
@@ -161,11 +167,10 @@ export default function HomeTop() {
           )}
         </div>
 
-        {(vip || captain || member) && (
+        {(vip || member) && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             {vip && <span className="rounded-full border border-amber-300 bg-amber-100 px-3.5 py-1 text-base text-amber-800">VIP</span>}
-            {captain && <span className="rounded-full border border-amber-300 bg-amber-100 px-3.5 py-1 text-base text-amber-800">Captain</span>}
             {member && <span className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-3.5 py-1 text-base text-indigo-800"><BadgeCheck size={15} aria-hidden /> Club</span>}
           </div>
         </div>
@@ -174,11 +179,13 @@ export default function HomeTop() {
         {/* the weather and date, then the last games, inside the card (desktop shows them as their own cards, see HomeScreen) */}
         {/* the venue banner first (desktop shows it as the hero instead), the weather and date just under it */}
         <div className="relative -mx-3.5 mt-3 overflow-hidden desk:hidden"><MobileHero /></div>
-        <LiveMatchStrip className="mt-3 desk:hidden" />
         <TodayCard inCard dark={dark} />
         <LastPlayed embedded dark={dark} />
+        {/* the live match, just below the last played tiles (only while a match is live) */}
+        <LiveMatchStrip className="mt-3 desk:hidden" />
 
-        {/* the next game: a calm solid navy card, white text, no accent colours */}
+        {/* the next game: a calm solid navy card, white text, no accent colours. Only when there is a next game: with none, nothing shows here (the "Book again" card is further down) */}
+        {next && (
         <div className="relative mt-3 flex items-center justify-between gap-3 overflow-hidden rounded-2xl px-3.5 py-3 shadow-[0_10px_22px_-16px_rgba(12,11,93,0.7)]" style={{ background: "#0c0b5d", color: "#ffffff" }}>
           <div className="relative flex min-w-0 items-center gap-3">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl" style={{ background: "rgba(255,255,255,0.12)", color: "#ffffff" }}><CalendarClock size={22} aria-hidden /></span>
@@ -193,6 +200,7 @@ export default function HomeTop() {
             {registered ? "My Games" : "Sign in"} <ChevronDown size={16} aria-hidden />
           </Link>
         </div>
+        )}
       </section>
     </div>
   );

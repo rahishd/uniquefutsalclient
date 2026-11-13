@@ -9,7 +9,7 @@ import { errorText } from "@/lib/api";
 import { openSignIn, signOut, useSession } from "@/lib/session";
 import { useTeams } from "@/lib/teams";
 import { setPref, usePrefs } from "@/lib/prefs";
-import { useLang, useT, type Lang } from "@/lib/i18n";
+import { useT } from "@/lib/i18n";
 import { fmtPts } from "@/lib/points";
 import { loyaltyStore } from "@/lib/loyalty";
 import { POSITIONS, profileStore, removeAvatar, saveProfile, squarePhoto, uploadAvatar } from "@/lib/profile";
@@ -95,7 +95,6 @@ function RegisteredProfile() {
   const membership = myMembershipStore.use().data?.current ?? null;
   const prefs = usePrefs();
   const t = useT();
-  const [lang, setLang] = useLang();
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({ name: "", email: "", location: "", position: "", dob: "" });
@@ -270,16 +269,11 @@ function RegisteredProfile() {
       </>)}
 
       {/* Settings */}
-      <DropCard id="sec-settings" title={t("Settings")} summary="Reminders, alerts, password and language" icon={<SettingsIcon size={20} className="text-brand" />} open={settingsOpen} onToggle={() => setSettingsOpen((o) => !o)}>
+      <DropCard id="sec-settings" title={t("Settings")} summary="Reminders, alerts and password" icon={<SettingsIcon size={20} className="text-brand" />} open={settingsOpen} onToggle={() => setSettingsOpen((o) => !o)}>
         <ul className="space-y-4 text-sm">
           <li className="flex items-center justify-between gap-4"><span>{t("Pop-up reminder")}<span className="block text-xs text-slate-400">Full-screen slider 1 hour before your game, to tell the venue &ldquo;I&apos;m coming&rdquo;</span></span><Switch checked={prefs.popup} onChange={(v) => setPref("popup", v)} label="Pop-up reminder, 1 hour before your game" /></li>
           <li className="flex items-center justify-between gap-4"><span>{t("Promotional notifications")}<span className="block text-xs text-slate-400">{t("Offers and tournaments")}</span></span><Switch checked={prefs.promos} onChange={(v) => setPref("promos", v)} label="Promotional notifications" /></li>
           <AccountSecurity />
-          <li className="flex items-center justify-between gap-4"><label htmlFor="lang">{t("Language")}</label>
-            <select id="lang" value={lang} onChange={(e) => setLang(e.target.value as Lang)} className="rounded-xl bg-white/70 px-3 py-2 text-sm outline-none ring-1 ring-white/80">
-              <option value="en">English</option><option value="ne">नेपाली</option>
-            </select>
-          </li>
         </ul>
       </DropCard>
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { RotateCw, Radio, X } from "lucide-react";
 import { tournamentStore, type TieMatch } from "@/lib/tournament";
 
@@ -52,7 +53,7 @@ function Player({ match, tournament, onClose }: { match: TieMatch; tournament: s
     : { position: "fixed", inset: 0 };
 
   return createPortal(
-    <div role="dialog" aria-modal="true" aria-label={`Live: ${tournament}`} className="z-[100] flex flex-col bg-black text-white" style={{ ...frame, zIndex: 100 }}>
+    <div role="dialog" aria-modal="true" aria-label={`Live: ${tournament}`} onClick={(e) => e.stopPropagation()} className="z-[100] flex flex-col bg-black text-white" style={{ ...frame, zIndex: 100 }}>
       <div className="flex shrink-0 items-center gap-2 bg-gradient-to-b from-black/80 to-transparent px-3 py-2">
         <span className="flex min-w-0 items-center gap-2 text-xs font-bold">
           <span className="rounded bg-rose-600 px-1.5 py-0.5 text-[10px] uppercase tracking-wider">Live</span>
@@ -87,29 +88,30 @@ function Player({ match, tournament, onClose }: { match: TieMatch; tournament: s
 export default function LiveMatchStrip({ className = "" }: { className?: string }) {
   const t = tournamentStore.use().data ?? null;
   const [playing, setPlaying] = useState(false);
+  const router = useRouter();
   // a match counts as live when the venue marked it live, or when the organizer added its Facebook Live video (and it is not finished)
   const live = t?.rounds.flatMap((r) => r.matches).filter((m) => m.status === "live" || (m.status !== "finished" && !!m.liveUrl)) ?? [];
   if (!t || live.length === 0) return null;
   const m = live.find((x) => x.status === "live" && x.liveUrl) ?? live.find((x) => x.liveUrl) ?? live[0];
-  const watch = "flex shrink-0 items-center gap-1 rounded-full bg-gradient-to-b from-rose-500 to-rose-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-[0_4px_10px_-3px_rgba(225,29,72,0.7)] transition active:scale-95";
+  const watch = "flex shrink-0 items-center gap-1 rounded-full border border-slate-200 px-2.5 py-1 text-[11px] font-semibold text-[#0c0b5d] transition active:scale-95";
   return (
-    <section aria-label="Live match" className={`uf-live-card overflow-hidden rounded-2xl bg-gradient-to-br from-rose-50 via-white to-rose-50 px-3 py-2.5 ${className}`}>
+    <section aria-label="Live match" role="link" tabIndex={0} title="See this match's goals" onClick={() => router.push(`/tournaments#live-${m.id}`)} onKeyDown={(e) => { if (e.key === "Enter") router.push(`/tournaments#live-${m.id}`); }} className={`uf-live-card cursor-pointer overflow-hidden rounded-2xl px-3 py-2.5 ${className}`} style={{ background: "#ffffff" }}>
       <div className="flex items-center gap-2">
-        <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-rose-600 py-0.5 pl-1.5 pr-2 text-[10px] font-extrabold uppercase tracking-wider text-white">
-          <span className="relative flex h-1.5 w-1.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75 motion-reduce:animate-none" /><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" /></span>
+        <span className="flex shrink-0 items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-rose-600">
+          <span className="relative flex h-1.5 w-1.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75 motion-reduce:animate-none" /><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-500" /></span>
           Live{live.length > 1 ? ` · ${live.length}` : ""}
         </span>
         <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-slate-500">{t.name}</span>
         {m.liveUrl ? (
-          <button type="button" onClick={() => setPlaying(true)} className={watch}><Radio size={12} aria-hidden /> Watch live</button>
+          <button type="button" onClick={(e) => { e.stopPropagation(); setPlaying(true); }} className={watch}><Radio size={12} aria-hidden className="text-rose-500" /> Watch live</button>
         ) : (
-          <Link href="/tournaments" className={watch}><Radio size={12} aria-hidden /> Watch live</Link>
+          <Link href={`/tournaments#live-${m.id}`} onClick={(e) => e.stopPropagation()} className={watch}><Radio size={12} aria-hidden className="text-rose-500" /> Watch live</Link>
         )}
       </div>
       <p className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-[#0c0b5d]">
-        <span className="truncate text-right text-[13px] font-bold">{m.home ?? "To be decided"}</span>
-        <span className="rounded-lg bg-[#0c0b5d] px-2.5 py-0.5 text-base font-extrabold tabular-nums text-white">{score(m.homeScore)} <span className="text-white/50">-</span> {score(m.awayScore)}</span>
-        <span className="truncate text-[13px] font-bold">{m.away ?? "To be decided"}</span>
+        <span className="truncate text-right text-[13px] font-semibold">{m.home ?? "To be decided"}</span>
+        <span className="rounded-md bg-slate-100 px-2.5 py-0.5 text-base font-bold tabular-nums text-[#0c0b5d]">{score(m.homeScore)} <span className="text-slate-400">–</span> {score(m.awayScore)}</span>
+        <span className="truncate text-[13px] font-semibold">{m.away ?? "To be decided"}</span>
       </p>
       {playing && m.liveUrl && <Player match={m} tournament={t.name} onClose={() => setPlaying(false)} />}
     </section>

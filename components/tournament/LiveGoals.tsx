@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { CalendarClock, Radio } from "lucide-react";
 import { matchTime, type TieGoal, type TieMatch, type TieRound } from "@/lib/tournament";
 
@@ -28,7 +29,7 @@ function Scorers({ goals, side }: { goals: TieGoal[]; side: "home" | "away" }) {
 function Scoreboard({ m }: { m: RM }) {
   const goals = m.goals ?? [];
   return (
-    <article className="overflow-hidden rounded-3xl border border-rose-100 bg-white shadow-[0_10px_30px_-18px_rgba(225,29,72,0.45)]">
+    <article id={`live-${m.id}`} className="scroll-mt-24 overflow-hidden rounded-3xl border border-rose-100 bg-white shadow-[0_10px_30px_-18px_rgba(225,29,72,0.45)]">
       <div className="flex items-center justify-between bg-rose-50 px-5 py-2.5">
         <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-rose-600">
           <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" /><span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" /></span>
@@ -59,10 +60,23 @@ export default function LiveGoals({ rounds }: { rounds: TieRound[] }) {
   const all = flat(rounds);
   const live = all.filter((m) => m.status === "live");
   const next = all.filter((m) => m.status === "upcoming" && m.home && m.away).sort((a, b) => String(a.startsAt ?? "").localeCompare(String(b.startsAt ?? "")))[0];
+  // opened from the live card on Home (/tournaments#live-<match id>): scroll to that match's scoreboard and flash it once
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (!id.startsWith("live-")) return;
+    const t = setTimeout(() => {
+      const el = document.getElementById(id) ?? document.getElementById("live-goal-status");
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("ring-2", "ring-rose-300");
+      setTimeout(() => el.classList.remove("ring-2", "ring-rose-300"), 2200);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [rounds]);
   const last = [...all].filter((m) => m.status === "finished").sort((a, b) => String(b.startsAt ?? "").localeCompare(String(a.startsAt ?? "")))[0];
 
   return (
-    <section aria-label="Live goal status" className="mt-8">
+    <section id="live-goal-status" aria-label="Live goal status" className="mt-8 scroll-mt-24">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-lg font-bold text-slate-900">Live goal status</h2>
         {live.length > 0 && <span className="rounded-full bg-rose-500 px-2.5 py-0.5 text-[11px] font-bold text-white">{live.length} live</span>}

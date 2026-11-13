@@ -20,7 +20,7 @@ export function ModeToggle() {
           onClick={() => void setMode(m)}
           className={`flex items-center justify-center gap-2 rounded-full py-2.5 ${(m === "captain") === captain ? "glass-active text-white" : "text-slate-500"}`}
         >
-          {m === "captain" && <span aria-hidden className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-[9px] font-bold text-[#0c0b5d]">C</span>}
+          {m === "captain" && <span aria-hidden className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold" style={{ color: "#ffffff" }}>C</span>}
           {m === "player" ? "Player profile" : "Captain profile"}
         </button>
       ))}
@@ -51,7 +51,7 @@ export function CaptainSummary() {
   return (
     <section aria-label="Captain profile" className="space-y-4">
       <div className="rounded-3xl bg-gradient-to-br from-[#0c0b5d] via-[#16167f] to-[#2a2aa8] p-5 text-white shadow-[0_10px_30px_rgba(12,11,93,0.35)]">
-        <p className="text-xs font-semibold uppercase tracking-wider text-amber-300">Captain</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-red-300">Captain</p>
         <h2 className="mt-1 text-xl font-semibold">{team.name}</h2>
         <div className="mt-3 flex items-center justify-between">
           <span className="rounded-2xl bg-white px-3 py-1.5"><Stars rating={team.rating} size={16} /></span>
