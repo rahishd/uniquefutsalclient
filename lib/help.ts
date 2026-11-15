@@ -26,7 +26,7 @@ export const helpTopics: HelpTopic[] = [
     summary: "The bottom bar, Quick Access and the buttons at the top.",
     points: [
       "The bottom bar has Home, Gamezone, Book Now, Chat and Profile.",
-      "Quick Access on Home opens everything else: Opponent, Find Player, Unique Club, Membership, Points, My stats, Tournaments, Promos, Complaints, Wheelchair Request, Children's Academy, Refer & Earn and Help. A small red New tag marks features you have not opened yet; it goes away once you have used the app a few times.",
+      "Quick Access on Home opens everything else: Opponent, Find Player, Unique Club, Membership, Points, Tournaments, Promos, Complaints, Wheelchair Request, Children's Academy, Refer & Earn and Help. A small red New tag marks features you have not opened yet; it goes away once you have used the app a few times.",
       "At the top: the moon or sun switches dark mode, NP or EN switches the language, and the bell shows your notifications.",
       "Next to your name, the round buttons give you quick tools: your Digital ID (QR), Order drinks and snacks, the venue Wi-Fi, the Rules and Regulations, your Health tracker, and a WhatsApp button to reach the venue. A red number appears on the Chat tab when someone messages you.",
       "Further down Home you will find our promo codes, tournaments, our corporate network, what makes us unique and a message from the founder.",
@@ -193,20 +193,6 @@ export const helpTopics: HelpTopic[] = [
       "The points go into your Unique Futsal loyalty balance and last 3 months. Guests can play practice games without points.",
     ],
     href: { label: "Play Goal Rush", to: "/goal-rush" },
-  },
-  {
-    id: "watch-earn",
-    icon: "points",
-    title: "Watch & Earn: ads for loyalty points",
-    summary: "Watch ads and earn loyalty points: 40 ads (10 minutes) = 1 point.",
-    points: [
-      "Open Quick Access > Watch & Earn and tap View Ads. You need to be signed in.",
-      "Ads play one after another, 15 seconds each, and the next one starts by itself. Tap Stop when you are done.",
-      "Every 40 ads you watch (10 minutes) earns 1 loyalty point. The bar shows how many ads are left for the next point.",
-      "An ad only counts once its full 15 seconds are done and while the screen is open. If you leave the screen, it pauses.",
-      "The points go into your Unique Futsal loyalty balance and last 1 year.",
-    ],
-    href: { label: "Watch & Earn", to: "/watch-earn" },
   },
   {
     id: "points",

@@ -32,7 +32,6 @@ import { chatRouter } from "../modules/chat";
 import { playerRequestRouter } from "../modules/playerrequest";
 import { clubRouter } from "../modules/club";
 import { goalRushRouter } from "../modules/goalrush";
-import { watchEarnRouter } from "../modules/watchearn";
 import { academyRouter } from "../modules/academy";
 import { referRouter } from "../modules/refer";
 import { healthRouter } from "../modules/health";
@@ -82,7 +81,6 @@ router.use("/chat", chatRouter);
 router.use("/player-requests", playerRequestRouter);
 router.use("/club", clubRouter);
 router.use("/goal-rush", goalRushRouter);
-router.use("/watch-earn", watchEarnRouter);
 router.use("/academy", academyRouter);
 router.use("/refer", referRouter);
 router.use("/wellness", healthRouter); // the player health tracker (not /health, which is the server uptime check)

@@ -1277,29 +1277,6 @@ model DocVerification {
   @@index([kind, createdAt])
 }
 
-// Watch & Earn: a customer watches ads one after another. Each ad must run its full 15 seconds (the server times it);
-// every 40 counted ads (10 minutes) write 1 loyalty point (a LoyaltyEntry of kind watch_earn, one per block of 40).
-model WatchEarnView {
-  id        String    @id @default(cuid())
-  userId    String // User.phoneNumber
-  adId      String? // the ad that was shown, for the record
-  day       String // YYYY-MM-DD (Nepal time)
-  status    String    @default("active") // active | counted | abandoned
-  startedAt DateTime  @default(now())
-  countedAt DateTime?
-
-  @@index([userId, status])
-  @@index([userId, day])
-  @@index([status, startedAt])
-}
-
-model WatchEarnStat {
-  userId    String   @id
-  views     Int      @default(0) // ads counted, all time
-  points    Int      @default(0) // points written so far (views / 40, rounded down)
-  updatedAt DateTime @default(now()) @updatedAt
-}
-
 // A phone's Face ID / fingerprint / screen-lock key for signing in without typing the password (WebAuthn passkey).
 // Only the public half is stored here; the private key never leaves the person's device.
 model Passkey {

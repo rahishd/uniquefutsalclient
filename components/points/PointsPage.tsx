@@ -9,8 +9,7 @@ import SendPdfButton from "@/components/SendPdfButton";
 import { pdfFileName, type PdfSpec } from "@/lib/branded-pdf";
 import { useSession, openSignIn } from "@/lib/session";
 import { errorText } from "@/lib/api";
-import { GAME_RS_PER_POINT, GOODS_DAILY_MAX_POINTS, GZ_POINTS_PER_HOUR, GAME_POINTS_MONTHS, MEMBERSHIP_POINTS, POINTS_CAPTAIN_WIN, REFERRAL_POINTS, RS_PER_POINT, SHIFT_HOURS, WATCH_POINTS_MONTHS, fmtPts } from "@/lib/points";
-import { RULES as WE_RULES, watchEarnStore } from "@/lib/watchearn";
+import { GAME_RS_PER_POINT, GOODS_DAILY_MAX_POINTS, GZ_POINTS_PER_HOUR, GAME_POINTS_MONTHS, MEMBERSHIP_POINTS, POINTS_CAPTAIN_WIN, REFERRAL_POINTS, RS_PER_POINT, SHIFT_HOURS, fmtPts } from "@/lib/points";
 import { RULES as GR_RULES, goalRushStore } from "@/lib/goalrush";
 import { FALLBACK_SHARE, cancelVoucher, claimFreeGame, loyaltyStore, progressPct, type LoyaltyRow, type Period } from "@/lib/loyalty";
 import { OfferCard } from "@/components/points/OfferCard";
@@ -49,7 +48,6 @@ function Validity({ row }: { row: LoyaltyRow }) {
 export default function PointsPage() {
   const session = useSession();
   const store = loyaltyStore.use();
-  const we = watchEarnStore.use().data ?? null;
   const gr = goalRushStore.use().data ?? null;
   const [all, setAll] = useState(false);
   // a notice opens its own row; the history shows only the latest few, so open the whole list if the row is further down
@@ -178,7 +176,6 @@ export default function PointsPage() {
             note: "Points are only ever shared from your own account. Nothing is taken from you without your tap.",
           });
           const ways = [
-            { Icon: Clapperboard, title: "Watch ads", sub: "Earn points in Watch & Earn", to: "/watch-earn" },
             { Icon: Goal, title: "Play games", sub: "Score goals in Goal Rush", to: "/goal-rush" },
             { Icon: CalendarDays, title: "Book courts", sub: "Earn on every futsal game", to: "/book" },
             { Icon: Gamepad2, title: "GameZone", sub: "Earn for every hour you play", to: "/gamezone" },
@@ -293,19 +290,10 @@ export default function PointsPage() {
         </div>
       </section>
 
-      {/* Scores: Watch & Earn and Goal Rush */}
+      {/* Scores: Goal Rush */}
       <section className="glass rounded-3xl p-5 desk:col-span-2" aria-label="Your scores">
         <h2 className="text-base font-semibold">Your scores</h2>
         <div className="mt-3 grid gap-3 desk:grid-cols-2">
-          <div className="rounded-2xl bg-white/60 p-4">
-            <p className="flex items-center gap-2 text-sm font-semibold"><Clapperboard size={18} className="text-sky-600" /> Watch &amp; Earn</p>
-            <p className="mt-2 text-2xl font-semibold">{we?.adsTowardNext ?? 0}<span className="text-sm font-normal text-slate-500"> / {WE_RULES.adsPerPoint} ads to the next point</span></p>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-valuemin={0} aria-valuemax={WE_RULES.adsPerPoint} aria-valuenow={we?.adsTowardNext ?? 0} aria-label="Ads towards the next Watch and Earn point">
-              <div className="h-full rounded-full bg-sky-500" style={{ width: `${Math.min(100, ((we?.adsTowardNext ?? 0) / WE_RULES.adsPerPoint) * 100)}%` }} />
-            </div>
-            <p className="mt-2 text-xs text-slate-500">{we?.pointsEarned ?? 0} points earned · {we?.todayViews ?? 0} ads today · {we?.totalViews ?? 0} ads in all</p>
-            <Link href="/watch-earn" className="mt-3 inline-flex text-xs font-semibold text-brand">Watch ads</Link>
-          </div>
           <div className="rounded-2xl bg-white/60 p-4">
             <p className="flex items-center gap-2 text-sm font-semibold"><Goal size={18} className="text-emerald-600" /> Unique Goal Rush</p>
             <p className="mt-2 text-2xl font-semibold">{gr?.allowance.pointsToday ?? 0}<span className="text-sm font-normal text-slate-500"> / {GR_RULES.maxPointsPerDay} points today</span></p>
@@ -325,7 +313,6 @@ export default function PointsPage() {
           <li className="flex gap-3"><ShoppingBag size={20} className="mt-0.5 shrink-0 text-sky-600" /><span>Add-on items: every <b>Rs. {RS_PER_POINT}</b> spent = <b>1 point</b> (Rs. 550 = 5.5 points). Items earn at most <b>{GOODS_DAILY_MAX_POINTS} points a day</b> (Rs. {(GOODS_DAILY_MAX_POINTS * RS_PER_POINT).toLocaleString("en-IN")}); anything more that day earns no extra.</span></li>
           <li className="flex gap-3"><HeartHandshake size={20} className="mt-0.5 shrink-0 text-pink-500" /><span><b>Refer &amp; Earn:</b> book a game for another team and you both get <b>{REFERRAL_POINTS} points</b> when the venue approves it. The other team must have an account; if not, nobody gets points.</span></li>
           <li className="flex gap-3"><Crown size={20} className="mt-0.5 shrink-0 text-violet-600" /><span>Membership purchase or renewal: <b>3 months = {MEMBERSHIP_POINTS.quarterly} points</b>, <b>6 months = {MEMBERSHIP_POINTS.half} points</b>.</span></li>
-          <li className="flex gap-3"><Clapperboard size={20} className="mt-0.5 shrink-0 text-sky-600" /><span><b>Watch &amp; Earn:</b> watch ads in Quick Access. Each ad is {WE_RULES.adSeconds} seconds, and <b>{WE_RULES.adsPerPoint} ads ({WE_RULES.minutesPerPoint} minutes) = 1 point</b>.</span></li>
           <li className="flex gap-3"><Goal size={20} className="mt-0.5 shrink-0 text-emerald-600" /><span><b>Unique Goal Rush:</b> score {GR_RULES.goalsToQualify} or more of {GR_RULES.shotsPerGame} penalties to win 1 point, up to {GR_RULES.gamesPerDay} games a day.</span></li>
           <li className="flex gap-3"><Trophy size={20} className="mt-0.5 shrink-0 text-amber-600" /><span>Challenge games: only the <b>winning captain</b> earns <b>{POINTS_CAPTAIN_WIN} points</b>.</span></li>
           <li className="flex gap-3"><Send size={20} className="mt-0.5 shrink-0 text-brand" /><span><b>Share points:</b> once you have at least {(loy.share ?? FALLBACK_SHARE).minBalance} points you can send whole points to a friend who has an account, up to {(loy.share ?? FALLBACK_SHARE).max} points at a time. They keep their expiry date, and sent points can&apos;t be taken back.</span></li>
@@ -338,7 +325,6 @@ export default function PointsPage() {
         <ul className="mt-3 divide-y divide-white/70 text-sm">
           {[
             { label: "Game points", rule: `${GAME_POINTS_MONTHS} months from the game`, b: loy.byType.games },
-            { label: "Watch & Earn", rule: `${WATCH_POINTS_MONTHS / 12} year from the day you earn it`, b: loy.byType.watch ?? { points: 0, nextExpiry: null } },
             { label: "Extra goods", rule: "1 year from purchase", b: loy.byType.goods },
             { label: "Membership", rule: "Never expire", b: loy.byType.membership },
             { label: "Shared with you", rule: "Keep the expiry they had", b: loy.byType.shared ?? { points: 0, nextExpiry: null } },
@@ -412,8 +398,7 @@ export default function PointsPage() {
         <ul className="mt-2 list-disc space-y-1.5 pl-4">
           <li>Points are earned only by the registered account holder (the main person). Guests don&apos;t earn points.</li>
           <li>Game points last {GAME_POINTS_MONTHS} months. Points not used in time expire.</li>
-          <li>Extra goods points and Watch &amp; Earn points last 1 year. Membership points never expire.</li>
-          <li>Watch &amp; Earn: an ad counts only after its full {WE_RULES.adSeconds} seconds while the screen is open, and {WE_RULES.adsPerPoint} counted ads give 1 point.</li>
+          <li>Extra goods points last 1 year. Membership points never expire.</li>
           <li>A free game is for one regular booking in the shift you chose. It can&apos;t be used to host a challenge and has no cash value.</li>
           <li>The final points are confirmed by Unique Futsal after the game or payment.</li>
         </ul>

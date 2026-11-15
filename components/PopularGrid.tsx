@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Accessibility, BarChart3, CalendarDays, Clapperboard, ChevronRight, CircleHelp, Crown, Gamepad2, Gift, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, UserSearch, Zap, BadgeCheck, Lock, ShieldCheck, ShieldPlus , Store } from "lucide-react";
+import { Accessibility, ChevronRight, CircleHelp, Crown, Gift, GraduationCap, HeartHandshake, MessageSquareWarning, Star, Swords, Tag, Trophy, UserSearch, Zap, BadgeCheck, Lock, ShieldCheck, ShieldPlus , Store } from "lucide-react";
 import EvCarIcon from "@/components/ev/EvCarIcon";
 import { markReadByTypes, noticesStore, type NoticeType } from "@/lib/notifications";
 import { partnersStore } from "@/lib/marketplace";
@@ -30,22 +30,20 @@ const DESK_TILES = 10;
 // (EV Charging is also left out of the desktop row)
 const IN_DESK_NAV = new Set(["/", "/book", "/opponent", "/gamezone", "/member", "/tournaments", "/points", "/profile", "/ev"]);
 
+// Book and Gamezone are not tiles any more (they have their own buttons in the bottom bar and the top bar). The first row: Find Player, Opponent, Unique Club, Promos;
+// Points starts the second row (a live partner tile goes right after it).
 const TILES: Tile[] = [
-  { label: "Book", href: "/book", icon: CalendarDays, tone: "text-brand", types: ["booking", "reminder", "payment"] },
-  { label: "Gamezone", href: "/gamezone", icon: Gamepad2, tone: "text-brand", types: ["gamezone"] },
-  { label: "Opponent", href: "/opponent", icon: Swords, tone: "text-brand", actions: true },
   { label: "Find Player", href: "/find-player", icon: UserSearch, tone: "text-brand", types: ["players"] },
-  { label: "Refer & Earn", href: "/refer", icon: HeartHandshake, tone: "text-brand", types: ["referral"] },
-  { label: "Watch & Earn", href: "/watch-earn", icon: Clapperboard, tone: "text-brand" },
-  { label: "Gift Card", href: "/gift-card", icon: Gift, tone: "text-brand" },
-  { label: "Points", href: "/points", icon: Star, tone: "text-brand", types: ["points"] },
+  { label: "Opponent", href: "/opponent", icon: Swords, tone: "text-brand", actions: true },
   { label: "Unique Club", href: "/club", icon: BadgeCheck, tone: "text-brand" },
+  { label: "Promos", href: "/promos", icon: Tag, tone: "text-brand", types: ["promo"] },
+  { label: "Points", href: "/points", icon: Star, tone: "text-brand", types: ["points"] },
+  { label: "Refer & Earn", href: "/refer", icon: HeartHandshake, tone: "text-brand", types: ["referral"] },
+  { label: "Gift Card", href: "/gift-card", icon: Gift, tone: "text-brand" },
   { label: "Membership", href: "/member", icon: Crown, tone: "text-brand", types: ["membership"] },
   { label: "Children's Academy", href: "/academy", icon: GraduationCap, tone: "text-brand", types: ["academy"] },
   { label: "Tournaments", href: "/tournaments", icon: Trophy, tone: "text-brand", types: ["tournament"] },
   { label: "Complaints", href: "/complaints", icon: MessageSquareWarning, tone: "text-brand", types: ["complaint"] },
-  { label: "Promos", href: "/promos", icon: Tag, tone: "text-brand", types: ["promo"] },
-  { label: "My stats", href: "/profile", icon: BarChart3, tone: "text-brand" },
   { label: "Help", href: "/help", icon: CircleHelp, tone: "text-brand" },
   { label: "EV Charging", href: "/ev", icon: EvCarIcon, tone: "text-brand" },
   { label: "Claim Insurance", href: "/insurance", icon: ShieldPlus, tone: "text-brand", types: ["insurance"] },
@@ -103,14 +101,14 @@ export default function PopularGrid() {
         </div>
       )}
       {/* desktop: the tiles fill two rows across the whole width (9 + 8 for 17 tiles, 10 + 10 for 20) */}
-      <ul style={{ "--qa-cols": deskCols } as React.CSSProperties} className="mt-4 grid grid-cols-4 gap-x-3 gap-y-5 desk:[grid-template-columns:repeat(var(--qa-cols),minmax(0,1fr))] desk:gap-x-4 desk:gap-y-6">
+      <ul style={{ "--qa-cols": deskCols } as React.CSSProperties} className="mt-4 grid grid-cols-4 gap-x-4 gap-y-6 tab:gap-x-5 tab:gap-y-6 desk:[grid-template-columns:repeat(var(--qa-cols),minmax(0,1fr))] desk:gap-x-4 desk:gap-y-6">
         {tiles.map((t) => {
           const count = countFor(t);
           const Icon = t.icon;
           const locked = guest && !GUEST_OK.has(t.href);
           const face = (
             <>
-              <span className={`${!locked && count > 0 ? "uf-tile-blink " : ""}relative flex h-[70px] w-[70px] items-center justify-center rounded-[22px] bg-[#dbeafe] shadow-[0_6px_14px_-10px_rgba(59,130,246,0.6)] ring-1 ring-[#bfd7ff] transition-transform group-active:scale-95 desk:h-24 desk:w-24 desk:group-hover:-translate-y-1 ${locked ? "opacity-60" : ""}`}>
+              <span className={`${!locked && count > 0 ? "uf-tile-blink " : ""}relative flex aspect-square w-full max-w-[70px] items-center justify-center rounded-[22px] desk:max-w-none bg-[#dbeafe] shadow-[0_6px_14px_-10px_rgba(59,130,246,0.6)] ring-1 ring-[#bfd7ff] transition-transform group-active:scale-95 desk:h-24 desk:w-24 desk:group-hover:-translate-y-1 ${locked ? "opacity-60" : ""}`}>
                 <Icon className={`${t.tone} h-[30px] w-[30px] desk:h-10 desk:w-10`} />
                 {locked && (
                   <span aria-hidden className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-slate-700 text-white shadow ring-2 ring-white">
@@ -131,7 +129,7 @@ export default function PopularGrid() {
                   </span>
                 )}
               </span>
-              <span className="text-center text-xs font-medium text-slate-700 desk:text-sm">{tr(t.label)}</span>
+              <span className="text-center text-xs font-medium leading-tight text-slate-700 desk:text-sm">{tr(t.label)}</span>
             </>
           );
           return (
