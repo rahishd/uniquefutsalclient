@@ -623,3 +623,18 @@ html.dark img.uf-hdr-logo { filter: none; }
 .uf-caret { animation: uf-caret 0.9s steps(1) infinite; }
 @keyframes uf-caret { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .uf-caret { animation: none; } }
+
+/* The one-time-code dialog (components/auth/OtpDialog.tsx): rise in, glowing box, popping digits, ripple while checking, green ripple and a drawn check on success, shake on a wrong code. */
+@keyframes uf-otp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes uf-otp-in { from { opacity: 0; transform: translateY(28px) scale(0.94); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes uf-otp-pop { 0% { transform: scale(0.45); opacity: 0.2; } 60% { transform: scale(1.22); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes uf-otp-glow { 0% { box-shadow: 0 0 0 0 rgba(51, 69, 176, 0.38); } 70% { box-shadow: 0 0 0 8px rgba(51, 69, 176, 0); } 100% { box-shadow: 0 0 0 0 rgba(51, 69, 176, 0); } }
+@keyframes uf-otp-caret { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+@keyframes uf-otp-wave { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@keyframes uf-otp-ok { 0% { transform: scale(1); } 45% { transform: scale(1.18) translateY(-4px); } 100% { transform: scale(1); } }
+@keyframes uf-otp-shake { 10%, 90% { transform: translateX(-2px); } 20%, 80% { transform: translateX(4px); } 30%, 50%, 70% { transform: translateX(-8px); } 40%, 60% { transform: translateX(8px); } }
+@keyframes uf-otp-draw { to { stroke-dashoffset: 0; } }
+@keyframes uf-otp-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) {
+  [role="dialog"][aria-labelledby="otp-title"], [role="dialog"][aria-labelledby="otp-title"] * { animation: none !important; }
+}

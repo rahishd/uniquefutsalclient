@@ -255,18 +255,6 @@ export const helpTopics: HelpTopic[] = [
     ],
   },
   {
-    id: "otp",
-    icon: "profile",
-    title: "Sign in or sign up with a code (OTP)",
-    summary: "A 6-digit code texted to your mobile number.",
-    points: [
-      "Signing in: on the sign-in page tap Continue with OTP, enter your mobile number, tap Send code, then type the 6-digit code. Your password still works too.",
-      "New here: enter your details and mobile number, we text a code to check the number is yours, then you choose your password.",
-      "A code works once and lasts 10 minutes. You can ask for a new one after a minute. After 5 wrong tries ask for a fresh code. Never share your code with anyone.",
-      "No code? Check your number is right and that your phone has signal, or sign in with your password.",
-    ],
-  },
-  {
     id: "face-id",
     icon: "profile",
     title: "Sign in with Face ID",
@@ -284,7 +272,7 @@ export const helpTopics: HelpTopic[] = [
     summary: "The venue can set a new one for you.",
     points: [
       "Know your password and want a new one? Profile > Settings > Password > Change.",
-      "Forgot it? Call or WhatsApp the venue and we will set a new password for you.",
+      "Forgot it? On the sign-in page tap Forgot Password?, enter your mobile number and tap Ask the venue to reset it. We will call you and set a new password. You can also call or WhatsApp the venue.",
     ],
   },
   {
@@ -306,7 +294,7 @@ export const helpTopics: HelpTopic[] = [
       "The bell at the top collects your messages. When something is new, the bell rings and shows how many are waiting. A red number on a Quick Access tile or on the Chat tab means something new is waiting there.",
       "One hour before your game a full-screen reminder asks \"Are you on your way?\". Slide to say you are coming and the venue is told.",
       "Prefer no full-screen pop-up? Turn off Pop-up reminder in Profile > Settings. You still get the bell message.",
-      "Want alerts when the app is closed? Turn on Alerts when the app is closed in Profile > Settings and allow notifications. On iPhone, add the app to your Home Screen first.",
+      "Want alerts when the app is closed? After you sign in, tap Turn on alerts on the pop-up and allow notifications. You can also switch them on or off in Profile > Settings. On iPhone, add the app to your Home Screen first (tap Download in the pop-up), then open it from there.",
     ],
   },
   {

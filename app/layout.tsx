@@ -6,6 +6,7 @@ import FooterGate from "@/components/FooterGate";
 import CompanyHeader from "@/components/CompanyHeader";
 import SwRegister from "@/components/SwRegister";
 import InstallPrompt from "@/components/InstallPrompt";
+import AlertsPrompt from "@/components/AlertsPrompt";
 import ArrivalPrompt from "@/components/ArrivalPrompt";
 import ForcePasswordChange from "@/components/ForcePasswordChange";
 import WinPrompt from "@/components/captain/WinPrompt";
@@ -58,6 +59,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ChatPopup />
         <SwRegister />
         <InstallPrompt />
+        <AlertsPrompt />
         <ArrivalPrompt />
         <ForcePasswordChange />
         <WinPrompt />

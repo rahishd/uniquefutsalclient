@@ -1,14 +1,26 @@
 import logger from "../config/logger";
+import { prisma } from "../config/db";
 
 export interface SmsOptions {
   phoneNumber: string;
   message: string;
+  // for the admin portal's SMS page (all optional)
+  kind?: string; // booking_requested | booking_confirmed | booking_cancelled | otp | reminder | staff_alert | membership | other
+  recipientName?: string | null;
+  bookingCode?: string | null;
+  logMessage?: string; // what is stored instead of the message (a one-time code must never be stored)
+}
+
+interface Outcome {
+  ok: boolean;
+  id?: string;
+  error?: string;
 }
 
 // Two senders, chosen by SMS_PROVIDER in backend/.env:
 //   "android" : SMS Gateway for Android in CLOUD mode (sms-gate.app). A phone with our SIM sends the text.
 //   "sparrow" : Sparrow SMS bulk gateway (the default when SMS_PROVIDER is not set, as before).
-// Every caller uses send(); nothing else in the app knows which one is active.
+// Every caller uses send(); nothing else in the app knows which one is active. Every text, sent or failed, is also written to SmsLog.
 const PROVIDER = (process.env.SMS_PROVIDER || "sparrow").toLowerCase();
 
 // Nepal numbers are stored as 98XXXXXXXX; the Android gateway wants +97798XXXXXXXX
@@ -32,14 +44,37 @@ export class SmsService {
   private readonly gateTtl = Number(process.env.SMSGATE_TTL_SECONDS || 3600); // a text still not sent after this is dropped (a stale reminder is worse than none)
 
   async send(options: SmsOptions): Promise<boolean> {
-    return PROVIDER === "android" ? this.sendAndroid(options) : this.sendSparrow(options);
+    const out = PROVIDER === "android" ? await this.sendAndroid(options) : await this.sendSparrow(options);
+    await this.record(options, out);
+    return out.ok;
   }
 
-  private async sendAndroid(options: SmsOptions): Promise<boolean> {
+  /** Writes the SmsLog row. A problem here is only logged: it never fails or delays the text itself. */
+  private async record(o: SmsOptions, out: Outcome) {
+    try {
+      await prisma.smsLog.create({
+        data: {
+          phoneNumber: o.phoneNumber,
+          recipientName: o.recipientName ?? null,
+          kind: o.kind || "other",
+          message: (o.logMessage ?? o.message).slice(0, 1000),
+          status: out.ok ? "queued" : "failed",
+          provider: PROVIDER === "android" ? "android" : "sparrow",
+          providerId: out.id ?? null,
+          error: out.ok ? null : (out.error ?? "Unknown error").slice(0, 300),
+          bookingCode: o.bookingCode ?? null,
+        },
+      });
+    } catch (e) {
+      logger.warn(`Could not write the SMS log: ${(e as Error).message}`);
+    }
+  }
+
+  private async sendAndroid(options: SmsOptions): Promise<Outcome> {
     try {
       if (!this.gateUser || !this.gatePass) {
         logger.error("SMS Gateway for Android credentials missing (SMSGATE_USERNAME / SMSGATE_PASSWORD)");
-        return false;
+        return { ok: false, error: "Gateway credentials are missing on the server" };
       }
       const to = toE164(options.phoneNumber);
       const body: Record<string, unknown> = {
@@ -64,21 +99,22 @@ export class SmsService {
       // 202 = accepted and queued for the phone (it is sent a moment later, or when the phone is next online)
       if (res.status === 200 || res.status === 201 || res.status === 202) {
         logger.info(`SMS queued for ${to} via Android gateway (id ${data.id ?? "?"})`);
-        return true;
+        return { ok: true, id: data.id };
       }
-      logger.error(`Android SMS gateway error ${res.status}: ${data.message || data.error || "Unknown error"}`);
-      return false;
+      const why = data.message || data.error || "Unknown error";
+      logger.error(`Android SMS gateway error ${res.status}: ${why}`);
+      return { ok: false, error: `Gateway error ${res.status}: ${why}` };
     } catch (error) {
       logger.error("Failed to send SMS via Android gateway", error);
-      return false;
+      return { ok: false, error: (error as Error).message };
     }
   }
 
-  private async sendSparrow(options: SmsOptions): Promise<boolean> {
+  private async sendSparrow(options: SmsOptions): Promise<Outcome> {
     try {
       if (!this.sparrowToken || !this.sparrowIdentity) {
         logger.error("Sparrow SMS credentials missing in environment variables");
-        return false;
+        return { ok: false, error: "Sparrow credentials are missing on the server" };
       }
 
       const params = new URLSearchParams({
@@ -96,14 +132,13 @@ export class SmsService {
 
       if (response.ok && data.response_code === 200) {
         logger.info(`SMS sent successfully to ${options.phoneNumber}: ${data.response}`);
-        return true;
-      } else {
-        logger.error(`Sparrow SMS error: ${data.response || "Unknown error"} (Code: ${data.response_code})`);
-        return false;
+        return { ok: true };
       }
+      logger.error(`Sparrow SMS error: ${data.response || "Unknown error"} (Code: ${data.response_code})`);
+      return { ok: false, error: `Sparrow: ${data.response || "Unknown error"} (${data.response_code})` };
     } catch (error) {
       logger.error("Failed to send SMS via Sparrow", error);
-      return false;
+      return { ok: false, error: (error as Error).message };
     }
   }
 

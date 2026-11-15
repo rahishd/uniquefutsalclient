@@ -27,10 +27,10 @@ export const authController = {
   signup: asyncHandler(async (req: AuthRequest, res: Response) => {
     const { email, password, name, phoneNumber, dateOfBirth, emergencyName, emergencyPhone, emergencyRelation }: SignupDTO = req.body;
 
-    // A customer must prove the mobile number with a code first (POST /auth/otp/request, /auth/otp/verify, then /auth/signup/complete).
-    // Only staff may create an account here. REQUIRE_SIGNUP_OTP=false switches the rule off (the automated tests do).
+    // Text-message codes are not used by default: a customer signs up with phone + password.
+    // REQUIRE_SIGNUP_OTP=true brings the code step back (POST /auth/otp/request, /auth/otp/verify, then /auth/signup/complete) for customers.
     const staff = req.user?.role === "admin" || req.user?.role === "superadmin";
-    if (!staff && process.env.REQUIRE_SIGNUP_OTP !== "false") {
+    if (!staff && process.env.REQUIRE_SIGNUP_OTP === "true") {
       throw new AppError(400, "Verify your mobile number with the code we text you, then choose a password.");
     }
 

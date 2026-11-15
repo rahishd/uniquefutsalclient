@@ -155,7 +155,7 @@ export default function InstallPrompt() {
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand text-sm font-bold text-white shadow-sm">UF</span>
           <div>
             <p className="text-sm font-semibold leading-tight">Get the Unique Futsal app</p>
-            <p className="mt-0.5 text-[11px] leading-snug text-slate-500">Keep it on your home screen for one-tap booking, reminders and offers.</p>
+            <p className="mt-0.5 text-[11px] leading-snug text-slate-500">Keep it on your home screen for one-tap booking, and get alerts even when the app is closed.</p>
           </div>
         </div>
 

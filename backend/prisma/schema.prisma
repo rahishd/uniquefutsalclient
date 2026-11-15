@@ -1455,3 +1455,22 @@ model LoginOtp {
 
   @@unique([phoneNumber, purpose])
 }
+
+// Every text the backend sends (or fails to send), for the admin portal's SMS page. A one-time code is never stored: its digits are hidden.
+model SmsLog {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  phoneNumber   String
+  recipientName String?
+  kind          String   @default("other")
+  message       String
+  status        String
+  provider      String
+  providerId    String?
+  error         String?
+  bookingCode   String?
+
+  @@index([createdAt])
+  @@index([phoneNumber])
+  @@index([kind])
+}

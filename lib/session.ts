@@ -119,14 +119,20 @@ export async function signIn(phone: string, password: string) {
   applyLogin(await api<AuthResult>("/auth/login", { method: "POST", body: { identifier: phone, password }, auth: "none" }));
 }
 
-/** Texts a one-time code to the phone. "login" is for an existing account; "signup" is for a new customer (before choosing a password). */
-export async function requestOtp(phone: string, purpose: "login" | "signup") {
+/** Texts a one-time code to the phone. "reset" is Forgot password (an existing account); "signup" is for a new customer (before choosing a password). There is no sign-in by code. */
+export async function requestOtp(phone: string, purpose: "reset" | "signup") {
   return api<{ sent: boolean; resendInSeconds: number }>("/auth/otp/request", { method: "POST", body: { phoneNumber: phone, purpose }, auth: "none" });
 }
 
-/** Signs in with the code that was texted (the password is not needed). */
-export async function signInWithOtp(phone: string, code: string) {
-  applyLogin(await api<AuthResult>("/auth/otp/verify", { method: "POST", body: { phoneNumber: phone, purpose: "login", code }, auth: "none" }));
+/** Forgot password: the code was right, so this gives a short-lived pass to choose a new password with (resetPasswordWithOtp). */
+export async function verifyResetOtp(phone: string, code: string) {
+  const r = await api<{ resetToken: string }>("/auth/otp/verify", { method: "POST", body: { phoneNumber: phone, purpose: "reset", code }, auth: "none" });
+  return r.resetToken;
+}
+
+/** Last step of Forgot password: the pass plus the new password. The customer signs in with it afterwards. */
+export async function resetPasswordWithOtp(resetToken: string, newPassword: string) {
+  await api<unknown>("/auth/otp/reset-password", { method: "POST", body: { resetToken, newPassword }, auth: "none" });
 }
 
 /** A new customer's code was right: gives a short-lived pass to choose a password with (completeSignUp). */

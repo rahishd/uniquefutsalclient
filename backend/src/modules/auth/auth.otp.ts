@@ -7,6 +7,7 @@ import { prisma } from "../../config/db";
 import env from "../../config/env";
 import logger from "../../config/logger";
 import smsService from "../../services/sms.service";
+import { renderSms } from "../../services/smsTemplates";
 import validateRequest from "../../middlewares/validate.middleware";
 import { AppError } from "../../middlewares/error.middleware";
 import { asyncHandler } from "../../utils/asyncHandler";
@@ -17,13 +18,15 @@ import { cleanEmergency } from "../../utils/emergency";
 import { isValidDob, MAX_AGE, MIN_AGE } from "../../utils/age";
 import { todayKey } from "../../utils/dates";
 import AuthService from "./auth.service";
+import { SUSPENDED_MESSAGE } from "../../middlewares/auth.middleware";
 import type { AuthResponse } from "./auth.dto";
 
 // One-time codes by SMS.
-//   login  : "Continue with OTP" on the sign-in page (the password still works too)
 //   signup : a new customer proves the phone number with a code, THEN chooses a password
+//   reset  : "Forgot password": a registered customer proves the number with a code, THEN chooses a new password
+// There is NO sign-in by code: signing in always needs the password.
 // Rules: a code lasts 10 minutes and works once; 5 wrong tries kill it; one new code a minute, 5 an hour per number.
-// Only a hash of the code is stored. Sign-in never tells whether a number has an account.
+// Only a hash of the code is stored. A reset code is only for registered customers (an unknown number is told to create an account).
 const TTL_MS = 10 * 60 * 1000;
 const RESEND_GAP_MS = 60 * 1000;
 const MAX_SENDS_PER_HOUR = 5;
@@ -31,19 +34,21 @@ const MAX_TRIES = 5;
 const PHONE = /^9\d{9}$/;
 const SIGNUP_TOKEN_MIN = 20; // minutes to choose a password after the code was accepted
 
-type Purpose = "login" | "signup";
+type Purpose = "signup" | "reset";
 
 const hashCode = (phone: string, purpose: Purpose, code: string) => crypto.createHmac("sha256", env.JWT_SECRET).update(`${phone}:${purpose}:${code}`).digest("hex");
 const signupSecret = () => `${env.JWT_SECRET}:signup-otp`; // a different key, so a sign-up pass can never be used as a sign-in token
+const resetSecret = () => `${env.JWT_SECRET}:reset-otp`; // and a different one again for the new-password pass
 
 export async function requestCode(phone: string, purpose: Purpose): Promise<{ sent: true; resendInSeconds: number }> {
   if (!PHONE.test(phone)) throw new AppError(400, "Enter a 10-digit mobile number starting with 9");
   const user = await prisma.user.findUnique({ where: { phoneNumber: phone } });
   const reply = { sent: true as const, resendInSeconds: RESEND_GAP_MS / 1000 };
 
-  if (purpose === "login") {
-    // no account, a suspended one, or a staff account: pretend it was sent (nothing is revealed, nothing is sent)
-    if (!user || !user.isActive || user.role !== "user") return reply;
+  if (purpose === "reset") {
+    // Only a registered customer gets a reset code. No code is sent, and none can be used, for a number with no account.
+    if (!user || user.role !== "user") throw new AppError(404, "This mobile number is not registered. Please create an account first.");
+    if (!user.isActive) throw new AppError(403, SUSPENDED_MESSAGE);
   } else if (user) {
     throw new AppError(409, "This mobile number is already registered. Please sign in instead.");
   }
@@ -55,7 +60,7 @@ export async function requestCode(phone: string, purpose: Purpose): Promise<{ se
   if (existing) {
     if (now - existing.sentAt.getTime() < RESEND_GAP_MS) throw new AppError(429, "Please wait a minute before asking for another code.");
     if (now - existing.windowStart.getTime() < 60 * 60 * 1000) {
-      if (existing.sends >= MAX_SENDS_PER_HOUR) throw new AppError(429, "Too many codes asked for this number. Try again in an hour or use your password.");
+      if (existing.sends >= MAX_SENDS_PER_HOUR) throw new AppError(429, "Too many codes asked for this number. Try again in an hour.");
       sends = existing.sends + 1;
       windowStart = existing.windowStart;
     }
@@ -65,13 +70,15 @@ export async function requestCode(phone: string, purpose: Purpose): Promise<{ se
   const data = { codeHash: hashCode(phone, purpose, code), expiresAt: new Date(now + TTL_MS), tries: 0, sends, windowStart, sentAt: new Date(now) };
   await prisma.loginOtp.upsert({ where: { phoneNumber_purpose: { phoneNumber: phone, purpose } }, update: data, create: { phoneNumber: phone, purpose, ...data } });
 
-  const ok = await smsService.send({ phoneNumber: phone, message: `${code} is your Unique Futsal code. It works for 10 minutes. Do not share it with anyone.` });
+  // the wording is edited in the admin portal (SMS page); the log keeps it with the digits hidden
+  const message = await renderSms("otp", { otp: code });
+  const ok = await smsService.send({ phoneNumber: phone, message, kind: "otp", logMessage: await renderSms("otp", { otp: "••••••" }), recipientName: user?.name ?? null });
   if (!ok) {
     if (process.env.NODE_ENV === "development") {
       logger.info(`OTP for ${phone} (${purpose}): ${code} (development only: the text could not be sent)`);
     } else {
       await prisma.loginOtp.delete({ where: { phoneNumber_purpose: { phoneNumber: phone, purpose } } }).catch(() => undefined);
-      throw new AppError(503, "We could not send the code right now. Please try again, or use your password.");
+      throw new AppError(503, "We could not send the code right now. Please try again in a moment.");
     }
   }
   return reply;
@@ -95,9 +102,29 @@ async function checkCode(phone: string, purpose: Purpose, code: string): Promise
   if (gone.count !== 1) throw new AppError(401, "This code was already used. Ask for a new one.");
 }
 
-export async function verifyLogin(phone: string, code: string): Promise<AuthResponse> {
-  await checkCode(phone, "login", code);
-  return AuthService.loginWithPasskey(phone); // the same checks and the same result as the password sign-in
+export async function verifyReset(phone: string, code: string): Promise<{ resetToken: string }> {
+  const user = await prisma.user.findUnique({ where: { phoneNumber: phone } });
+  if (!user || user.role !== "user") throw new AppError(404, "This mobile number is not registered. Please create an account first.");
+  if (!user.isActive) throw new AppError(403, SUSPENDED_MESSAGE);
+  await checkCode(phone, "reset", code);
+  return { resetToken: jwt.sign({ purpose: "reset", phone }, resetSecret(), { expiresIn: `${SIGNUP_TOKEN_MIN}m` }) };
+}
+
+/** The last step of "Forgot password": the pass from verifyReset plus a new password. The customer then signs in with it. */
+export async function resetPasswordWithCode(resetToken: string, newPassword: string): Promise<void> {
+  let phone: string;
+  try {
+    const p = jwt.verify(resetToken, resetSecret()) as { purpose?: string; phone?: string };
+    if (p.purpose !== "reset" || !p.phone) throw new Error("wrong token");
+    phone = p.phone;
+  } catch {
+    throw new AppError(401, "Your verification expired. Please ask for a new code.");
+  }
+  const user = await prisma.user.findUnique({ where: { phoneNumber: phone } });
+  if (!user || user.role !== "user") throw new AppError(404, "This mobile number is not registered. Please create an account first.");
+  if (!user.isActive) throw new AppError(403, SUSPENDED_MESSAGE);
+  await prisma.user.update({ where: { phoneNumber: phone }, data: { password: await HashUtil.hash(newPassword) } });
+  logger.info(`Password reset by code for ${phone.slice(0, 3)}*******`);
 }
 
 export async function verifySignup(phone: string, code: string): Promise<{ signupToken: string }> {
@@ -160,7 +187,7 @@ const limiter = rateLimit({
 
 const router = Router();
 const phoneRule = body("phoneNumber").matches(PHONE).withMessage("Enter a 10-digit mobile number starting with 9");
-const purposeRule = body("purpose").isIn(["login", "signup"]);
+const purposeRule = body("purpose").isIn(["signup", "reset"]);
 const codeRule = body("code").matches(/^\d{6}$/).withMessage("Enter the 6-digit code");
 
 router.post("/otp/request", limiter, [phoneRule, purposeRule], validateRequest, asyncHandler(async (req, res: Response) => {
@@ -169,9 +196,20 @@ router.post("/otp/request", limiter, [phoneRule, purposeRule], validateRequest, 
 }));
 
 router.post("/otp/verify", limiter, [phoneRule, purposeRule, codeRule], validateRequest, asyncHandler(async (req, res: Response) => {
-  if (req.body.purpose === "login") res.json(ApiResponseUtil.success(200, "Logged in successfully", await verifyLogin(req.body.phoneNumber, req.body.code)));
+  if (req.body.purpose === "reset") res.json(ApiResponseUtil.success(200, "Mobile number verified", await verifyReset(req.body.phoneNumber, req.body.code)));
   else res.json(ApiResponseUtil.success(200, "Mobile number verified", await verifySignup(req.body.phoneNumber, req.body.code)));
 }));
+
+router.post(
+  "/otp/reset-password",
+  limiter,
+  [body("resetToken").notEmpty(), body("newPassword").isLength({ min: 6 }).withMessage("Use at least 6 characters")],
+  validateRequest,
+  asyncHandler(async (req, res: Response) => {
+    await resetPasswordWithCode(req.body.resetToken, req.body.newPassword);
+    res.json(ApiResponseUtil.success(200, "Password changed. You can sign in now."));
+  }),
+);
 
 router.post(
   "/signup/complete",

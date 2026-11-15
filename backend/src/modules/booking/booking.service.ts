@@ -15,6 +15,7 @@ import notificationService from "../notification/notification.service";
 import productService from "../product/product.service";
 import SettingsService from "../settings/settings.service";
 import smsService from "../../services/sms.service";
+import { sendBookingSms, smsBookingCancelled } from "./booking.sms";
 import { PromoCode as PromoCodeDTO } from "../settings/settings.dto";
 import { uploadFileToR2 } from "../../utils/r2storage";
 import { calculateLoyaltyProgress } from "../../utils/loyalty";
@@ -452,24 +453,14 @@ export class BookingService {
 
     // Notify Bookings
     for (const booking of upcomingBookings) {
-      if (booking.customerPhone) {
-        const message = `Reminder: Your game starts in 1 hour (@${booking.startTime}). See you at Unique Futsal! ⚽`;
-        smsService.send({
-          phoneNumber: booking.customerPhone,
-          message: message,
-        }).catch(err => logger.error(`Failed to send reminder to ${booking.customerPhone}`, err));
-      }
+      if (booking.customerPhone) void sendBookingSms("reminder", booking as never);
     }
 
     // Notify Memberships
     for (const sub of activeMemberships) {
       if (sub.user?.phoneNumber) {
         const startTime = sub.timeSlot?.split("-")[0] || targetTime;
-        const message = `Reminder: Your membership game starts in 1 hour (@${startTime}). See you at Unique Futsal! ⚽`;
-        smsService.send({
-          phoneNumber: sub.user.phoneNumber,
-          message: message,
-        }).catch(err => logger.error(`Failed to send membership reminder to ${sub.user.phoneNumber}`, err));
+        void sendBookingSms("reminder", { id: sub.id, date: today, startTime, customerName: sub.user.name ?? null }, sub.user.phoneNumber);
       }
     }
   }
@@ -910,6 +901,7 @@ export class BookingService {
       smsService.send({
         phoneNumber: adminPhone,
         message: adminMessage,
+        kind: "staff_alert",
       }).catch(err => logger.error("Failed to send admin booking notification", err));
     }
 
@@ -1124,15 +1116,7 @@ export class BookingService {
       await loyaltyService.releaseVoucherForBooking(id);
       
       const shouldSendCancelSms = dto.sendSms !== false; // Respect admin SMS choice
-      if (existingBooking.customerPhone && shouldSendCancelSms) {
-        const formattedDate = this.formatDayDateForSms(existingBooking.date);
-        const name = (existingBooking as any).customerName || "Customer";
-        const message = `Dear ${name}, Your booking scheduled for ${existingBooking.startTime} on ${formattedDate} has been cancelled successfully. If this was unintentional, please contact us or rebook your slot anytime. Thank you for choosing Unique Futsal.`;
-        smsService.send({
-          phoneNumber: existingBooking.customerPhone,
-          message: message,
-        }).catch(err => logger.error("Failed to send admin cancellation SMS", err));
-      }
+      if (existingBooking.customerPhone && shouldSendCancelSms) smsBookingCancelled(existingBooking as never);
 
       return { id, status: "cancelled" } as any;
     }
@@ -1373,13 +1357,7 @@ export class BookingService {
     const isNowConfirmed = (booking as any).status === "confirmed";
     const shouldSendSms = dto.sendSms !== false; // Default to true for backward compatibility, but we will pass false from admin if they choose No
     if (!wasConfirmed && isNowConfirmed && existingBooking.customerPhone && shouldSendSms) {
-      const formattedDate = this.formatDateForSms(existingBooking.date);
-      const name = (booking as any).customerName || "Customer";
-      const message = `Dear ${name}, Your booking has been confirmed for ${existingBooking.startTime} on ${formattedDate}. Please arrive 10 minutes before your scheduled game time. Play safe and have fun! - Unique Futsal`;
-      smsService.send({
-        phoneNumber: existingBooking.customerPhone,
-        message: message,
-      }).catch(err => logger.error("Failed to send player confirmation SMS", err));
+      void sendBookingSms("booking_confirmed", booking as never, existingBooking.customerPhone);
     }
 
     await this.awardLoyaltyFor([booking.id]);
@@ -1416,15 +1394,7 @@ export class BookingService {
       );
     }
 
-    if (existing.customerPhone && sendSms) {
-      const formattedDate = this.formatDayDateForSms(existing.date);
-      const name = (existing as any).customerName || "Customer";
-      const message = `Dear ${name}, Your booking scheduled for ${existing.startTime} on ${formattedDate} has been cancelled successfully. If this was unintentional, please contact us or rebook your slot anytime. Thank you for choosing Unique Futsal.`;
-      smsService.send({
-        phoneNumber: existing.customerPhone,
-        message: message,
-      }).catch(err => logger.error("Failed to send deletion SMS", err));
-    }
+    if (existing.customerPhone && sendSms) smsBookingCancelled(existing as never);
   }
 
   // Cancel a booking
@@ -1504,19 +1474,12 @@ export class BookingService {
       smsService.send({
         phoneNumber: adminPhone,
         message: adminMessage,
+        kind: "staff_alert",
       }).catch(err => logger.error("Failed to send admin cancellation alert", err));
     }
 
     // Notify Player
-    if (existing.customerPhone) {
-      const formattedDate = this.formatDayDateForSms(existing.date);
-      const name = existing.customerName || "Customer";
-      const message = `Dear ${name}, Your booking scheduled for ${existing.startTime} on ${formattedDate} has been cancelled successfully. If this was unintentional, please contact us or rebook your slot anytime. Thank you for choosing Unique Futsal.`;
-      smsService.send({
-        phoneNumber: existing.customerPhone,
-        message: message,
-      }).catch(err => logger.error("Failed to send player cancellation confirmation", err));
-    }
+    if (existing.customerPhone) smsBookingCancelled(existing as never);
 
     return { ...this.toBookingResponse(cancelled), refundDue: refund };
   }
