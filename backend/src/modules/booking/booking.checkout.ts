@@ -5,6 +5,7 @@ import { AuthRequest } from "../../middlewares/auth.middleware";
 import { AppError } from "../../middlewares/error.middleware";
 import { prisma } from "../../config/db";
 import BookingService from "./booking.service";
+import { smsBookingConfirmed, smsBookingRequested } from "./booking.sms";
 import paymentService, { QR_HOLD_MS } from "../payment/payment.service";
 import loyaltyService from "../loyalty/loyalty.service";
 import notificationService from "../notification/notification.service";
@@ -134,6 +135,10 @@ export const checkoutController = {
       await BookingService.freeSlots(booking.id);
       throw err;
     }
+
+    // texts: pay-at-venue bookings wait for the venue ("requested"); free ones are confirmed now; online ones are texted when the payment arrives
+    if (booking.status === "confirmed") smsBookingConfirmed(booking as never);
+    else if (method === "venue") smsBookingRequested(booking as never);
 
     if (userId) {
       await notificationService.notify({

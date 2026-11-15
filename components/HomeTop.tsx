@@ -16,6 +16,7 @@ import LiveMatchStrip from "@/components/LiveMatchStrip";
 import { MobileHero } from "@/components/DeskHero";
 import GuestPrompt from "@/components/GuestPrompt";
 import NotificationBell from "@/components/NotificationBell";
+import CaptainBadge from "@/components/captain/CaptainBadge";
 import DigitalIdButton from "@/components/digitalid/DigitalIdButton";
 import WifiButton from "@/components/wifi/WifiButton";
 import OrderButton from "@/components/order/OrderButton";
@@ -133,11 +134,7 @@ export default function HomeTop() {
         </div>
         <div className="flex shrink-0 items-center gap-2.5 [&_button[aria-label^=Notifications]]:!h-11 [&_button[aria-label^=Notifications]]:!w-11 [&_button[aria-label^=Notifications]]:!bg-white [&_button[aria-label^=Notifications]]:!shadow-none [&_button[aria-label^=Notifications]]:!ring-0">
           {/* a captain: the round "(C)" badge, the same size as the bell, just left of it */}
-          {captain && (
-            <span role="img" aria-label="Captain" title="Captain" className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-red-300 bg-red-100">
-              <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full bg-red-500 text-sm font-extrabold leading-none text-white">C</span>
-            </span>
-          )}
+          {captain && <CaptainBadge />}
           <NotificationBell />
         </div>
       </div>

@@ -3,6 +3,7 @@ import { AppError } from "../../middlewares/error.middleware";
 import logger from "../../config/logger";
 import notificationService from "../notification/notification.service";
 import loyaltyService from "../loyalty/loyalty.service";
+import { smsBookingConfirmed } from "../booking/booking.sms";
 import { getGateway, OnlineMethod } from "../../services/paymentGateway";
 
 export const QR_HOLD_MS = 10 * 60 * 1000; // an unpaid QR (and the slot behind it) is held for 10 minutes
@@ -128,6 +129,7 @@ export class PaymentService {
         await notificationService.notify({ userId: b.userId, type: "payment", title: "Payment received", message: `Rs. ${order.amount} received for booking ${b.code || b.id}.`, href: "/profile", dedupeKey: `pay-${order.orderCode}` });
         await notificationService.notify({ userId: b.userId, type: "booking", title: "Booking confirmed", message: `${b.date} · ${b.startTime} – ${b.endTime}. Booking ${b.code || b.id}.`, href: `/booking/${b.code || b.id}`, dedupeKey: `booked-${b.id}` });
       }
+      smsBookingConfirmed({ ...b, remainingAmount: rest });
       // a game bought for a friend (Gift Card): tell both of them
       const { default: giftService } = await import("../gift/gift.service");
       await giftService.onGamePaid(b.id);
