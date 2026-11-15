@@ -11,3 +11,5 @@ process.env.SPARROW_SMS_TOKEN = "";
 process.env.SPARROW_SMS_IDENTITY = "";
 process.env.SMSGATE_USERNAME = "";
 process.env.SMSGATE_PASSWORD = "";
+// customer sign-up through the old password-only route stays open for the automated tests (production requires the SMS code)
+process.env.REQUIRE_SIGNUP_OTP = "false";

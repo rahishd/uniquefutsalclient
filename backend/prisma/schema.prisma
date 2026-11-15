@@ -1440,3 +1440,18 @@ model MarketplaceRedemption {
   @@index([partnerId, createdAt])
   @@index([userId])
 }
+
+// A one-time code texted to a phone, to sign in ("login") or to create an account ("signup"). Only a hash of the code is kept.
+model LoginOtp {
+  id          String   @id @default(cuid())
+  phoneNumber String
+  purpose     String
+  codeHash    String
+  expiresAt   DateTime
+  tries       Int      @default(0)
+  sends       Int      @default(1)
+  windowStart DateTime @default(now())
+  sentAt      DateTime @default(now())
+
+  @@unique([phoneNumber, purpose])
+}

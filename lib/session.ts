@@ -119,6 +119,36 @@ export async function signIn(phone: string, password: string) {
   applyLogin(await api<AuthResult>("/auth/login", { method: "POST", body: { identifier: phone, password }, auth: "none" }));
 }
 
+/** Texts a one-time code to the phone. "login" is for an existing account; "signup" is for a new customer (before choosing a password). */
+export async function requestOtp(phone: string, purpose: "login" | "signup") {
+  return api<{ sent: boolean; resendInSeconds: number }>("/auth/otp/request", { method: "POST", body: { phoneNumber: phone, purpose }, auth: "none" });
+}
+
+/** Signs in with the code that was texted (the password is not needed). */
+export async function signInWithOtp(phone: string, code: string) {
+  applyLogin(await api<AuthResult>("/auth/otp/verify", { method: "POST", body: { phoneNumber: phone, purpose: "login", code }, auth: "none" }));
+}
+
+/** A new customer's code was right: gives a short-lived pass to choose a password with (completeSignUp). */
+export async function verifySignupOtp(phone: string, code: string) {
+  const r = await api<{ signupToken: string }>("/auth/otp/verify", { method: "POST", body: { phoneNumber: phone, purpose: "signup", code }, auth: "none" });
+  return r.signupToken;
+}
+
+/** Last step of sign-up: the verified number plus the chosen password creates the account and signs in. */
+export async function completeSignUp(input: { signupToken: string; name: string; password: string; dateOfBirth: string; emergencyName: string; emergencyPhone: string; emergencyRelation?: string }) {
+  const r = await api<AuthResult>("/auth/signup/complete", {
+    method: "POST",
+    body: { signupToken: input.signupToken, name: input.name, password: input.password, dateOfBirth: input.dateOfBirth, emergencyName: input.emergencyName, emergencyPhone: input.emergencyPhone, emergencyRelation: input.emergencyRelation || undefined },
+    auth: "none",
+  });
+  cached = { ...toSession(r.user), registered: true, emergency: true } as Session;
+  saveUser(cached);
+  setTokens({ token: r.token, refreshToken: r.refreshToken });
+  cachedFor = r.token;
+  emit();
+}
+
 /** The friend has replaced the shared first password: stop asking. */
 export function markPasswordSet() {
   if (cached && cached.registered) {

@@ -5,6 +5,7 @@ import { AuthRequest } from "../../middlewares/auth.middleware";
 import AuthService from "./auth.service";
 import { LoginDTO, SignupDTO, UpdateMeDTO, ChangePasswordDTO } from "./auth.dto";
 import { CONSTANTS } from "../../config/constants";
+import { AppError } from "../../middlewares/error.middleware";
 
 export const authController = {
   login: asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -25,6 +26,13 @@ export const authController = {
 
   signup: asyncHandler(async (req: AuthRequest, res: Response) => {
     const { email, password, name, phoneNumber, dateOfBirth, emergencyName, emergencyPhone, emergencyRelation }: SignupDTO = req.body;
+
+    // A customer must prove the mobile number with a code first (POST /auth/otp/request, /auth/otp/verify, then /auth/signup/complete).
+    // Only staff may create an account here. REQUIRE_SIGNUP_OTP=false switches the rule off (the automated tests do).
+    const staff = req.user?.role === "admin" || req.user?.role === "superadmin";
+    if (!staff && process.env.REQUIRE_SIGNUP_OTP !== "false") {
+      throw new AppError(400, "Verify your mobile number with the code we text you, then choose a password.");
+    }
 
     const result = await AuthService.signup(
       {

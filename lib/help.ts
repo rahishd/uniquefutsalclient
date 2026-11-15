@@ -255,6 +255,18 @@ export const helpTopics: HelpTopic[] = [
     ],
   },
   {
+    id: "otp",
+    icon: "profile",
+    title: "Sign in or sign up with a code (OTP)",
+    summary: "A 6-digit code texted to your mobile number.",
+    points: [
+      "Signing in: on the sign-in page tap Continue with OTP, enter your mobile number, tap Send code, then type the 6-digit code. Your password still works too.",
+      "New here: enter your details and mobile number, we text a code to check the number is yours, then you choose your password.",
+      "A code works once and lasts 10 minutes. You can ask for a new one after a minute. After 5 wrong tries ask for a fresh code. Never share your code with anyone.",
+      "No code? Check your number is right and that your phone has signal, or sign in with your password.",
+    ],
+  },
+  {
     id: "face-id",
     icon: "profile",
     title: "Sign in with Face ID",

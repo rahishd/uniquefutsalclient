@@ -3,9 +3,9 @@
 import { startLoginSplash } from "@/lib/splash";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Cake, CheckCircle2, Eye, EyeOff, HeartPulse, Loader2, Lock, Phone, User } from "lucide-react";
+import { Cake, CheckCircle2, Eye, EyeOff, HeartPulse, KeyRound, Loader2, Lock, MessageSquareText, Phone, User } from "lucide-react";
 import { errorText } from "@/lib/api";
-import { signIn, signUp, useSession } from "@/lib/session";
+import { completeSignUp, requestOtp, signIn, signInWithOtp, useSession, verifySignupOtp } from "@/lib/session";
 import { site } from "@/lib/site";
 import { googleConfig, requestPasswordReset, resetPasswordWithGoogle, type GoogleConfig } from "@/lib/google";
 import GoogleButton from "@/components/auth/GoogleButton";
@@ -41,6 +41,18 @@ export default function AuthForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  // one-time codes: "Continue with OTP" on sign-in, and the new customer's 3 steps (details, code, password)
+  const [via, setVia] = useState<"password" | "otp">("password");
+  const [step, setStep] = useState<"details" | "code" | "password">("details");
+  const [codeSent, setCodeSent] = useState(false);
+  const [code, setCode] = useState("");
+  const [wait, setWait] = useState(0); // seconds until another code may be asked for
+  const [signupToken, setSignupToken] = useState("");
+  useEffect(() => {
+    if (wait <= 0) return;
+    const h = setTimeout(() => setWait((w) => w - 1), 1000);
+    return () => clearTimeout(h);
+  }, [wait]);
   // opening the app straight on the sign-in page (a bookmark, a restored tab, a cold start) goes to Home instead: Home has the Log in and
   // Create account buttons. Coming from inside the app (the Log in buttons, or a page that needs a sign-in, which add ?next= or ?mode=) stays here.
   useEffect(() => {
@@ -66,7 +78,13 @@ export default function AuthForm() {
   const emPhoneOk = /^9\d{9}$/.test(emPhone) && emPhone !== phone;
   const emPhoneBad = emPhone.length === 10 && !emPhoneOk;
   const emOk = emName.trim().length >= 2 && emPhoneOk;
-  const ok = phoneOk && password.length >= 6 && (mode === "in" || (name.trim().length >= 2 && dobOk(dob) && emOk));
+  const detailsOk = phoneOk && name.trim().length >= 2 && dobOk(dob) && emOk;
+  const codeOk = /^d{6}$/.test(code);
+  const ok =
+    mode === "in" ? phoneOk && (via === "otp" ? (codeSent ? codeOk : true) : password.length >= 6)
+    : step === "details" ? detailsOk
+    : step === "code" ? codeOk
+    : password.length >= 6;
 
   function go(m: "in" | "up" | "reset") {
     setMode(m);
@@ -74,6 +92,29 @@ export default function AuthForm() {
     setDone(null);
     setSent(false);
     setPassword("");
+    setVia("password");
+    setStep("details");
+    setCodeSent(false);
+    setCode("");
+    setSignupToken("");
+  }
+
+  // texts a code: for sign-in ("continue with OTP") or for the new customer's number
+  async function sendCode(purpose: "login" | "signup") {
+    if (busy || wait > 0) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const r = await requestOtp(phone, purpose);
+      setCode("");
+      setWait(r.resendInSeconds || 60);
+      if (purpose === "login") setCodeSent(true);
+      else setStep("code");
+    } catch (err) {
+      setError(errorText(err));
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function resetGoogle(idToken: string) {
@@ -108,11 +149,20 @@ export default function AuthForm() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (mode === "reset" || !ok || busy) return;
+    // the steps that only texts or checks a code
+    if (mode === "in" && via === "otp" && !codeSent) return void sendCode("login");
+    if (mode === "up" && step === "details") return void sendCode("signup");
     setBusy(true);
     setError(null);
     try {
-      if (mode === "in") await signIn(phone, password);
-      else await signUp({ name: name.trim(), phone, password, dateOfBirth: dob, emergencyName: emName.trim(), emergencyPhone: emPhone, emergencyRelation: emRelation.trim() });
+      if (mode === "up" && step === "code") {
+        setSignupToken(await verifySignupOtp(phone, code));
+        setStep("password");
+        setBusy(false);
+        return;
+      }
+      if (mode === "in") await (via === "otp" ? signInWithOtp(phone, code) : signIn(phone, password));
+      else await completeSignUp({ signupToken, name: name.trim(), password, dateOfBirth: dob, emergencyName: emName.trim(), emergencyPhone: emPhone, emergencyRelation: emRelation.trim() });
       startLoginSplash(); // the splash screen plays once on the next page, only after a sign-in
       window.location.assign(nextPath());
     } catch (err) {
@@ -137,7 +187,9 @@ export default function AuthForm() {
     "flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0c0b5d] py-4 text-base font-semibold text-white shadow-[0_12px_24px_-12px_rgba(12,11,93,0.8)] transition active:scale-[0.99] disabled:opacity-40";
   const formTitle = mode === "in" ? t("Sign in to continue") : mode === "up" ? t("Your details") : t("Your mobile number");
   const formSub =
-    mode === "in" ? "Book courts, Gamezone and EV charging, and see your points." : mode === "up" ? "It takes a minute. You can book straight away." : "Enter the mobile number on your account.";
+    mode === "in" ? (via === "otp" ? "We will text a 6-digit code to your mobile number." : "Book courts, Gamezone and EV charging, and see your points.")
+    : mode === "up" ? (step === "details" ? "We will text a code to verify your number. Then you choose a password." : step === "code" ? "Enter the 6-digit code we texted you." : "Number verified. Choose a password to finish.")
+    : "Enter the mobile number on your account.";
 
   return (
     <div className="mx-auto max-w-md rounded-[32px] bg-white px-5 pb-7 pt-8 shadow-[0_20px_50px_-24px_rgba(12,11,93,0.35)] ring-1 ring-slate-100 desk:px-8">
@@ -173,14 +225,14 @@ export default function AuthForm() {
 
       <div className="mt-4">
       <form onSubmit={submit} className="space-y-4" noValidate>
-        {mode === "up" && (
+        {mode === "up" && step === "details" && (
           <div className={`${field} ring-transparent focus-within:ring-sky-300`}>
             <User size={18} className="shrink-0 text-slate-400" />
             <input style={noBorder} className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("Full name")} aria-label="Full name" autoComplete="name" />
           </div>
         )}
 
-        {mode === "up" && (
+        {mode === "up" && step === "details" && (
           <div>
             <label className={`${field} ${dobBad ? "ring-2 ring-rose-400" : "ring-transparent focus-within:ring-sky-300"}`}>
               <Cake size={18} className={`shrink-0 ${dobBad ? "text-rose-400" : "text-slate-400"}`} />
@@ -202,7 +254,13 @@ export default function AuthForm() {
           </div>
         )}
 
-        <div>
+        {mode === "up" && step !== "details" && (
+          <p className="flex items-center justify-between gap-2 rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-600">
+            <span className="flex items-center gap-2"><Phone size={16} className="text-slate-400" /> {phone}{step === "password" && <CheckCircle2 size={16} className="text-emerald-600" aria-label="Verified" />}</span>
+            {step === "code" && <button type="button" onClick={() => { setStep("details"); setCode(""); setError(null); }} className="font-semibold text-[#0c0b5d]">Change</button>}
+          </p>
+        )}
+        <div className={mode === "up" && step !== "details" ? "hidden" : ""}>
           <div className={`${field} ${phoneBad ? "ring-2 ring-rose-400" : "ring-transparent focus-within:ring-sky-300"}`}>
             <Phone size={18} className={`shrink-0 ${phoneBad ? "text-rose-400" : "text-slate-400"}`} />
             <input
@@ -211,6 +269,7 @@ export default function AuthForm() {
               value={phone}
               inputMode="numeric"
               onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+              disabled={mode === "in" && via === "otp" && codeSent}
               placeholder={t("Mobile number (98XXXXXXXX)")}
               aria-label="Mobile number"
               aria-invalid={phoneBad}
@@ -220,7 +279,7 @@ export default function AuthForm() {
           {phoneBad && <p className="mt-1.5 px-5 text-sm font-medium text-rose-500">{t("That mobile number doesn't look right")}</p>}
         </div>
 
-        {mode === "up" && (
+        {mode === "up" && step === "details" && (
           <fieldset className="space-y-2.5 rounded-3xl bg-rose-50/70 p-3 ring-1 ring-rose-100">
             <legend className="sr-only">Emergency contact</legend>
             <p className="flex items-center gap-2 px-1 text-sm font-semibold text-slate-800"><HeartPulse size={17} className="text-rose-500" aria-hidden /> {t("Emergency contact")}</p>
@@ -244,7 +303,7 @@ export default function AuthForm() {
           </fieldset>
         )}
 
-        {mode !== "reset" && (
+        {((mode === "in" && via === "password") || (mode === "up" && step === "password")) && (
           <div className={`${field} ring-transparent focus-within:ring-sky-300`}>
             <Lock size={18} className="shrink-0 text-slate-400" />
             <input
@@ -263,10 +322,34 @@ export default function AuthForm() {
           </div>
         )}
 
-        {mode === "in" && (
+        {mode === "in" && via === "password" && (
           <div className="flex justify-end px-1">
             <button type="button" onClick={() => go("reset")} className="text-sm font-semibold text-[#0c0b5d]">{t("Forgot Password?")}</button>
           </div>
+        )}
+
+        {/* the one-time code: sign-in with OTP (after "Send code"), and the new customer's second step */}
+        {((mode === "in" && via === "otp" && codeSent) || (mode === "up" && step === "code")) && (
+          <div className="space-y-2">
+            <div className={`${field} ring-transparent focus-within:ring-sky-300`}>
+              <KeyRound size={18} className="shrink-0 text-slate-400" />
+              <input style={noBorder} className={`${inputCls} tracking-[0.4em]`} value={code} inputMode="numeric" autoComplete="one-time-code" maxLength={6} autoFocus
+                onChange={(e) => setCode(e.target.value.replace(/D/g, "").slice(0, 6))} placeholder="6-digit code" aria-label="6-digit code" />
+            </div>
+            <p className="flex items-center justify-between px-1 text-xs text-slate-500">
+              <span>We texted a code to {phone}.</span>
+              <button type="button" disabled={wait > 0 || busy} onClick={() => sendCode(mode === "in" ? "login" : "signup")} className="font-semibold text-[#0c0b5d] disabled:text-slate-400">
+                {wait > 0 ? `Resend in ${wait}s` : "Resend code"}
+              </button>
+            </p>
+          </div>
+        )}
+
+        {mode === "in" && (
+          <button type="button" onClick={() => { setVia(via === "otp" ? "password" : "otp"); setCodeSent(false); setCode(""); setError(null); }}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-semibold text-[#0c0b5d] ring-1 ring-slate-200 transition hover:bg-slate-50">
+            {via === "otp" ? <><Lock size={16} /> Use my password instead</> : <><MessageSquareText size={16} /> Continue with OTP</>}
+          </button>
         )}
 
         {done && mode === "in" && <p role="status" className="rounded-2xl bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">{done}</p>}
@@ -306,7 +389,9 @@ export default function AuthForm() {
         ) : (
           <>
             <button type="submit" disabled={!ok || busy} className={primary}>
-              {busy ? <><Loader2 size={18} className="animate-spin" /> Please wait…</> : mode === "in" ? t("Log In") : t("Create account")}
+              {busy ? <><Loader2 size={18} className="animate-spin" /> Please wait…</>
+                : mode === "in" ? (via === "otp" ? (codeSent ? t("Log In") : "Send code") : t("Log In"))
+                : step === "details" ? "Send verification code" : step === "code" ? "Verify number" : t("Create account")}
             </button>
           </>
         )}

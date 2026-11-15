@@ -7,11 +7,13 @@ import { authRateLimitMiddleware } from "../../middlewares/rateLimit.middleware"
 import authMiddleware, { optionalAuthMiddleware } from "../../middlewares/auth.middleware";
 import googleRoutes from "./google.routes";
 import passkeyRoutes from "./passkey.routes";
+import otpRoutes from "./auth.otp";
 
 const router = Router();
 
 router.use(googleRoutes); // Google link + password reset (no SMS)
 router.use(passkeyRoutes); // Face ID / fingerprint sign-in
+router.use(otpRoutes); // one-time codes by SMS: sign in with a code, and verify a new number before choosing a password
 
 // OTP / SMS verification is switched off (OTP_ENABLED=false). These routes answer 503 until the owner turns it on.
 const needsOtp = (_req: Request, res: Response, next: NextFunction) => {
