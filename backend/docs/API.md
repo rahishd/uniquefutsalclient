@@ -362,22 +362,54 @@ Where the discount shows up:
 
 **Maturity rule.** The 10% on the **1-month membership plan** and on **hosting a tournament** (admin portal) is only for a club member who has been in the club for **15 days, or has played 5 games** (completed bookings dated on or after the day they joined). Court bookings and Gamezone get the 10% from the first day. `GET /club` reports it: `{mature, daysIn, gamesPlayed, daysToMature, gamesToMature, matureAfterDays: 15, matureAfterGames: 5}`. The check is made by the server when a membership is requested and when the tournament bill is made (at the closing time once the final bill is closed).
 
-## Unique Goal Rush (penalty game)
+## Unique Ludo (online board game)
 
-A 5-shot penalty game against a goalkeeper played by the **server**. The app sends only where the player aimed and how hard; the server decides the kick's accuracy, the keeper's dive and the result (`src/modules/goalrush/goalrush.sim.ts`), so editing the browser cannot change a result. A copy of the engine in the app (`lib/goalrush-sim.ts`) is used only for the guest/practice mode, which earns nothing.
+Replaced Unique Goal Rush in the customer app. A Ludo game for 2 to 4 players: against computer players (single player) or in a private room with friends (multiplayer, real time). Module `src/modules/ludo`: `ludo.engine.ts` (pure rules and computer players), `ludo.service.ts` (rooms, points, limits, timers), `ludo.realtime.ts` (WebSocket), `ludo.routes.ts`. Migration `20261123000001_unique_ludo` (tables `LudoGame`, `LudoPlayer`, `LudoInvite`, `LudoEvent`, `LudoDailyUsage`). Tests: `tests/ludoEngine.test.ts`, `tests/ludo.test.ts`.
 
-Rules (enforced here): up to **3 games a calendar day** (Nepal time) for a signed-in customer; **every game started counts**, so a bad start cannot be thrown away. A game is exactly 5 shots, taken in order, at least 0.6 s apart. When the 5th shot is in, the game is finished and, **in the same transaction**, earns loyalty points **only with at least 3 goals out of 5: every 3 goals = 1 point** (so 1 point for 3, 4 or 5 goals; 0 for fewer): a `LoyaltyEntry` of kind `goal_rush` (sourceType `goal_rush`, sourceId = game id, unique), valid 3 months. At most 3 points a day. Sending a shot again returns the stored result (idempotent). A game left for 30 minutes, or from an earlier day, is abandoned: it counts for its day and earns nothing. Starts are serialised per customer (advisory lock), shots per game (row lock). Every finished game is written to the audit log.
+**The server decides everything.** The app only sends an action with the game's action counter (`seq`): "roll", or "move token 2". The dice are rolled on the server (`crypto.randomInt`), the legal moves, captures, winner, points and daily limits are all decided here, and the whole board is stored in `LudoGame.state`. A stale or repeated action (wrong `seq`, double tap, two tabs, a replay) is answered 409 and changes nothing. Every action is locked on the game row (`SELECT ... FOR UPDATE`) so parallel requests cannot race. Each roll, move and capture is also written to `LudoEvent` (unique per game and action number).
+
+**Rules** (engine): 52 shared squares, 5 home-lane squares per colour; a 6 brings a token out; exact number to finish; landing on an opponent captures it unless the square is safe (the 4 start squares and the 4 star squares); no blocks; another roll after a 6, a capture or a token reaching home; the third 6 in a row forfeits the turn; if no token can move the turn passes; the first player with all 4 tokens home wins and the game ends at once (the others are ranked by tokens home, then progress). Two players sit in opposite corners (red, yellow). Computer players (Easy, Normal, Hard) get exactly what a person gets, may only pick among the legal moves, and use the same server dice.
+
+**Points** (ledger rows of `LoyaltyEntry`, kind `ludo`; never a separate balance):
+
+| Row | Points | Unique key (`sourceType` / `sourceId`) |
+| --- | --- | --- |
+| entry fee | -1 | `ludo_fee` / `<gameId>:<phone>`, written when the game STARTS |
+| winner reward | +2 | `ludo_win` / `<gameId>:<phone>`, once per game, human winner only (a computer standing in for a person never earns for them) |
+| refund | +1 | `ludo_refund` / `<gameId>:<phone>`, only when the server cancels a started game (`cancelWithRefund`) |
+
+Starting is ONE database transaction: every human's balance and daily count are checked under the same advisory lock the other loyalty features use (`loyalty:<phone>`), then the fees, the day counts and the live game are written together, so a failure charges nobody ("Could not start the game. You were not charged."). Opening or browsing a lobby never charges. Daily limit (Nepal day, `LudoDailyUsage`): **4 single player and 5 multiplayer** games started per customer; a game counts when it starts, leaving or abandoning it does not give it back, a cancelled lobby never counts, and the count is per account (any device, any room). A person can be in one room or game at a time.
+
+**Fair play and reconnection.** Multiplayer turns last 45 s; when the time runs out the server plays that turn for the person (shown as "ran out of time") and after 3 in a row the computer takes the seat. A person whose socket is gone for 60 s is replaced by the computer until they come back (any action or reconnect hands the seat back). Leaving a started game forfeits it (no refund, no win; in multiplayer the computer plays the seat). If every human has left, the game is `abandoned` (no winner, no reward, no refund). A solo game left alone 30 min is abandoned. A lobby idle 30 min is cancelled (no charge). A finished game can be viewed but never resumed. A ticker (every 0.5 s) runs due computer actions and timeouts from the database (`LudoGame.actAt`), so a restart loses nothing.
 
 | Method | Path | Who | What |
 | --- | --- | --- | --- |
-| GET | `/goal-rush/rules` | Public | `{shotsPerGame: 5, gamesPerDay: 3, goalsToQualify: 3, goalsPerPoint: 3, pointsPerGame: 1, maxPointsPerDay: 3}` |
-| GET | `/goal-rush/me` | User | `{rules, allowance: {day, limit, used, left, pointsToday, maxPointsPerDay, resetsAt}, active: game or null, balance: valid loyalty points, recent: last 10 games}` |
-| POST | `/goal-rush/games` | User | starts a game (201) or returns the one still being played (200, `resumed: true`). 429 when the 3 games of the day are used |
-| GET | `/goal-rush/games/:id` | Owner | the game with its shots |
-| POST | `/goal-rush/games/:id/shots` | Owner | `{no (1-5), aimX, aimY, power (0-1)}` -> `{shot: {no, outcome: goal/save/wide/over/post, ballX, ballY, keeper}, game, allowance}`. 409 out of order or over, 429 too fast, 404 not yours. After shot 5 the game has `status: "completed"`, `points` and `rewardId` |
-| GET | `/goal-rush/history` | User | finished and abandoned games, newest first |
+| GET | `/ludo/rules` | Public | `{entryFee: 1, winReward: 2, soloLimit: 4, multiLimit: 5, minPlayers, maxPlayers, turnSeconds, graceSeconds, strikes, maxSixes}` |
+| GET | `/ludo/me` | User | `{rules, balance, limits: {day, solo: {used, limit, left}, multi: {...}, resetsAt}, current: the room or game I am in or null, invites: [{id, gameId, code, from}], friends: {total, online}, recent, stats}` |
+| POST | `/ludo/solo` | User | `{opponents: 1-3, difficulty: easy/normal/hard}` starts a solo game now (fee taken, day counted): returns the game view. 409 not enough points / already in a game, 429 daily limit |
+| POST | `/ludo/rooms` | User | `{maxPlayers: 2-4}` opens a private room (free). 409 / 429 as above |
+| GET | `/ludo/rooms/:idOrCode` | Member or invited | the room or game view; anyone else gets 404 (rooms are private) |
+| POST | `/ludo/rooms/:id/invite` | Host | `{phone}`: only people on the host's friend list (403 otherwise); sends a notification (type `players`, link `/ludo/room/CODE`). 20 invitations an hour |
+| DELETE | `/ludo/rooms/:id/invites/:inviteId` | Host | cancels an invitation |
+| POST | `/ludo/invites/:id/accept` / `decline` | Invited friend | accept checks the room is open and not full, and that the person has 1 point and a game left today |
+| POST | `/ludo/rooms/join` | User | `{code}`: the code alone never opens a room; there must be an open invitation (403) |
+| POST | `/ludo/rooms/:id/ready` | Player | `{ready}` |
+| DELETE | `/ludo/rooms/:id/players/:playerId` | Host | removes a player before the game starts |
+| POST | `/ludo/rooms/:id/leave` / `cancel` | Player / Host | leave (a started game is forfeited); the host's cancel or leave closes the lobby |
+| POST | `/ludo/rooms/:id/start` | Host | needs 2 or more players, all ready; charges everyone atomically (see above) |
+| GET | `/ludo/games/:id` | Member | the game view (board, players, online and connection state, last events for the animation, `turnEndsAt`, `outcome`) |
+| POST | `/ludo/games/:id/roll` | The player to move | `{seq}` |
+| POST | `/ludo/games/:id/move` | The player to move | `{token: 0-3, seq}` |
+| POST | `/ludo/games/:id/leave` | Player | forfeits |
+| GET | `/ludo/friends?room=&q=` | User | my friends (from Chat) with `online` (a live Ludo socket) and, for my room, `invite: none/invited/declined/joined` |
+| GET | `/ludo/history`, `/ludo/stats` | User | finished games (mode, opponents, result, points spent and earned, duration) and totals (played, wins, losses, win %, captures, with friends, best streak), all from the database |
+| GET | `/ludo/leaderboard?period=month/all&sort=wins/rate/played&mode=multi/solo/all` | User | first name and numbers only (never phone numbers); win % needs 5 finished games; default mode is multiplayer |
 
-Admin portal: `GET /admin/goal-rush` (totals for today, this month and all time, games per day for 14 days, players worth a look, the games list) and `GET /admin/goal-rush/:id` (one game shot by shot with its reward reference); permission `goalrush.view`. Nothing can be edited there; a reward is corrected with Loyalty Points > Adjust, which is logged.
+Rate limits (production): 120 roll or move requests a minute, 20 game starts, 40 invitations, per signed-in customer.
+
+**Real time.** WebSocket `/api/ludo/ws` (same host and port as the API). The first message must be `{"type":"auth","token":"<access token>"}` (never in the URL); the server answers `{"type":"ready"}` and then pushes `{"type":"game","game":<view>}` whenever a game or room the person is in (or invited to) changes. The socket is one-way and cannot move a token or roll a die; all actions use the routes above. Close codes: 4401 bad or expired token, 4403 suspended. "Online" means a live socket. Presence is held in the API process; with more than one API process a shared pub/sub (for example Redis) must be added. Behind Nginx the location for `/api/ludo/ws` needs `proxy_http_version 1.1; proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection "upgrade"; proxy_read_timeout 3600s;` (see `deploy/nginx`).
+
+**Left in place from Goal Rush** (no longer offered in the customer app and no longer served by the API): the tables `GoalRushGame` and `GoalRushShot`, every `LoyaltyEntry` with kind `goal_rush` (still counted in the balance and shown in the points history), and the admin portal's Goal Rush report, which reads those tables.
 
 ## Order at the venue (venue orders)
 

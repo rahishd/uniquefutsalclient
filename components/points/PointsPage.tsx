@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import { useHighlight } from "@/lib/highlight";
 import Link from "next/link";
-import { Gift, Star, Trophy, ShoppingBag, Gamepad2, UserRound, ChevronDown, Crown, HeartHandshake, Check, Clock, TriangleAlert, Loader2, Goal, Clapperboard, Send, Info, CalendarDays, ChevronRight } from "lucide-react";
+import { Gift, Star, Trophy, ShoppingBag, Gamepad2, UserRound, ChevronDown, Crown, HeartHandshake, Check, Clock, TriangleAlert, Loader2, Goal, Clapperboard, Send, Info, CalendarDays, ChevronRight, Dices } from "lucide-react";
 import SharePoints from "@/components/points/SharePoints";
 import SendPdfButton from "@/components/SendPdfButton";
 import { pdfFileName, type PdfSpec } from "@/lib/branded-pdf";
 import { useSession, openSignIn } from "@/lib/session";
 import { errorText } from "@/lib/api";
 import { GAME_RS_PER_POINT, GOODS_DAILY_MAX_POINTS, GZ_POINTS_PER_HOUR, GAME_POINTS_MONTHS, MEMBERSHIP_POINTS, POINTS_CAPTAIN_WIN, REFERRAL_POINTS, RS_PER_POINT, SHIFT_HOURS, fmtPts } from "@/lib/points";
-import { RULES as GR_RULES, goalRushStore } from "@/lib/goalrush";
+import { DEFAULT_RULES as LUDO_RULES, ludoStore } from "@/lib/ludo";
 import { FALLBACK_SHARE, cancelVoucher, claimFreeGame, loyaltyStore, progressPct, type LoyaltyRow, type Period } from "@/lib/loyalty";
 import { OfferCard } from "@/components/points/OfferCard";
 import PartnerBanners from "@/components/marketplace/PartnerBanners";
@@ -27,6 +27,7 @@ const KIND: Record<LoyaltyRow["kind"], { icon: typeof Star; tone: string }> = {
   free_game: { icon: Gift, tone: "bg-orange-400/20 text-orange-600" },
   referral: { icon: HeartHandshake, tone: "bg-pink-400/20 text-pink-600" },
   goal_rush: { icon: Goal, tone: "bg-emerald-400/20 text-emerald-700" },
+  ludo: { icon: Dices, tone: "bg-indigo-400/20 text-indigo-700" },
   gift: { icon: Gift, tone: "bg-rose-400/20 text-rose-600" },
   watch_earn: { icon: Clapperboard, tone: "bg-sky-400/20 text-sky-700" },
   review: { icon: Star, tone: "bg-amber-400/25 text-amber-600" },
@@ -48,7 +49,7 @@ function Validity({ row }: { row: LoyaltyRow }) {
 export default function PointsPage() {
   const session = useSession();
   const store = loyaltyStore.use();
-  const gr = goalRushStore.use().data ?? null;
+  const ludo = ludoStore.use().data ?? null;
   const [all, setAll] = useState(false);
   // a notice opens its own row; the history shows only the latest few, so open the whole list if the row is further down
   const [target, setTarget] = useState<string | null>(null);
@@ -176,7 +177,7 @@ export default function PointsPage() {
             note: "Points are only ever shared from your own account. Nothing is taken from you without your tap.",
           });
           const ways = [
-            { Icon: Goal, title: "Play games", sub: "Score goals in Goal Rush", to: "/goal-rush" },
+            { Icon: Dices, title: "Play Unique Ludo", sub: "Win 2 points a game", to: "/ludo" },
             { Icon: CalendarDays, title: "Book courts", sub: "Earn on every futsal game", to: "/book" },
             { Icon: Gamepad2, title: "GameZone", sub: "Earn for every hour you play", to: "/gamezone" },
             { Icon: Gift, title: "Gift cards", sub: "Receive points as a gift", to: "/gift-card" },
@@ -290,15 +291,15 @@ export default function PointsPage() {
         </div>
       </section>
 
-      {/* Scores: Goal Rush */}
+      {/* Scores: Unique Ludo */}
       <section className="glass rounded-3xl p-5 desk:col-span-2" aria-label="Your scores">
         <h2 className="text-base font-semibold">Your scores</h2>
         <div className="mt-3 grid gap-3 desk:grid-cols-2">
           <div className="rounded-2xl bg-white/60 p-4">
-            <p className="flex items-center gap-2 text-sm font-semibold"><Goal size={18} className="text-emerald-600" /> Unique Goal Rush</p>
-            <p className="mt-2 text-2xl font-semibold">{gr?.allowance.pointsToday ?? 0}<span className="text-sm font-normal text-slate-500"> / {GR_RULES.maxPointsPerDay} points today</span></p>
-            <p className="mt-2 text-xs text-slate-500">{gr?.allowance.used ?? 0} of {GR_RULES.gamesPerDay} games played today · {gr ? `${gr.recent.filter((g) => g.points > 0).length} winning games of your last ${gr.recent.length}` : "no games yet"}</p>
-            <Link href="/goal-rush" className="mt-3 inline-flex text-xs font-semibold text-brand">Play Goal Rush</Link>
+            <p className="flex items-center gap-2 text-sm font-semibold"><Dices size={18} className="text-indigo-600" /> Unique Ludo</p>
+            <p className="mt-2 text-2xl font-semibold">{ludo?.stats.wins ?? 0}<span className="text-sm font-normal text-slate-500"> wins · {ludo?.stats.played ?? 0} games played</span></p>
+            <p className="mt-2 text-xs text-slate-500">Solo {ludo?.limits.solo.used ?? 0}/{LUDO_RULES.soloLimit} · Multiplayer {ludo?.limits.multi.used ?? 0}/{LUDO_RULES.multiLimit} games played today</p>
+            <Link href="/ludo" className="mt-3 inline-flex text-xs font-semibold text-brand">Play Unique Ludo</Link>
           </div>
         </div>
       </section>
@@ -313,7 +314,7 @@ export default function PointsPage() {
           <li className="flex gap-3"><ShoppingBag size={20} className="mt-0.5 shrink-0 text-sky-600" /><span>Add-on items: every <b>Rs. {RS_PER_POINT}</b> spent = <b>1 point</b> (Rs. 550 = 5.5 points). Items earn at most <b>{GOODS_DAILY_MAX_POINTS} points a day</b> (Rs. {(GOODS_DAILY_MAX_POINTS * RS_PER_POINT).toLocaleString("en-IN")}); anything more that day earns no extra.</span></li>
           <li className="flex gap-3"><HeartHandshake size={20} className="mt-0.5 shrink-0 text-pink-500" /><span><b>Refer &amp; Earn:</b> book a game for another team and you both get <b>{REFERRAL_POINTS} points</b> when the venue approves it. The other team must have an account; if not, nobody gets points.</span></li>
           <li className="flex gap-3"><Crown size={20} className="mt-0.5 shrink-0 text-violet-600" /><span>Membership purchase or renewal: <b>3 months = {MEMBERSHIP_POINTS.quarterly} points</b>, <b>6 months = {MEMBERSHIP_POINTS.half} points</b>.</span></li>
-          <li className="flex gap-3"><Goal size={20} className="mt-0.5 shrink-0 text-emerald-600" /><span><b>Unique Goal Rush:</b> score {GR_RULES.goalsToQualify} or more of {GR_RULES.shotsPerGame} penalties to win 1 point, up to {GR_RULES.gamesPerDay} games a day.</span></li>
+          <li className="flex gap-3"><Dices size={20} className="mt-0.5 shrink-0 text-indigo-600" /><span><b>Unique Ludo:</b> every game costs {LUDO_RULES.entryFee} point to enter and the winner earns {LUDO_RULES.winReward} points, up to {LUDO_RULES.soloLimit} solo and {LUDO_RULES.multiLimit} multiplayer games a day.</span></li>
           <li className="flex gap-3"><Trophy size={20} className="mt-0.5 shrink-0 text-amber-600" /><span>Challenge games: only the <b>winning captain</b> earns <b>{POINTS_CAPTAIN_WIN} points</b>.</span></li>
           <li className="flex gap-3"><Send size={20} className="mt-0.5 shrink-0 text-brand" /><span><b>Share points:</b> once you have at least {(loy.share ?? FALLBACK_SHARE).minBalance} points you can send whole points to a friend who has an account, up to {(loy.share ?? FALLBACK_SHARE).max} points at a time. They keep their expiry date, and sent points can&apos;t be taken back.</span></li>
         </ul>

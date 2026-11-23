@@ -247,8 +247,14 @@ html.dark :is(.bg-brand:not(.text-white), .uf-keep, [class*="bg-[#0c0b5d]"], [cl
   animation: uf-tile-blink 1.3s ease-in-out infinite;
   --tw-ring-color: rgba(244, 63, 94, 0.55);
 }
+/* Quick Access: the icon itself blinks when there is something new for it (the tiles have no box any more) */
+@keyframes uf-icon-blink {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.18); opacity: 0.55; }
+}
+.uf-icon-blink { animation: uf-icon-blink 1.3s ease-in-out infinite; transform-origin: center; }
 @media (prefers-reduced-motion: reduce) {
-  .uf-tile-blink { animation: none; box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.55); }
+  .uf-tile-blink, .uf-icon-blink { animation: none; }
   .uf-bell-ring, .uf-badge-blink, .uf-badge-ping { animation: none; }
   .uf-badge-ping { display: none; }
 }

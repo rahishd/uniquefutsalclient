@@ -14,7 +14,7 @@ import QuickRebook from "@/components/QuickRebook";
 import PopularGrid from "@/components/PopularGrid";
 import PartnerRewards from "@/components/marketplace/PartnerRewards";
 import WhyUnique from "@/components/WhyUnique";
-import GoalRushCard from "@/components/goalrush/GoalRushCard";
+import LudoCard from "@/components/ludo/LudoCard";
 import PromoCodes from "@/components/PromoCodes";
 import BannerOffer from "@/components/BannerOffer";
 import TournamentSection from "@/components/TournamentSection";
@@ -27,7 +27,7 @@ import GiftOffers from "@/components/points/OfferCard";
 // Tablet and wide phone (`tab:`, 640px and up): the same two columns, 50/50. Desktop mode (`desk:`, see globals.css), top to bottom:
 //   row 1  profile card | weather + last played card (half each)
 //   row 2  search bar, full width (and the emergency reminder when there is one)
-//   row 3  main column (8/12: promo banner, Quick Access, Goal Rush, gallery) | sticky sidebar (4/12: book again, ad, promo codes, tournament)
+//   row 3  main column (8/12: promo banner, Quick Access, Unique Ludo, gallery) | sticky sidebar (4/12: book again, ad, promo codes, tournament)
 // The wrappers are `display: contents` on mobile so every block stays in the one column; each block carries its own mobile order.
 export default function HomeScreen() {
   return (
@@ -92,8 +92,8 @@ export default function HomeScreen() {
         <div className="order-[7] empty:hidden desk:order-[10] desk:col-span-12 desk:mt-10"><GallerySection /></div>
 
         <div className="uf-home-below order-[7] desk:order-[8] desk:col-span-8 desk:flex desk:flex-col">
-          {/* the penalty mini game, right under Quick Access */}
-          <GoalRushCard />
+          {/* Unique Ludo, the online board game, right under Quick Access */}
+          <LudoCard />
         </div>
       </div>
 
@@ -102,7 +102,7 @@ export default function HomeScreen() {
         <div className="order-[6] empty:hidden tab:[&>*]:mt-0 desk:hidden"><QuickRebook /></div>
         <div className="order-[9] empty:hidden tab:[&>*]:mt-0 desk:hidden"><PromoCodes /></div>
         <div className="uf-rest-col order-[10] empty:hidden tab:[&>*]:mt-0 desk:[&>*]:mt-0"><TournamentSection /></div>
-        {/* desktop: beside the Goal Rush card; `uf-rest-col` keeps the side column open (see the :has() rule in globals.css) */}
+        {/* desktop: beside the Unique Ludo card; `uf-rest-col` keeps the side column open (see the :has() rule in globals.css) */}
         <div className="uf-rest-col uf-desk-only order-[11] hidden desk:flex desk:flex-1 desk:flex-col"><WhyUnique className="flex flex-1 flex-col" /></div>
       </aside>
 

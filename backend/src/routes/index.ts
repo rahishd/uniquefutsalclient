@@ -31,7 +31,7 @@ import { wheelchairRouter } from "../modules/wheelchair";
 import { chatRouter } from "../modules/chat";
 import { playerRequestRouter } from "../modules/playerrequest";
 import { clubRouter } from "../modules/club";
-import { goalRushRouter } from "../modules/goalrush";
+import { ludoRouter } from "../modules/ludo";
 import { academyRouter } from "../modules/academy";
 import { referRouter } from "../modules/refer";
 import { healthRouter } from "../modules/health";
@@ -80,7 +80,7 @@ router.use("/wheelchair", wheelchairRouter);
 router.use("/chat", chatRouter);
 router.use("/player-requests", playerRequestRouter);
 router.use("/club", clubRouter);
-router.use("/goal-rush", goalRushRouter);
+router.use("/ludo", ludoRouter); // Unique Ludo replaced Goal Rush; the old /goal-rush routes are no longer served (tables and history stay)
 router.use("/academy", academyRouter);
 router.use("/refer", referRouter);
 router.use("/wellness", healthRouter); // the player health tracker (not /health, which is the server uptime check)

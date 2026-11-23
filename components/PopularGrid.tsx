@@ -20,9 +20,6 @@ interface Tile {
   actions?: boolean;
 }
 
-// Every tile wears a "New" tag except the long-standing ones, and nobody who has signed in more than this many times sees it.
-const NEW_TAG_LOGINS = 2;
-const NO_NEW_TAG = new Set(["Book", "Gamezone", "Points", "Tournaments"]);
 
 // the desktop shows the first row of tiles only (the phone shows all of them)
 const DESK_TILES = 10;
@@ -70,8 +67,6 @@ export default function PopularGrid() {
   const teams = useTeams();
   const session = useSession();
   const guest = session?.registered !== true;
-  // someone who has signed in more than 5 times knows their way around: no "New" tags for them
-  const showNew = !(session?.registered && (session.logins ?? 0) > NEW_TAG_LOGINS);
   const tr = useT();
 
   function countFor(t: Tile) {
@@ -108,16 +103,11 @@ export default function PopularGrid() {
           const locked = guest && !GUEST_OK.has(t.href);
           const face = (
             <>
-              <span className={`${!locked && count > 0 ? "uf-tile-blink " : ""}relative flex aspect-square w-full max-w-[70px] items-center justify-center rounded-[22px] desk:max-w-none bg-[#dbeafe] shadow-[0_6px_14px_-10px_rgba(59,130,246,0.6)] ring-1 ring-[#bfd7ff] transition-transform group-active:scale-95 desk:h-24 desk:w-24 desk:group-hover:-translate-y-1 ${locked ? "opacity-60" : ""}`}>
-                <Icon className={`${t.tone} h-[30px] w-[30px] desk:h-10 desk:w-10`} />
+              <span className={`relative flex aspect-square w-full max-w-[70px] items-center justify-center desk:max-w-none transition-transform group-active:scale-95 desk:h-24 desk:w-24 desk:group-hover:-translate-y-1 ${locked ? "opacity-60" : ""}`}>
+                <Icon className={`${t.tone} h-[30px] w-[30px] desk:h-10 desk:w-10 ${!locked && count > 0 ? "uf-icon-blink" : ""}`} />
                 {locked && (
                   <span aria-hidden className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-slate-700 text-white shadow ring-2 ring-white">
                     <Lock size={12} />
-                  </span>
-                )}
-                {showNew && !NO_NEW_TAG.has(t.label) && (
-                  <span aria-hidden className="absolute -left-2 -top-2 rounded-full bg-gradient-to-r from-[#f5822a] to-[#ff9a4d] px-1.5 py-px text-[8px] font-extrabold uppercase leading-[14px] tracking-wider text-white shadow-md ring-2 ring-white">
-                    {tr("New")}
                   </span>
                 )}
                 {!locked && count > 0 && (

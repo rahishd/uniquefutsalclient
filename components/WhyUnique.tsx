@@ -3,7 +3,7 @@ import { ChevronRight } from "lucide-react";
 import { FACILITIES } from "@/components/Facilities";
 
 // Home, desktop only: "What makes us unique", the same list as What Makes Us Unique in the footer, two per row (five rows). It sits in the sidebar
-// column beside the Goal Rush card (see components/HomeScreen.tsx). Plain server markup, no images, so it adds nothing to load.
+// column beside the Unique Ludo card (see components/HomeScreen.tsx). Plain server markup, no images, so it adds nothing to load.
 export default function WhyUnique({ className = "" }: { className?: string }) {
   return (
     <section aria-labelledby="why-unique-heading" className={className}>

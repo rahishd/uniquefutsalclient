@@ -5,6 +5,7 @@ import { prisma } from "./config/db";
 import { registerUserListeners } from "./events/listeners/user.listener";
 import { registerOrderListeners } from "./events/listeners/order.listener";
 import { initCronTasks } from "./tasks/cron";
+import { attachLudoSocket, startLudoEngine } from "./modules/ludo";
 
 const PORT = env.PORT || 5000;
 
@@ -27,6 +28,10 @@ const PORT = env.PORT || 5000;
       logger.info(`🚀 Server is running on port ${PORT}`);
       logger.info(`📝 Environment: ${env.NODE_ENV}`);
     });
+
+    // Unique Ludo: real-time socket (/api/ludo/ws), computer players and turn timers
+    attachLudoSocket(server);
+    startLudoEngine();
 
     // Graceful shutdown
     process.on("SIGINT", async () => {

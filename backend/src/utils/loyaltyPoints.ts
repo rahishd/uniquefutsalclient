@@ -42,7 +42,7 @@ export function periodOfHour(hour: number): Period {
   return hour < 10 ? "Morning" : hour < 17 ? "Day" : "Evening";
 }
 
-export type LoyaltyKind = "game" | "captain_win" | "goods" | "membership" | "free_game" | "referral" | "goal_rush" | "gift" | "watch_earn" | "review" | "shared_out" | "shared_in";
+export type LoyaltyKind = "game" | "captain_win" | "goods" | "membership" | "free_game" | "referral" | "goal_rush" | "ludo" | "gift" | "watch_earn" | "review" | "shared_out" | "shared_in";
 
 // Sharing points: a customer sends whole points they hold to another registered customer. The points keep the expiry
 // they had, so sharing never makes points last longer.
@@ -76,7 +76,7 @@ export function goodsPointsRoom(alreadyToday: number): number {
 }
 
 export function expiryFor(kind: LoyaltyKind, earnedOn: string): string | null | undefined {
-  if (kind === "game" || kind === "captain_win" || kind === "goal_rush") return addMonthsKey(earnedOn, GAME_POINTS_MONTHS);
+  if (kind === "game" || kind === "captain_win" || kind === "goal_rush" || kind === "ludo") return addMonthsKey(earnedOn, GAME_POINTS_MONTHS);
   if (kind === "watch_earn") return addMonthsKey(earnedOn, WATCH_POINTS_MONTHS);
   if (kind === "review") return addMonthsKey(earnedOn, REVIEW_POINTS_MONTHS);
   if (kind === "goods") return addMonthsKey(earnedOn, GOODS_POINTS_MONTHS);
@@ -199,7 +199,7 @@ export function summarize(ledger: LedgerRow[], today: string): LoyaltySummary {
     remaining: r1(valid.reduce((n, l) => n + l.left, 0)),
     expiringSoon,
     byType: {
-      games: bucket((l) => l.row.kind === "game" || l.row.kind === "captain_win" || l.row.kind === "goal_rush"),
+      games: bucket((l) => l.row.kind === "game" || l.row.kind === "captain_win" || l.row.kind === "goal_rush" || l.row.kind === "ludo"),
       watch: bucket((l) => l.row.kind === "watch_earn"),
       goods: bucket((l) => l.row.kind === "goods"),
       membership: bucket((l) => l.row.kind === "membership"),

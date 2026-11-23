@@ -28,4 +28,4 @@ export async function redeemOffer(offerId: string) {
 }
 
 export const day = (iso: string) => new Date(iso.length === 10 ? `${iso}T00:00:00` : iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-export const KIND_LABEL: Record<string, string> = { game: "Game", captain_win: "Challenge win", goods: "Goods", membership: "Membership", referral: "Refer & Earn", goal_rush: "Goal Rush", gift: "Gift", watch_earn: "Watch & Earn", review: "Review", shared_in: "Shared with you" };
+export const KIND_LABEL: Record<string, string> = { game: "Game", captain_win: "Challenge win", goods: "Goods", membership: "Membership", referral: "Refer & Earn", goal_rush: "Goal Rush", ludo: "Unique Ludo", gift: "Gift", watch_earn: "Watch & Earn", review: "Review", shared_in: "Shared with you" };

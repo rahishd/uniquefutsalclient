@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# customer data pulled from the old admin panel (phone numbers): never commit
+backend/migration-data/
