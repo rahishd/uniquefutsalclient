@@ -155,7 +155,6 @@ function Flow({ catalog }: { catalog: Catalog }) {
           orderId={pay.orderCode}
           amount={pay.amount}
           remarks={pay.remarks}
-          payload={pay.qrPayload}
           expiresAt={pay.expiresAt}
           guestPhone={registered ? undefined : phone}
           onBack={() => {

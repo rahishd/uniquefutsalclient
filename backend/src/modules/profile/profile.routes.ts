@@ -11,6 +11,7 @@ import { todayKey } from "../../utils/dates";
 import { ageOn, isValidDob, MAX_AGE, MIN_AGE } from "../../utils/age";
 import { codeKey, ensurePaymentCodes } from "../verify/verify.codes";
 import sharp from "sharp";
+import pushService from "../push/push.service";
 
 const router = Router();
 router.use(authMiddleware); // everything here is about the signed-in customer only
@@ -213,6 +214,25 @@ router.delete(
   asyncHandler(async (req: AuthRequest, res: Response) => {
     await prisma.pushSubscription.deleteMany({ where: { endpoint: req.body.endpoint, userId: req.user!.id } });
     res.json(ApiResponseUtil.success(200, "Unsubscribed"));
+  }),
+);
+
+// "Send me a test alert" (Profile > Settings): sends one alert to this customer's saved devices and says what happened, so a missing
+// alert on a phone or watch can be traced: is the server set up, does it know a device of this customer, did the push service accept it.
+const lastTest = new Map<string, number>();
+router.post(
+  "/push-test",
+  asyncHandler(async (req: AuthRequest, res: Response) => {
+    const id = req.user!.id;
+    const now = Date.now();
+    if (now - (lastTest.get(id) ?? 0) < 8000) throw new AppError(429, "Wait a few seconds before sending another test.");
+    lastTest.set(id, now);
+    const devices = await prisma.pushSubscription.count({ where: { userId: id } });
+    const serverReady = pushService.enabled;
+    const sent = serverReady && devices > 0
+      ? await pushService.sendToUser(id, "booking", { title: "Test alert", body: "If you can read this, alerts reach this phone. Check your watch too.", href: "/profile", tag: `test-${now}` })
+      : 0;
+    res.json(ApiResponseUtil.success(200, "Test alert", { serverReady, devices, sent }));
   }),
 );
 

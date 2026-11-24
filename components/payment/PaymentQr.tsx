@@ -2,9 +2,8 @@
 
 import CharityLine from "@/components/CharityLine";
 import { useEffect, useRef, useState } from "react";
-import { QRCodeCanvas } from "qrcode.react";
 import { Check, ChevronLeft, Clock, Copy, Download, Loader2 } from "lucide-react";
-import { METHOD_LABEL, PAYMENT_POLL_MS, fetchPaymentStatus, isTestQr, testPay, type OnlineMethod } from "@/lib/payment";
+import { METHOD_LABEL, PAYMENT_POLL_MS, fetchPaymentStatus, type OnlineMethod } from "@/lib/payment";
 
 const rs = (n: number) => `Rs. ${n.toLocaleString("en-IN")}`;
 
@@ -17,25 +16,22 @@ interface Props {
   method: OnlineMethod;
   orderId: string; // the booking / session ID the server is waiting to see paid
   amount: number; // final amount after every promo code (decided by the server)
-  remarks: string; // e.g. "Regular game - <booking id>"
-  payload: string; // the QR content the server created
-  expiresAt: string; // when the QR (and the held slot) runs out
+  remarks: string; // the short booking code: the customer writes it as the Fonepay remark
+  expiresAt: string; // when the held slot runs out
   guestPhone?: string; // a guest has no account: the server checks the order against this number
-  onPaid: () => void; // called automatically once the server reports the order as paid
+  onPaid: () => void; // called automatically once the venue confirms the payment
   onBack: () => void;
   backLabel?: string; // default: "Change payment method"
 }
 
-// Shows the QR for the exact amount, then watches for the payment. The customer never has to
-// confirm anything: the screen moves on by itself when the server reports "paid".
-export default function PaymentQr({ method, orderId, amount, remarks, payload, expiresAt, guestPhone, onPaid, onBack, backLabel = "Change payment method" }: Props) {
+// The venue's own Fonepay QR (the same for every customer), the exact amount, and the booking code to write as the remark.
+// The venue sees the payment in the Fonepay app and confirms it in the admin portal; this screen watches for that and moves on by itself.
+export default function PaymentQr({ method, orderId, amount, remarks, expiresAt, guestPhone, onPaid, onBack, backLabel = "Change payment method" }: Props) {
   const label = METHOD_LABEL[method];
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const reported = useRef(false);
   const onPaidRef = useRef(onPaid); // always call the latest callback without restarting the polling
   const [left, setLeft] = useState(() => Math.max(0, new Date(expiresAt).getTime() - Date.now()));
   const [serverExpired, setServerExpired] = useState(false);
-  const [testBusy, setTestBusy] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -54,7 +50,7 @@ export default function PaymentQr({ method, orderId, amount, remarks, payload, e
 
   const expired = left <= 0 || serverExpired;
 
-  // Ask the server whether the order is paid, every few seconds and whenever the customer
+  // Ask the server whether the venue has confirmed the payment, every few seconds and whenever the customer
   // comes back to this tab (it may have been paused while they were in their payment app).
   useEffect(() => {
     if (expired) return;
@@ -81,22 +77,13 @@ export default function PaymentQr({ method, orderId, amount, remarks, payload, e
     };
   }, [expired, orderId, guestPhone]);
 
-  function save() {
-    const url = canvasRef.current?.toDataURL("image/png");
-    if (!url) return;
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `unique-futsal-${method}-qr.png`;
-    a.click();
-  }
-
   async function copyRemarks() {
     try {
       await navigator.clipboard.writeText(remarks);
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch {
-      // clipboard blocked: the remarks are visible to type in
+      // clipboard blocked: the code is visible to type in
     }
   }
 
@@ -108,7 +95,7 @@ export default function PaymentQr({ method, orderId, amount, remarks, payload, e
 
       <header>
         <h1 className="text-2xl font-semibold">Pay with {label}</h1>
-        <p className="text-sm text-slate-500">Scan or upload this QR in your payment app.</p>
+        <p className="text-sm text-slate-500">Scan the venue&apos;s {label} QR, pay the amount below, and write the code as the remark.</p>
       </header>
 
       <section className="glass rounded-3xl p-5 text-center">
@@ -116,55 +103,49 @@ export default function PaymentQr({ method, orderId, amount, remarks, payload, e
         <p className="text-3xl font-semibold">{rs(amount)}</p>
         <div className="mt-1"><CharityLine amount={amount} as="note" /></div>
 
-        <div className="mx-auto mt-4 w-fit rounded-2xl bg-white p-3 shadow-inner ring-1 ring-slate-100" style={expired ? { opacity: 0.25 } : undefined}>
-          <QRCodeCanvas
-            ref={canvasRef}
-            value={payload}
-            size={216}
-            level="M"
-            marginSize={2}
-            role="img"
-            aria-label={`${label} payment QR for ${rs(amount)}`}
-          />
+        {/* the code the customer writes in the Remarks box of their payment app, so the venue can match the payment to this booking */}
+        <div className="mt-4 rounded-2xl bg-brand/5 p-4 ring-1 ring-brand/20">
+          <p className="text-xs font-medium text-brand">Write this code in Remarks</p>
+          <div className="mt-1 flex items-center justify-center gap-3">
+            <span className="select-all break-all font-mono text-2xl font-bold tracking-wide" aria-label={`Booking code ${remarks}`}>{remarks}</span>
+            <button type="button" onClick={copyRemarks} className="flex shrink-0 items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-brand ring-1 ring-brand/20" aria-label="Copy code">
+              {copied ? <><Check size={14} /> Copied</> : <><Copy size={14} /> Copy</>}
+            </button>
+          </div>
         </div>
 
-        <p className={`mt-3 flex items-center justify-center gap-1.5 text-sm font-medium ${expired ? "text-rose-500" : left < 60000 ? "text-orange-500" : "text-slate-500"}`} role="timer" aria-live="off">
-          <Clock size={15} /> {expired ? "This QR has expired" : `Valid for ${mmss(left)}`}
+        <div className="mx-auto mt-4 w-fit max-w-full rounded-2xl bg-white p-3 shadow-inner ring-1 ring-slate-100" style={expired ? { opacity: 0.25 } : undefined}>
+          {/* the venue's own fixed Fonepay QR (public/fonepay-qr.png): the same picture for every payment */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/fonepay-qr.png" alt={`${label} QR of Unique Futsal`} width={669} height={1096} className="h-auto w-full max-w-[260px]" />
+        </div>
+
+        <p className={`mt-3 flex items-center justify-center gap-1.5 text-sm font-medium ${expired ? "text-rose-500" : left < 120000 ? "text-orange-500" : "text-slate-500"}`} role="timer" aria-live="off">
+          <Clock size={15} /> {expired ? "Your slot is no longer held" : `Your slot is held for ${mmss(left)}`}
         </p>
 
         {!expired && (
-          <button type="button" onClick={save} className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/70 px-5 py-2.5 text-sm font-medium text-brand">
+          <a href="/fonepay-qr.png" download="unique-futsal-fonepay-qr.png" className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/70 px-5 py-2.5 text-sm font-medium text-brand">
             <Download size={16} /> Save QR image
-          </button>
+          </a>
         )}
       </section>
 
-      {/* Live status: the customer just waits; no confirmation button */}
+      {/* Live status: the customer just waits; the venue confirms the payment */}
       {!expired && (
-        <p role="status" aria-live="polite" className="flex items-center justify-center gap-2 rounded-2xl bg-brand/5 px-4 py-3 text-sm font-medium text-brand">
-          <Loader2 size={16} className="animate-spin" /> Waiting for your payment… we&apos;ll confirm it automatically
+        <p role="status" aria-live="polite" className="flex items-center justify-center gap-2 rounded-2xl bg-brand/5 px-4 py-3 text-center text-sm font-medium text-brand">
+          <Loader2 size={16} className="shrink-0 animate-spin" /> Waiting for the venue to confirm your payment. This page updates by itself.
         </p>
       )}
-
-      <section className="glass rounded-3xl p-5">
-        <h2 className="text-sm font-medium">Payment remarks (filled in for you)</h2>
-        <div className="mt-2 flex items-center justify-between gap-3 rounded-2xl bg-white/70 px-4 py-3">
-          <span className="min-w-0 break-words text-sm font-medium">{remarks}</span>
-          <button type="button" onClick={copyRemarks} className="flex shrink-0 items-center gap-1 text-xs font-medium text-brand" aria-label="Copy remarks">
-            {copied ? <><Check size={14} /> Copied</> : <><Copy size={14} /> Copy</>}
-          </button>
-        </div>
-        <p className="mt-2 text-xs text-slate-400">These remarks link your payment to this order. Please don&apos;t change them.</p>
-      </section>
 
       <section className="glass rounded-3xl p-5">
         <h2 className="text-sm font-medium">How to pay</h2>
         <ol className="mt-3 space-y-3 text-sm text-slate-600">
           {[
-            "Take a screenshot of this QR, or tap Save QR image.",
-            `Open your payment app (${label} or any app that scans QR) and choose Scan QR, then upload the screenshot from your gallery.`,
-            "Check the amount and remarks match, then complete the payment.",
-            "That's it. This page detects your payment and confirms automatically.",
+            `Open your payment app (${label} or any app that scans QR) and choose Scan QR. Scan the QR above, or tap Save QR image and upload it from your gallery.`,
+            `Enter the amount: ${rs(amount)}.`,
+            `In Remarks, write ${remarks}. This is how the venue finds your payment.`,
+            "Complete the payment. The venue checks it and confirms your booking, usually within a few minutes.",
           ].map((t, i) => (
             <li key={t} className="flex gap-3">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand text-xs text-white">{i + 1}</span>
@@ -174,36 +155,10 @@ export default function PaymentQr({ method, orderId, amount, remarks, payload, e
         </ol>
       </section>
 
-      {isTestQr(payload) && (
-        <div className="rounded-2xl bg-amber-400/15 px-4 py-3 text-xs text-amber-700">
-          <p>
-            Test mode: the server is using its test payment gateway, so this QR can&apos;t take a real payment. With the real gateway the server learns about your payment from {label} and this screen updates by itself.
-          </p>
-          {!expired && (
-            <button
-              type="button"
-              disabled={testBusy}
-              onClick={async () => {
-                setTestBusy(true);
-                try {
-                  await testPay(orderId);
-                } catch {
-                  // not available outside test mode
-                }
-                setTestBusy(false);
-              }}
-              className="mt-2 rounded-full bg-amber-500 px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
-            >
-              Test: simulate payment received
-            </button>
-          )}
-        </div>
-      )}
-
       {expired && (
         <>
           <p className="rounded-2xl bg-slate-100 px-4 py-3 text-xs text-slate-500">
-            Already paid? You don&apos;t need to do anything. Once the payment reaches us, your order updates automatically.
+            Already paid? Keep your payment screenshot and call the venue with the code {remarks}. They will find your payment.
           </p>
           <button type="button" onClick={onBack} className="glass-btn block w-full rounded-full py-4 text-center text-base font-semibold text-white">
             Start again

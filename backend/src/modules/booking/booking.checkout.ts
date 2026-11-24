@@ -6,7 +6,7 @@ import { AppError } from "../../middlewares/error.middleware";
 import { prisma } from "../../config/db";
 import BookingService from "./booking.service";
 import { smsBookingConfirmed, smsBookingRequested } from "./booking.sms";
-import paymentService, { QR_HOLD_MS } from "../payment/payment.service";
+import paymentService, { PAYMENT_HOLD_MS } from "../payment/payment.service";
 import loyaltyService from "../loyalty/loyalty.service";
 import notificationService from "../notification/notification.service";
 import { addDaysKey, todayKey } from "../../utils/dates";
@@ -99,7 +99,7 @@ export const checkoutController = {
     );
 
     // Online bookings stay pending (and hold the slot) until the payment is confirmed by the server.
-    const holdUntil = new Date(Date.now() + QR_HOLD_MS);
+    const holdUntil = new Date(Date.now() + PAYMENT_HOLD_MS);
     let payment = null;
     try {
       if (voucherId) {
@@ -121,7 +121,7 @@ export const checkoutController = {
         await prisma.booking.update({ where: { id: booking.id }, data: { status: "pending", paymentStatus: "pending" } });
       } else if (booking.totalPrice > 0) {
         await prisma.booking.update({ where: { id: booking.id }, data: { status: "pending", paymentStatus: "pending", holdExpiresAt: holdUntil, paymentOrderCode: booking.id } });
-        payment = await paymentService.createOrder({ orderCode: booking.id, purpose: "game", userId, guestPhone: customerPhone, method: method as "fonepay", amount: booking.totalPrice });
+        payment = await paymentService.createOrder({ orderCode: booking.id, code: (booking as { code?: string | null }).code, purpose: "game", userId, guestPhone: customerPhone, method: method as "fonepay", amount: booking.totalPrice });
         booking.status = "pending";
       } else {
         // a promo took the price to zero: nothing to pay

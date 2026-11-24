@@ -3,14 +3,12 @@ import { asyncHandler } from "../../utils/asyncHandler";
 import { ApiResponseUtil } from "../../utils/apiResponse";
 import { AuthRequest, optionalAuthMiddleware } from "../../middlewares/auth.middleware";
 import adminOnly from "../../middlewares/admin.middleware";
-import { AppError } from "../../middlewares/error.middleware";
 import { AuditService } from "../audit";
-import { isTestGateway } from "../../services/paymentGateway";
 import paymentService from "./payment.service";
 
 const router = Router();
 
-// Polled by the QR screen. Owner (signed in) or the guest who made the order (?phone=).
+// Polled by the payment screen. Owner (signed in) or the guest who made the order (?phone=).
 router.get(
   "/:orderCode/status",
   optionalAuthMiddleware,
@@ -25,7 +23,7 @@ router.get(
   }),
 );
 
-// Staff: record a payment that was received outside the gateway (for example cash taken for an online order).
+// Staff: the customer paid the venue's Fonepay QR and staff saw it in the Fonepay app. This confirms the order.
 router.post(
   "/:orderCode/mark-paid",
   ...adminOnly,
@@ -35,26 +33,5 @@ router.post(
     res.json(ApiResponseUtil.success(200, "Payment recorded", { alreadyPaid: result.alreadyPaid }));
   }),
 );
-
-// LOCAL/TEST ONLY: pretends the gateway told us the payment arrived. Not available in production.
-router.post(
-  "/:orderCode/test-pay",
-  asyncHandler(async (req: AuthRequest, res: Response) => {
-    if (!isTestGateway()) throw new AppError(404, "Not found");
-    const result = await paymentService.markPaid(req.params.orderCode, { source: "test" });
-    res.json(ApiResponseUtil.success(200, "Test payment recorded", { alreadyPaid: result.alreadyPaid }));
-  }),
-);
-
-// Gateway callbacks. They must verify the gateway's signature before calling markPaid.
-// Not available until the Fonepay merchant keys are configured.
-for (const gw of ["fonepay"]) {
-  router.post(
-    `/webhooks/${gw}`,
-    asyncHandler(async () => {
-      throw new AppError(501, `${gw} callbacks are not configured yet`);
-    }),
-  );
-}
 
 export default router;

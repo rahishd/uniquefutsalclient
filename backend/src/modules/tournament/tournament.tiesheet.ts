@@ -9,7 +9,7 @@ import { notifyFollowers, type MatchState } from "./matchFollow";
 import { AppError } from "../../middlewares/error.middleware";
 import { AuditService } from "../audit";
 import { prisma } from "../../config/db";
-import { todayKey } from "../../utils/dates";
+import { addDaysKey, currentHour, todayKey } from "../../utils/dates";
 
 // Facebook's player only plays the full video address (facebook.com/<page>/videos/<id>), not the short links people copy
 // (facebook.com/share/v/..., fb.watch/...). Follow the short link once and remember the answer.
@@ -33,6 +33,15 @@ async function canonicalLive(url: string | null): Promise<string | null> {
   return out;
 }
 
+// Has the tournament finished? Staff closed it, or its last day has passed, or it is the last day and the court hours of that day are over
+// (a hosted event has its own hours per day). Without hours, a tournament ends with its last date.
+export function tournamentEnded(t: { status: string; endDate: string }, days: { date: string; endHour: number }[] = [], today = todayKey(), hour = currentHour()): boolean {
+  if (t.status === "completed" || t.endDate < today) return true;
+  if (t.endDate !== today) return false;
+  const last = days.find((d) => d.date === t.endDate);
+  return !!last && hour >= last.endHour;
+}
+
 // The customer view of a tournament: scores and the tie-sheet. Registrations (team phone numbers and emails)
 // and the venue's costs are never part of this public view.
 export async function publicTournament(t: { id: string; name: string; prizePool: number; minTeams: number; maxTeams: number; startDate: string; endDate: string; isActive: boolean; status: string; description: string | null; hostedEvent?: boolean; hostName?: string | null; entryFee?: number }) {
@@ -43,7 +52,8 @@ export async function publicTournament(t: { id: string; name: string; prizePool:
   for (const m of rounds.flatMap((r) => r.matches)) if (m.liveUrl && m.status !== "finished") liveLinks.set(m.id, await canonicalLive(m.liveUrl));
   const hosted = t.hostedEvent ? { hostName: t.hostName ?? null, days: days.map((d) => ({ date: d.date, startHour: d.startHour, endHour: d.endHour })) } : undefined;
   const today = todayKey();
-  const status = t.status === "completed" ? "completed" : t.startDate > today ? "upcoming" : "live";
+  const ended = tournamentEnded(t, days, today); // finished, even if staff never closed it
+  const status = ended ? "completed" : t.startDate > today ? "upcoming" : "live";
   let prizes: { first?: string; second?: string; third?: string } | undefined;
   let format: string | undefined;
   try {
@@ -57,7 +67,7 @@ export async function publicTournament(t: { id: string; name: string; prizePool:
     id: t.id, name: t.name, status, startDate: t.startDate, endDate: t.endDate, teams: t.maxTeams, prizePool: t.prizePool, entryFee: t.entryFee ?? 0, prizes, format, hosted,
     rounds: rounds.map((r) => ({
       id: r.id, name: r.name,
-      matches: r.matches.map((m) => ({ id: m.id, status: m.status, home: m.home, away: m.away, homeScore: m.homeScore, awayScore: m.awayScore, note: m.note, startsAt: m.startsAt, venue: m.venue, liveUrl: liveLinks.get(m.id) ?? null,
+      matches: r.matches.map((m) => ({ id: m.id, status: ended && m.status === "live" ? "finished" : m.status, home: m.home, away: m.away, homeScore: m.homeScore, awayScore: m.awayScore, note: m.note, startsAt: m.startsAt, venue: m.venue, liveUrl: ended ? null : liveLinks.get(m.id) ?? null,
         goals: m.goals.map((g) => ({ side: g.side, minute: g.minute, scorer: g.scorer, at: g.createdAt })), // at: the clock time the goal was entered
       })),
     })),
@@ -70,14 +80,20 @@ const router = Router();
 router.get(
   "/current",
   asyncHandler(async (_req: Request, res: Response) => {
-    const list = await prisma.tournament.findMany({ where: { isActive: true, status: { not: "completed" } }, orderBy: { startDate: "asc" } });
     const today = todayKey();
+    // a tournament that finished in the last 3 days is still shown, as Completed with its result
+    const list = await prisma.tournament.findMany({ where: { isActive: true, status: { not: "cancelled" }, endDate: { gte: addDaysKey(today, -3) } }, orderBy: { startDate: "asc" } });
+    const dayRows = await prisma.tournamentDay.findMany({ where: { tournamentId: { in: list.map((t) => t.id) } }, select: { tournamentId: true, date: true, endHour: true } });
+    const over = (t: (typeof list)[number]) => tournamentEnded(t, dayRows.filter((d) => d.tournamentId === t.id), today);
+    const open = list.filter((t) => !over(t));
+    const finished = list.filter(over);
     // a tournament with a match being played now (live, or with its Facebook Live video) comes first, so Home can show it
     const playing = await prisma.tournamentMatch.findFirst({
-      where: { OR: [{ status: "live" }, { status: { not: "finished" }, liveUrl: { not: null } }], round: { tournamentId: { in: list.map((t) => t.id) } } },
+      where: { OR: [{ status: "live" }, { status: { not: "finished" }, liveUrl: { not: null } }], round: { tournamentId: { in: open.map((t) => t.id) } } },
       orderBy: { status: "desc" }, select: { round: { select: { tournamentId: true } } },
     });
-    const live = list.find((t) => t.id === playing?.round.tournamentId) ?? list.find((t) => t.startDate <= today && t.endDate >= today) ?? list.find((t) => t.startDate > today) ?? null;
+    // the one being played, else the one running today, else the next one coming, else the one that just finished (latest first)
+    const live = open.find((t) => t.id === playing?.round.tournamentId) ?? open.find((t) => t.startDate <= today && t.endDate >= today) ?? open.find((t) => t.startDate > today) ?? [...finished].sort((a, b) => b.endDate.localeCompare(a.endDate))[0] ?? null;
     res.json(ApiResponseUtil.success(200, "Current tournament", live ? await publicTournament(live) : null));
   }),
 );

@@ -33,3 +33,6 @@ export async function wipeTestData(phones: string[]) {
   await prisma.notification.deleteMany({ where: { userId: { in: phones } } });
   await prisma.user.deleteMany({ where: { phoneNumber: { in: phones } } });
 }
+
+// Staff confirm that the customer's Fonepay payment arrived (the customer cannot do this themselves)
+export const confirmPayment = (orderCode: string) => api().post(`/api/payments/${orderCode}/mark-paid`).set(bearer(adminToken()));

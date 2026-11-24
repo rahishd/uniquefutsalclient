@@ -35,7 +35,6 @@ export interface GiftOrder {
   method: "fonepay";
   amount: number;
   remarks: string;
-  qrPayload: string;
   expiresAt: string;
   status: string;
 }

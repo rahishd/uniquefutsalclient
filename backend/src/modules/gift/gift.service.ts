@@ -4,7 +4,7 @@ import { prisma } from "../../config/db";
 import { AppError } from "../../middlewares/error.middleware";
 import BookingService from "../booking/booking.service";
 import { assertWindow } from "../booking/booking.checkout";
-import paymentService, { QR_HOLD_MS } from "../payment/payment.service";
+import paymentService, { PAYMENT_HOLD_MS } from "../payment/payment.service";
 import loyaltyService from "../loyalty/loyalty.service";
 import notificationService from "../notification/notification.service";
 
@@ -104,10 +104,10 @@ export class GiftService {
       const code = await this.newCode();
       await prisma.booking.update({
         where: { id: booking.id },
-        data: { status: "pending", paymentStatus: "pending", holdExpiresAt: new Date(Date.now() + QR_HOLD_MS), paymentOrderCode: booking.id },
+        data: { status: "pending", paymentStatus: "pending", holdExpiresAt: new Date(Date.now() + PAYMENT_HOLD_MS), paymentOrderCode: booking.id },
       });
       const gift = await prisma.gift.create({ data: { code, kind: "game", buyerId, friendId: f.phone, bookingId: booking.id, amount: booking.totalPrice, message } });
-      const payment = await paymentService.createOrder({ orderCode: booking.id, purpose: "game", userId: buyerId, method: "fonepay", amount: booking.totalPrice });
+      const payment = await paymentService.createOrder({ orderCode: booking.id, code: (booking as { code?: string | null }).code, purpose: "game", userId: buyerId, method: "fonepay", amount: booking.totalPrice });
       return { gift: await this.view(gift, buyerId), payment };
     } catch (e) {
       // roll back: free the slot so nothing stays blocked

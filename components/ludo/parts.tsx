@@ -52,8 +52,8 @@ export function LudoFrame({ title = "Unique Ludo", subtitle, back, right, childr
           {subtitle && <p>{subtitle}</p>}
         </div>
         {right}
-        <button type="button" className="lu-icon" onClick={toggleMusic} aria-pressed={music} aria-label={music ? "Turn music off" : "Turn music on"}><Music size={18} /></button>
-        <button type="button" className="lu-icon" onClick={toggleSfx} aria-pressed={!sfx} aria-label={sfx ? "Mute sound effects" : "Turn sound effects on"}>{sfx ? <Volume2 size={18} /> : <VolumeX size={18} />}</button>
+        <button type="button" className="lu-icon" onClick={toggleMusic} aria-pressed={music} aria-label={music ? "Turn music off" : "Turn music on"}><span className={music ? "" : "lu-off"}><Music size={18} /></span></button>
+        <button type="button" className="lu-icon" onClick={toggleSfx} aria-pressed={sfx} aria-label={sfx ? "Mute sound effects" : "Turn sound effects on"}>{sfx ? <Volume2 size={18} /> : <VolumeX size={18} />}</button>
       </header>
       {children}
     </div>

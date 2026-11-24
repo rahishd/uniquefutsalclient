@@ -3,7 +3,7 @@ import logger from "../../config/logger";
 import { AppError } from "../../middlewares/error.middleware";
 import SettingsService from "../settings/settings.service";
 import BookingService from "../booking/booking.service";
-import paymentService, { QR_HOLD_MS } from "../payment/payment.service";
+import paymentService, { PAYMENT_HOLD_MS } from "../payment/payment.service";
 import notificationService from "../notification/notification.service";
 import pushService from "../push/push.service";
 import { addDaysKey, startsAtMs, todayKey } from "../../utils/dates";
@@ -366,9 +366,9 @@ export class PlayerRequestService {
     try {
       await prisma.booking.update({
         where: { id: booking.id },
-        data: { status: "pending", paymentStatus: "pending", holdExpiresAt: new Date(Date.now() + QR_HOLD_MS), paymentOrderCode: booking.id, notes: `FIND_PLAYER:${r.id}` },
+        data: { status: "pending", paymentStatus: "pending", holdExpiresAt: new Date(Date.now() + PAYMENT_HOLD_MS), paymentOrderCode: booking.id, notes: `FIND_PLAYER:${r.id}` },
       });
-      const order = await paymentService.createOrder({ orderCode: booking.id, purpose: "game", userId, method: "fonepay", amount: advance });
+      const order = await paymentService.createOrder({ orderCode: booking.id, code: (booking as { code?: string | null }).code, purpose: "game", userId, method: "fonepay", amount: advance });
       await prisma.playerRequest.update({ where: { id: r.id }, data: { bookingId: booking.id } });
       return order;
     } catch (e) {

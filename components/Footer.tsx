@@ -3,7 +3,7 @@
 import BackToTop from "@/components/BackToTop";
 import { useState } from "react";
 import Link from "next/link";
-import { CalendarCheck, ChevronDown, ChevronUp, Clock3, Mail, MapPin, Navigation, PhoneCall, Leaf, Smartphone, Banknote, Trophy } from "lucide-react";
+import { CalendarCheck, ChevronDown, ChevronUp, Clock3, Mail, MapPin, Navigation, PhoneCall, Leaf, Smartphone, Banknote, Trophy, HeartHandshake } from "lucide-react";
 import { FaFacebookF, FaInstagram, FaTiktok, FaWhatsapp } from "react-icons/fa6";
 import { site } from "@/lib/site";
 import { useT } from "@/lib/i18n";
@@ -240,20 +240,21 @@ export default function Footer() {
         </div>
       </section>
 
-      {/* the venue in three facts: years open, hours played, and what players think of us. Years count up by themselves (2018 counts as the first year). */}
+      {/* the venue in four facts, in one row: what players think of us, the charity share, years open and hours played. Years count up by themselves (2018 counts as the first year). */}
       <section aria-label="Unique Futsal in numbers" className="mt-4 overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-slate-200 desk:mt-6">
-        <ul className="grid grid-cols-3 divide-x divide-slate-200">
+        <ul className="grid grid-cols-4 divide-x divide-slate-200">
           {[
-            { Icon: CalendarCheck, big: `${new Date().getFullYear() - 2017} Years`, small: "of Indoor Futsal Service" },
-            { Icon: Clock3, big: "22,000+", small: "Hours Played" },
-            { Icon: Trophy, big: "1st Choice", small: "Players’ Futsal" },
-          ].map(({ Icon, big, small }) => (
-            <li key={small} className="flex flex-col items-center px-1.5 py-3.5 text-center desk:px-6 desk:py-6">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#e8f0ff] to-[#cfe0ff] text-[#2c3da0] shadow-[0_6px_12px_-8px_rgba(44,61,160,0.7)] ring-2 ring-white desk:h-14 desk:w-14">
-                <Icon size={19} strokeWidth={2} aria-hidden className="desk:h-6 desk:w-6" />
+            { Icon: Trophy, big: "1st Choice", small: "Players’ Futsal", tone: "from-amber-300 to-orange-500 shadow-[0_8px_14px_-6px_rgba(245,130,42,0.8)]" },
+            { Icon: HeartHandshake, big: "3% Charity", small: "of every game", tone: "from-pink-400 to-rose-600 shadow-[0_8px_14px_-6px_rgba(225,29,72,0.7)]" },
+            { Icon: CalendarCheck, big: `${new Date().getFullYear() - 2017} Years`, small: "of Indoor Futsal Service", tone: "from-emerald-400 to-teal-600 shadow-[0_8px_14px_-6px_rgba(13,148,136,0.75)]" },
+            { Icon: Clock3, big: "22,000+", small: "Hours Played", tone: "from-sky-400 to-indigo-600 shadow-[0_8px_14px_-6px_rgba(79,70,229,0.75)]" },
+          ].map(({ Icon, big, small, tone }) => (
+            <li key={small} className="flex flex-col items-center px-1 py-3.5 text-center desk:px-6 desk:py-6">
+              <span className={`flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br ${tone} text-white ring-2 ring-white desk:h-14 desk:w-14`}>
+                <Icon size={17} strokeWidth={2.25} aria-hidden className="drop-shadow-sm desk:h-6 desk:w-6" />
               </span>
-              <span className="mt-2 text-[17px] font-extrabold leading-none tracking-tight text-[#0c0b5d] desk:mt-3 desk:text-3xl">{big}</span>
-              <span className="mt-1 text-[10px] font-semibold leading-tight text-slate-500 desk:text-sm">{small}</span>
+              <span className="mt-2 text-[13.5px] font-extrabold leading-none tracking-tight text-[#0c0b5d] desk:mt-3 desk:text-3xl">{big}</span>
+              <span className="mt-1 text-[9.5px] font-semibold leading-tight text-slate-500 desk:text-sm">{small}</span>
             </li>
           ))}
         </ul>

@@ -29,7 +29,6 @@ export interface ClubOrder {
   method: "fonepay";
   amount: number;
   remarks: string;
-  qrPayload: string;
   expiresAt: string;
   status: string;
 }

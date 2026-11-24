@@ -1,4 +1,4 @@
-import { api, bearer, futureDate, makeUser, prisma, tokenFor } from "./helpers";
+import { api, bearer, futureDate, makeUser, prisma, tokenFor, confirmPayment } from "./helpers";
 
 const M = "9800000851"; // becomes a club member
 const N = "9800000852"; // never a member
@@ -50,7 +50,7 @@ describe("Unique Club: joining", () => {
 
   it("switches the club on for 30 days when the payment arrives, and renewing adds 30 more", async () => {
     const o = (await post(M, "/api/club/join")).body.data;
-    expect((await post(M, `/api/payments/${o.orderCode}/test-pay`)).status).toBe(200);
+    expect((await confirmPayment(o.orderCode)).status).toBe(200);
     const s = (await get(M, "/api/club")).body.data;
     expect(s.member).toBe(true);
     expect(s.daysLeft).toBe(30);
@@ -58,7 +58,7 @@ describe("Unique Club: joining", () => {
 
     const renew = (await post(M, "/api/club/join")).body.data;
     expect(renew.orderCode).not.toBe(o.orderCode);
-    await post(M, `/api/payments/${renew.orderCode}/test-pay`);
+    await confirmPayment(renew.orderCode);
     const s2 = (await get(M, "/api/club")).body.data;
     expect(s2.daysLeft).toBe(60);
     expect(s2.payments).toBe(2);

@@ -38,7 +38,6 @@ export interface AdvanceOrder {
   method: "fonepay";
   amount: number;
   remarks: string;
-  qrPayload: string;
   expiresAt: string;
   status: string;
 }

@@ -2,7 +2,7 @@ import { activeClub, clubDiscountOf } from "../club/club.service";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../config/db";
 import { AppError } from "../../middlewares/error.middleware";
-import paymentService, { QR_HOLD_MS } from "../payment/payment.service";
+import paymentService, { PAYMENT_HOLD_MS } from "../payment/payment.service";
 import notificationService from "../notification/notification.service";
 import { addDaysKey, currentHour, startsAtMs, todayKey } from "../../utils/dates";
 import { clockView, loadClocks } from "./gamezone.clock";
@@ -144,7 +144,7 @@ export class GamezoneCustomerService {
             clubDiscount,
             paymentMethod: input.method,
             paymentStatus: online ? "pending" : "pay_at_venue",
-            holdExpiresAt: online ? new Date(Date.now() + QR_HOLD_MS) : null,
+            holdExpiresAt: online ? new Date(Date.now() + PAYMENT_HOLD_MS) : null,
           },
         });
         // the unique (console, date, hour) index decides who gets the hours if two requests race

@@ -125,7 +125,7 @@ export default function BulkBookingFlow() {
     }
   }
 
-  /* ---------- pay with the Fonepay QR ---------- */
+  /* ---------- pay with Fonepay ---------- */
   if (result && !paid) {
     const pay = result.payment;
     return (
@@ -140,7 +140,6 @@ export default function BulkBookingFlow() {
           orderId={pay.orderCode}
           amount={pay.amount}
           remarks={pay.remarks}
-          payload={pay.qrPayload}
           expiresAt={pay.expiresAt}
           onBack={() => { setResult(null); setSlotsByDate({}); setStep(0); setPicked([]); }}
           backLabel="Cancel and start again"
@@ -284,7 +283,7 @@ export default function BulkBookingFlow() {
         {error && <p role="alert" className="rounded-2xl bg-rose-500/10 px-4 py-3 text-sm text-rose-600">{error}</p>}
 
         <button type="button" onClick={confirm} disabled={!quote || busy} className="glass-btn flex w-full items-center justify-center gap-2 rounded-full py-4 text-base font-semibold text-white disabled:opacity-50">
-          {busy ? <><Loader2 size={18} className="animate-spin" /> Holding your hours…</> : `Continue to Fonepay QR · ${quote ? formatRs(bulkAmount(total, mode)) : "…"}`}
+          {busy ? <><Loader2 size={18} className="animate-spin" /> Holding your hours…</> : `Continue to Fonepay · ${quote ? formatRs(bulkAmount(total, mode)) : "…"}`}
         </button>
       </div>
     );

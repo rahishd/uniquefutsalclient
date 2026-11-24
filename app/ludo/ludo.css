@@ -40,6 +40,9 @@
 .lu-icon:hover { background: rgba(255, 255, 255, 0.14); }
 .lu-icon:active { transform: scale(0.94); }
 .lu-icon[aria-pressed="true"] { background: rgba(250, 204, 21, 0.18); border-color: rgba(250, 204, 21, 0.5); color: var(--lu-gold); }
+/* an icon that is switched off is crossed out (the speaker draws its own cross; the music note gets this one) */
+.lu-off { position: relative; display: inline-grid; place-items: center; opacity: 0.85; }
+.lu-off::after { content: ""; position: absolute; left: -3px; right: -3px; top: 50%; height: 2px; border-radius: 2px; background: currentColor; transform: rotate(-45deg); box-shadow: 0 0 0 1.5px var(--lu-bg-2); }
 
 .lu-wrap { width: 100%; max-width: 72rem; margin: 0 auto; padding: 0 1rem; }
 .lu-panel {

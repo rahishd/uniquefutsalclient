@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { errorText } from "@/lib/api";
-import { disablePush, enablePush, pushState, type PushState } from "@/lib/push";
+import { disablePush, enablePush, pushState, sendTestAlert, type PushState } from "@/lib/push";
 import { changeMyPassword } from "@/lib/google";
 
 function Switch({ checked, onChange, label, disabled }: { checked: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }) {
@@ -26,6 +26,7 @@ export default function AccountSecurity() {
   const [push, setPush] = useState<PushState | null>(null);
   const [pushError, setPushError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [test, setTest] = useState<{ ok: boolean; text: string } | null>(null);
   const [pw, setPw] = useState<{ cur: string; next: string } | null>(null);
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -55,6 +56,23 @@ export default function AccountSecurity() {
     }
   }
 
+  // "Send me a test alert": says in plain words where the chain stops if nothing arrives
+  async function runTest() {
+    setBusy(true);
+    setTest(null);
+    try {
+      const r = await sendTestAlert();
+      if (!r.serverReady) setTest({ ok: false, text: "Alerts are not switched on at the venue's server yet, so nothing can be sent. Please tell the venue." });
+      else if (r.devices === 0) setTest({ ok: false, text: "The server does not know this phone yet. Switch on \"Alerts when the app is closed\" above, then try again." });
+      else if (r.sent === 0) setTest({ ok: false, text: "The server tried, but your phone's alert service refused it. Switch the alerts off and on again, then try again." });
+      else setTest({ ok: true, text: `Sent to ${r.sent} device${r.sent === 1 ? "" : "s"}. It should appear on this phone in a few seconds. Lock the phone to see it on your watch.` });
+    } catch (e) {
+      setTest({ ok: false, text: errorText(e) });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function savePw() {
     if (!pw) return;
     setPwMsg(null);
@@ -80,6 +98,18 @@ export default function AccountSecurity() {
         {push === "unsupported" && <p className="mt-1 text-xs text-slate-400">This browser cannot receive them.</p>}
         {push === "denied" && <p className="mt-1 text-xs text-amber-600">Blocked. Allow notifications for this site in your browser settings.</p>}
         {pushError && <p role="alert" className="mt-1 text-xs text-rose-600">{pushError}</p>}
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <button type="button" onClick={() => void runTest()} disabled={busy} className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-brand disabled:opacity-50">Send me a test alert</button>
+        </div>
+        {test && <p role="status" className={`mt-1.5 text-xs ${test.ok ? "text-emerald-600" : "text-rose-600"}`}>{test.text}</p>}
+        <details className="mt-2 text-xs text-slate-400">
+          <summary className="cursor-pointer font-medium text-slate-500">Get alerts on your watch</summary>
+          <ul className="mt-1.5 list-disc space-y-1 pl-4">
+            <li><b>Apple Watch:</b> add this app to your iPhone Home Screen, switch alerts on above, then in the Watch app open Notifications and allow this app. Your watch shows them when the iPhone is locked.</li>
+            <li><b>Samsung Galaxy Watch:</b> in Chrome or Samsung Internet allow notifications for this site, then in the Galaxy Wearable app open Watch settings, Notifications, and allow your browser.</li>
+            <li>Not seeing them? Tap Send me a test alert. If it appears on the phone but not the watch, the watch is not mirroring this app yet.</li>
+          </ul>
+        </details>
       </li>
       <li>
         <div className="flex items-center justify-between gap-4">

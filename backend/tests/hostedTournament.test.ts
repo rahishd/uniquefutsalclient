@@ -37,6 +37,19 @@ describe("a tournament the venue hosts", () => {
     expect(text).not.toContain("2000");
   });
 
+  it("stops showing it once its last day has passed, even with a match left on live", async () => {
+    const round = await prisma.tournamentRound.create({ data: { tournamentId: tid, name: "Group", position: 0 } });
+    await prisma.tournamentMatch.create({ data: { roundId: round.id, home: "A", away: "B", status: "live" } });
+    await prisma.tournament.update({ where: { id: tid }, data: { startDate: futureDate(-6), endDate: futureDate(-4) } });
+    try {
+      const r = await api().get("/api/tournaments/current");
+      expect(r.body.data).toBeNull(); // Home no longer offers an ended tournament as the live one
+    } finally {
+      await prisma.tournamentRound.deleteMany({ where: { id: round.id } });
+      await prisma.tournament.update({ where: { id: tid }, data: { startDate: todayKey(), endDate: futureDate(1) } });
+    }
+  });
+
   it("does not show a cancelled hosted tournament", async () => {
     await prisma.tournament.update({ where: { id: tid }, data: { status: "cancelled", isActive: false } });
     const r = await api().get("/api/tournaments/current");

@@ -43,7 +43,6 @@ export default function ClubPage() {
           orderId={order.orderCode}
           amount={order.amount}
           remarks={order.remarks}
-          payload={order.qrPayload}
           expiresAt={order.expiresAt}
           backLabel="Back to Unique Club"
           onBack={() => setOrder(null)}
@@ -124,7 +123,7 @@ export default function ClubPage() {
             {busy ? <Loader2 size={16} className="animate-spin" /> : <BadgeCheck size={16} />}
             {club.member ? `Renew for ${club.days} more days · ${formatRs(club.fee)}` : `Join Unique Club · ${formatRs(club.fee)}`}
           </button>
-          <p className="text-center text-xs text-slate-400">Pay once with the Fonepay QR. The club switches on as soon as the payment arrives.</p>
+          <p className="text-center text-xs text-slate-400">Pay once with Fonepay and write the code shown as the remark. The club switches on as soon as the venue confirms the payment.</p>
           {error && <p role="alert" className="rounded-xl bg-red-500/10 p-3 text-sm text-red-600">{error}</p>}
         </div>
       )}

@@ -10,11 +10,10 @@ import { pdfFileName, type PdfSpec } from "@/lib/branded-pdf";
 import { useSession, openSignIn } from "@/lib/session";
 import { errorText } from "@/lib/api";
 import { GAME_RS_PER_POINT, GOODS_DAILY_MAX_POINTS, GZ_POINTS_PER_HOUR, GAME_POINTS_MONTHS, MEMBERSHIP_POINTS, POINTS_CAPTAIN_WIN, REFERRAL_POINTS, RS_PER_POINT, SHIFT_HOURS, fmtPts } from "@/lib/points";
-import { DEFAULT_RULES as LUDO_RULES, ludoStore } from "@/lib/ludo";
+import { DEFAULT_RULES as LUDO_RULES } from "@/lib/ludo";
 import { FALLBACK_SHARE, cancelVoucher, claimFreeGame, loyaltyStore, progressPct, type LoyaltyRow, type Period } from "@/lib/loyalty";
 import { OfferCard } from "@/components/points/OfferCard";
 import PartnerBanners from "@/components/marketplace/PartnerBanners";
-import LoyaltyCardView from "@/components/marketplace/LoyaltyCardView";
 import { askConfirm } from "@/lib/confirm";
 import { formatRs } from "@/lib/booking";
 import { fmtDay } from "@/lib/promos";
@@ -49,8 +48,8 @@ function Validity({ row }: { row: LoyaltyRow }) {
 export default function PointsPage() {
   const session = useSession();
   const store = loyaltyStore.use();
-  const ludo = ludoStore.use().data ?? null;
   const [all, setAll] = useState(false);
+  const [howOpen, setHowOpen] = useState(false); // "How it works": the first two rules show; the rest open with View more
   // a notice opens its own row; the history shows only the latest few, so open the whole list if the row is further down
   const [target, setTarget] = useState<string | null>(null);
   useHighlight(setTarget);
@@ -148,67 +147,21 @@ export default function PointsPage() {
 
       {sharing && <SharePoints loy={loy} onClose={() => setSharing(false)} />}
 
-      {/* My loyalty card: proof of the points earned on my bills, to show a partner. Links to the partners' offers. */}
+      {/* points the venue's staff gave by hand (admin top-up) that are still valid: a gift card right under the balance */}
+      {loy.rows.filter((e) => e.points > 0 && e.detail.startsWith(ADMIN_GIFT) && e.status === "valid").map((e) => (
+        <div key={e.id} data-hl={e.id} className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-500 via-pink-500 to-amber-400 p-4 text-white shadow-[0_14px_28px_-16px_rgba(244,63,94,0.8)] desk:col-span-2">
+          <Gift size={72} className="pointer-events-none absolute -right-3 -top-3 rotate-12 text-white/15" aria-hidden />
+          <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-white/90"><Gift size={14} aria-hidden /> A gift from Unique Futsal</p>
+          <p className="mt-1 text-3xl font-extrabold leading-none">+{fmtPts(e.points)} <span className="text-base font-bold">loyalty points</span></p>
+          <p className="mt-2 rounded-2xl bg-white px-3 py-2 text-sm font-semibold !text-black">{e.detail.slice(ADMIN_GIFT.length)}</p>
+          <p className="mt-2 text-[11px] text-white/85">{fmtDay(e.earnedOn)}{e.expiresOn ? ` · valid until ${fmtDay(e.expiresOn)}` : ""}</p>
+        </div>
+      ))}
+
+      {/* Link to the partners' offers (the loyalty card itself lives on the Partners page) */}
       <div className="space-y-2 desk:col-span-2">
-        <LoyaltyCardView />
         <Link href="/marketplace" className="flex items-center justify-between rounded-2xl bg-white/70 px-4 py-3 text-sm font-semibold text-[#0c0b5d] shadow-sm">Use my points at our partners <ChevronRight size={16} /></Link>
       </div>
-
-      {/* Why more points = more free games, and where the points come from */}
-      <section className="glass rounded-3xl p-5 desk:col-span-2" aria-label="More loyalty points, more free games">
-        <div className="flex items-start gap-3">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-amber-400/25 text-amber-600"><Gift size={22} /></span>
-          <div>
-            <h2 className="text-base font-semibold">More Loyalty Points, More Free Games!</h2>
-            <p className="mt-1 text-sm leading-relaxed text-slate-500">
-              You&apos;re no longer limited to one free game after every 10 games. Redeem as many free games as your available Loyalty Points allow.
-            </p>
-          </div>
-        </div>
-
-        <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Ways to earn more points</p>
-        {(() => {
-          const me = session.registered ? session.phone : "";
-          // a friend can only top you up by sharing from their own account, so this sends them a branded PDF page with the ask and how to do it
-          const askFriendPdf = (): PdfSpec => ({
-            purpose: "POINTS REQUEST", title: "Could you share some loyalty points?", subtitle: `A friendly request from ${session.registered ? session.name : "a Unique Futsal player"}.`,
-            ref: `POINTS-${me}`, rows: [{ label: "Please send them to", value: me, big: true }],
-            stepsTitle: "How to share points", steps: ["Open the Unique Futsal app and go to Points.", "Tap Share points with a friend.", "Enter the number above and send."],
-            note: "Points are only ever shared from your own account. Nothing is taken from you without your tap.",
-          });
-          const ways = [
-            { Icon: Dices, title: "Play Unique Ludo", sub: "Win 2 points a game", to: "/ludo" },
-            { Icon: CalendarDays, title: "Book courts", sub: "Earn on every futsal game", to: "/book" },
-            { Icon: Gamepad2, title: "GameZone", sub: "Earn for every hour you play", to: "/gamezone" },
-            { Icon: Gift, title: "Gift cards", sub: "Receive points as a gift", to: "/gift-card" },
-            { Icon: Send, title: "Friends top-up", sub: "Ask a friend to share points", to: "", external: true },
-          ];
-          const tile = "group flex items-center gap-3 rounded-2xl bg-white/60 px-3.5 py-3 ring-1 ring-black/5 transition hover:bg-white/90 hover:ring-brand/30 active:scale-[0.99]";
-          return (
-            <ul className="mt-2 grid grid-cols-1 gap-2 tab:grid-cols-2 desk:grid-cols-3">
-              {ways.map(({ Icon, title, sub, to, external }) => {
-                const body = (
-                  <>
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand"><Icon size={18} /></span>
-                    <span className="min-w-0 flex-1 text-xs leading-snug"><span className="block text-sm font-semibold text-slate-700">{title}</span><span className="mt-0.5 block text-slate-500">{sub}</span></span>
-                    <ChevronRight size={16} className="shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-brand" aria-hidden />
-                  </>
-                );
-                return (
-                  <li key={title}>
-                    {external ? (
-                      <SendPdfButton label="Friends top-up" build={askFriendPdf} filename={() => pdfFileName("points-request", me)} message="Hi! Could you share some Unique Futsal loyalty points with me? How to do it is in the attached PDF." className={tile + " w-full text-left"} wrapperClassName="">{body}</SendPdfButton>
-                    ) : (
-                      <Link href={to} className={tile} aria-label={`${title}: ${sub}`}>{body}</Link>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          );
-        })()}
-        <p className="mt-4 text-center text-xs font-medium text-slate-500">Enjoy more rewards, your way!</p>
-      </section>
 
       {/* Claim a free game */}
       <section className="glass rounded-3xl p-5 desk:col-span-2" aria-label="Claim a free game">
@@ -291,25 +244,13 @@ export default function PointsPage() {
         </div>
       </section>
 
-      {/* Scores: Unique Ludo */}
-      <section className="glass rounded-3xl p-5 desk:col-span-2" aria-label="Your scores">
-        <h2 className="text-base font-semibold">Your scores</h2>
-        <div className="mt-3 grid gap-3 desk:grid-cols-2">
-          <div className="rounded-2xl bg-white/60 p-4">
-            <p className="flex items-center gap-2 text-sm font-semibold"><Dices size={18} className="text-indigo-600" /> Unique Ludo</p>
-            <p className="mt-2 text-2xl font-semibold">{ludo?.stats.wins ?? 0}<span className="text-sm font-normal text-slate-500"> wins · {ludo?.stats.played ?? 0} games played</span></p>
-            <p className="mt-2 text-xs text-slate-500">Solo {ludo?.limits.solo.used ?? 0}/{LUDO_RULES.soloLimit} · Multiplayer {ludo?.limits.multi.used ?? 0}/{LUDO_RULES.multiLimit} games played today</p>
-            <Link href="/ludo" className="mt-3 inline-flex text-xs font-semibold text-brand">Play Unique Ludo</Link>
-          </div>
-        </div>
-      </section>
-
       {/* How it works */}
       <section className="glass rounded-3xl p-5">
         <h2 className="text-base font-semibold">How it works</h2>
         <ul className="mt-3 space-y-3 text-sm">
           <li className="flex gap-3"><Gamepad2 size={20} className="mt-0.5 shrink-0 text-emerald-600" /><span>Every game earns <b>price ÷ {GAME_RS_PER_POINT}</b> points: a Rs. 1,000 game earns 10 and a Rs. 1,250 game earns 12.5. A game you book for another team earns the same, on your own account.</span></li>
           <li className="flex gap-3"><Gift size={20} className="mt-0.5 shrink-0 text-orange-500" /><span><b>A free game costs its price ÷ 10 in points</b>. You can claim any shift you have the points for: {loy.shifts.map((s) => `${s.period} Rs. ${s.price.toLocaleString("en-IN")} = ${fmtPts(s.cost)} points`).join(" · ")}.</span></li>
+          {howOpen && (<>
           <li className="flex gap-3"><Gamepad2 size={20} className="mt-0.5 shrink-0 text-violet-500" /><span><b>Gamezone:</b> every hour you play earns {GZ_POINTS_PER_HOUR} points (1 hour = {GZ_POINTS_PER_HOUR} points).</span></li>
           <li className="flex gap-3"><ShoppingBag size={20} className="mt-0.5 shrink-0 text-sky-600" /><span>Add-on items: every <b>Rs. {RS_PER_POINT}</b> spent = <b>1 point</b> (Rs. 550 = 5.5 points). Items earn at most <b>{GOODS_DAILY_MAX_POINTS} points a day</b> (Rs. {(GOODS_DAILY_MAX_POINTS * RS_PER_POINT).toLocaleString("en-IN")}); anything more that day earns no extra.</span></li>
           <li className="flex gap-3"><HeartHandshake size={20} className="mt-0.5 shrink-0 text-pink-500" /><span><b>Refer &amp; Earn:</b> book a game for another team and you both get <b>{REFERRAL_POINTS} points</b> when the venue approves it. The other team must have an account; if not, nobody gets points.</span></li>
@@ -317,7 +258,9 @@ export default function PointsPage() {
           <li className="flex gap-3"><Dices size={20} className="mt-0.5 shrink-0 text-indigo-600" /><span><b>Unique Ludo:</b> every game costs {LUDO_RULES.entryFee} point to enter and the winner earns {LUDO_RULES.winReward} points, up to {LUDO_RULES.soloLimit} solo and {LUDO_RULES.multiLimit} multiplayer games a day.</span></li>
           <li className="flex gap-3"><Trophy size={20} className="mt-0.5 shrink-0 text-amber-600" /><span>Challenge games: only the <b>winning captain</b> earns <b>{POINTS_CAPTAIN_WIN} points</b>.</span></li>
           <li className="flex gap-3"><Send size={20} className="mt-0.5 shrink-0 text-brand" /><span><b>Share points:</b> once you have at least {(loy.share ?? FALLBACK_SHARE).minBalance} points you can send whole points to a friend who has an account, up to {(loy.share ?? FALLBACK_SHARE).max} points at a time. They keep their expiry date, and sent points can&apos;t be taken back.</span></li>
+          </>)}
         </ul>
+        <button type="button" onClick={() => setHowOpen((o) => !o)} aria-expanded={howOpen} className="mt-3 text-sm font-semibold text-brand">{howOpen ? "Show less" : "View more"}</button>
       </section>
 
       {/* Expiry */}
@@ -359,18 +302,6 @@ export default function PointsPage() {
         ) : (
           <ul className="mt-3 space-y-3">
             {rows.map((e) => {
-              // points the venue's staff added by hand (admin top-up) show as a gift card with the reason
-              if (e.points > 0 && e.detail.startsWith(ADMIN_GIFT)) {
-                return (
-                  <li key={e.id} data-hl={e.id} className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-500 via-pink-500 to-amber-400 p-4 text-white shadow-[0_14px_28px_-16px_rgba(244,63,94,0.8)]">
-                    <Gift size={72} className="pointer-events-none absolute -right-3 -top-3 rotate-12 text-white/15" aria-hidden />
-                    <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-white/90"><Gift size={14} aria-hidden /> A gift from Unique Futsal</p>
-                    <p className="mt-1 text-3xl font-extrabold leading-none">+{fmtPts(e.points)} <span className="text-base font-bold">loyalty points</span></p>
-                    <p className="mt-2 rounded-2xl bg-white px-3 py-2 text-sm font-semibold !text-black">{e.detail.slice(ADMIN_GIFT.length)}</p>
-                    <p className="mt-2 text-[11px] text-white/85">{fmtDay(e.earnedOn)}{e.status === "valid" && e.expiresOn ? ` · valid until ${fmtDay(e.expiresOn)}` : e.status === "expired" ? " · expired" : e.status === "used" ? " · used" : ""}</p>
-                  </li>
-                );
-              }
               const k = KIND[e.kind] ?? KIND.game;
               const Icon = k.icon;
               return (
@@ -403,6 +334,62 @@ export default function PointsPage() {
           <li>A free game is for one regular booking in the shift you chose. It can&apos;t be used to host a challenge and has no cash value.</li>
           <li>The final points are confirmed by Unique Futsal after the game or payment.</li>
         </ul>
+      </section>
+
+      {/* Why more points = more free games, and where the points come from */}
+      <section className="glass rounded-3xl p-5 desk:col-span-2" aria-label="More loyalty points, more free games">
+        <div className="flex items-start gap-3">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-amber-400/25 text-amber-600"><Gift size={22} /></span>
+          <div>
+            <h2 className="text-base font-semibold">More Loyalty Points, More Free Games!</h2>
+            <p className="mt-1 text-sm leading-relaxed text-slate-500">
+              You&apos;re no longer limited to one free game after every 10 games. Redeem as many free games as your available Loyalty Points allow.
+            </p>
+          </div>
+        </div>
+
+        <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Ways to earn more points</p>
+        {(() => {
+          const me = session.registered ? session.phone : "";
+          // a friend can only top you up by sharing from their own account, so this sends them a branded PDF page with the ask and how to do it
+          const askFriendPdf = (): PdfSpec => ({
+            purpose: "POINTS REQUEST", title: "Could you share some loyalty points?", subtitle: `A friendly request from ${session.registered ? session.name : "a Unique Futsal player"}.`,
+            ref: `POINTS-${me}`, rows: [{ label: "Please send them to", value: me, big: true }],
+            stepsTitle: "How to share points", steps: ["Open the Unique Futsal app and go to Points.", "Tap Share points with a friend.", "Enter the number above and send."],
+            note: "Points are only ever shared from your own account. Nothing is taken from you without your tap.",
+          });
+          const ways = [
+            { Icon: Dices, title: "Play Unique Ludo", sub: "Win 2 points a game", to: "/ludo" },
+            { Icon: CalendarDays, title: "Book courts", sub: "Earn on every futsal game", to: "/book" },
+            { Icon: Gamepad2, title: "GameZone", sub: "Earn for every hour you play", to: "/gamezone" },
+            { Icon: Gift, title: "Gift cards", sub: "Receive points as a gift", to: "/gift-card" },
+            { Icon: Send, title: "Friends top-up", sub: "Ask a friend to share points", to: "", external: true },
+          ];
+          const tile = "group flex items-center gap-3 rounded-2xl bg-white/60 px-3.5 py-3 ring-1 ring-black/5 transition hover:bg-white/90 hover:ring-brand/30 active:scale-[0.99]";
+          return (
+            <ul className="mt-2 grid grid-cols-1 gap-2 tab:grid-cols-2 desk:grid-cols-3">
+              {ways.map(({ Icon, title, sub, to, external }) => {
+                const body = (
+                  <>
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand"><Icon size={18} /></span>
+                    <span className="min-w-0 flex-1 text-xs leading-snug"><span className="block text-sm font-semibold text-slate-700">{title}</span><span className="mt-0.5 block text-slate-500">{sub}</span></span>
+                    <ChevronRight size={16} className="shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-brand" aria-hidden />
+                  </>
+                );
+                return (
+                  <li key={title}>
+                    {external ? (
+                      <SendPdfButton label="Friends top-up" build={askFriendPdf} filename={() => pdfFileName("points-request", me)} message="Hi! Could you share some Unique Futsal loyalty points with me? How to do it is in the attached PDF." className={tile + " w-full text-left"} wrapperClassName="">{body}</SendPdfButton>
+                    ) : (
+                      <Link href={to} className={tile} aria-label={`${title}: ${sub}`}>{body}</Link>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          );
+        })()}
+        <p className="mt-4 text-center text-xs font-medium text-slate-500">Enjoy more rewards, your way!</p>
       </section>
 
       <p className="px-2 text-center text-xs text-slate-400 desk:col-span-2">

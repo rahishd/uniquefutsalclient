@@ -4,24 +4,17 @@ import logger from "../../config/logger";
 import notificationService from "../notification/notification.service";
 import loyaltyService from "../loyalty/loyalty.service";
 import { smsBookingConfirmed } from "../booking/booking.sms";
-import { getGateway, OnlineMethod } from "../../services/paymentGateway";
 
-export const QR_HOLD_MS = 10 * 60 * 1000; // an unpaid QR (and the slot behind it) is held for 10 minutes
+// An unpaid order (and the slot behind it) is held for 30 minutes: the customer pays the venue's fixed Fonepay QR, then staff see the payment
+// in the Fonepay app and confirm it in the admin portal (which marks the order paid). 30 minutes leaves time for both.
+export const PAYMENT_HOLD_MS = 30 * 60 * 1000;
 
 export type PaymentPurpose = "game" | "bulk" | "gamezone" | "purchase" | "renew" | "club" | "gift_points";
+export type OnlineMethod = "fonepay";
 
-const PURPOSE_LABEL: Record<PaymentPurpose, string> = {
-  game: "Regular game",
-  bulk: "Bulk booking",
-  gamezone: "Gamezone PS5",
-  purchase: "Membership purchase",
-  renew: "Membership renew",
-  club: "Unique Club",
-  gift_points: "Gift Card points",
-};
-
-// The note the customer's payment carries, so the payment can be matched to its order.
-export const remarksFor = (purpose: PaymentPurpose, orderCode: string) => `${PURPOSE_LABEL[purpose]} - ${orderCode}`;
+// The note the customer writes as the Fonepay remark, so the payment can be found and matched to its order: the short booking code
+// (or the order's own short code for Gamezone, Unique Club, gifts and bulk bookings).
+export const remarksFor = (orderCode: string, code?: string | null) => code || orderCode;
 
 export interface OrderInput {
   orderCode: string;
@@ -30,14 +23,14 @@ export interface OrderInput {
   guestPhone?: string | null;
   method: OnlineMethod;
   amount: number;
+  code?: string | null; // the short code shown to the customer as the payment remark (defaults to orderCode)
 }
 
 export class PaymentService {
-  // Creates the order and the QR for the exact amount. The browser never builds a payable QR.
+  // Creates the order the customer pays through the venue's fixed Fonepay QR. Nothing is generated: the customer sees the same QR, the exact amount and the code to write as the remark.
   async createOrder(input: OrderInput) {
     if (!Number.isInteger(input.amount) || input.amount <= 0) throw new AppError(400, "Invalid payment amount");
-    const remarks = remarksFor(input.purpose, input.orderCode);
-    const qr = await getGateway().createQr({ orderCode: input.orderCode, method: input.method, amount: input.amount, remarks });
+    const remarks = remarksFor(input.orderCode, input.code);
     const order = await prisma.paymentOrder.create({
       data: {
         orderCode: input.orderCode,
@@ -47,9 +40,9 @@ export class PaymentService {
         method: input.method,
         amount: input.amount,
         remarks,
-        qrPayload: qr.qrPayload,
-        gatewayRef: qr.gatewayRef ?? null,
-        expiresAt: new Date(Date.now() + QR_HOLD_MS),
+        qrPayload: null,
+        gatewayRef: null,
+        expiresAt: new Date(Date.now() + PAYMENT_HOLD_MS),
       },
     });
     return this.publicView(order);
@@ -66,7 +59,7 @@ export class PaymentService {
     return Boolean(o.guestPhone && who.phone && who.phone === o.guestPhone);
   }
 
-  // Polled by the QR screen every few seconds. The status only ever changes through markPaid / expiry on the server.
+  // Polled by the payment screen every few seconds. The status only ever changes through markPaid / expiry on the server.
   async status(orderCode: string, who: { userId?: string; phone?: string; staff?: boolean }) {
     let order = await prisma.paymentOrder.findUnique({ where: { orderCode } });
     if (!order || !this.canSee(order, who)) throw new AppError(404, "Order not found");
@@ -77,8 +70,8 @@ export class PaymentService {
     return { status: order.status, paidAt: order.paidAt, expiresAt: order.expiresAt };
   }
 
-  // Called ONLY from a verified gateway callback, a staff action, or the test endpoint. Safe to call twice.
-  async markPaid(orderCode: string, p: { source: "gateway" | "staff" | "test"; by?: string; amount?: number; gatewayRef?: string }) {
+  // Called ONLY from a staff action in the admin portal (staff saw the payment in the Fonepay app). Safe to call twice.
+  async markPaid(orderCode: string, p: { source: "staff"; by?: string; amount?: number; gatewayRef?: string }) {
     const order = await prisma.paymentOrder.findUnique({ where: { orderCode } });
     if (!order) throw new AppError(404, "Order not found");
     if (order.status === "paid") return { alreadyPaid: true, order };
@@ -93,7 +86,7 @@ export class PaymentService {
       where: { orderCode, status: { in: ["pending", "expired"] } },
       data: { status: "paid", paidAt: new Date(), paidBy: p.by ?? p.source, gatewayRef: p.gatewayRef ?? order.gatewayRef },
     });
-    await prisma.paymentEvent.create({ data: { orderCode, source: p.source === "test" ? "system" : p.source, payload: JSON.stringify({ event: "PAID", by: p.by, amount: order.amount }) } });
+    await prisma.paymentEvent.create({ data: { orderCode, source: p.source, payload: JSON.stringify({ event: "PAID", by: p.by, amount: order.amount }) } });
     if (upd.count === 0) return { alreadyPaid: true, order };
 
     const confirmed = await this.onPaid({ ...order, status: "paid" });

@@ -7,7 +7,7 @@ import { AppError } from "../../middlewares/error.middleware";
 import { prisma } from "../../config/db";
 import { addDaysKey, todayKey } from "../../utils/dates";
 import BookingService from "./booking.service";
-import paymentService, { QR_HOLD_MS } from "../payment/payment.service";
+import paymentService, { PAYMENT_HOLD_MS } from "../payment/payment.service";
 import notificationService from "../notification/notification.service";
 import SettingsService from "../settings/settings.service";
 import { usesLeft } from "../promo/promoLimits";
@@ -167,7 +167,7 @@ export const bulkController = {
     if (req.body.method !== undefined && req.body.method !== "fonepay") throw new AppError(403, "Bulk bookings are paid online with Fonepay only.");
 
     const code = newCode();
-    const holdUntil = new Date(Date.now() + QR_HOLD_MS);
+    const holdUntil = new Date(Date.now() + PAYMENT_HOLD_MS);
     const made: { id: string; total: number }[] = [];
 
     const undo = async () => {

@@ -64,8 +64,8 @@ Times use Nepal time. Dates are `YYYY-MM-DD`. Money is whole rupees.
 | POST | `/bookings/quote` | Guest | `{date,startTime,duration?,promoCode?,voucherId?}` -> `{basePrice,discount,total,promo,vip,water,usesVoucher,earnPoints}`; `water` is `{bottles, excluded}`: the 2 complimentary mineral water bottles, or 0 with `excluded: "vip"` (a VIP discount applies) or `"promo"` (a promo code applies and staff did not switch `includesWater` on for it). The booking stores the same number in `waterBottles` |
 | GET | `/bookings/bulk/allowance` | User | `{limit:5, used:{<Monday of week>: n}}`: bulk games already held per calendar week (Monday to Sunday). At most 5 per customer per week; `/bookings/bulk/quote` and `/bookings/bulk` answer 409 above that |
 | POST | `/bookings/bulk/quote` | User | `{slots:[{date,startTime}] (1..10, today..+7), promoCode?}`. Prices every hour on its own; the promo counts only on hours where it is valid. Returns `{slots,subtotal,discount,total,advance,promo}` |
-| POST | `/bookings/bulk` | User | `{slots, mode: advance|full, promoCode?}`. Fonepay only (50% advance or full). Holds every hour (10 minutes, tagged `BULK:<code>`), makes ONE order `BLK-XXXXXX` (purpose `bulk`) -> `{code,total,payNow,restAtVenue,bookings,payment}`. When paid, all hours confirm and the amount is shared across them in proportion to price; unpaid, all are released together |
-| POST | `/bookings/checkout` | Guest or User | `{date,startTime,duration?,method: fonepay|venue,promoCode?,voucherId?,guest?:{name,phone}}`. Guest: details required, `venue` refused (403), no voucher. User: no guest details. Window today..+10. Online -> `{booking, payment:{orderCode,amount,remarks,qrPayload,expiresAt}}` and the slot is held 10 minutes |
+| POST | `/bookings/bulk` | User | `{slots, mode: advance|full, promoCode?}`. Fonepay only (50% advance or full). Holds every hour (30 minutes, tagged `BULK:<code>`), makes ONE order `BLK-XXXXXX` (purpose `bulk`) -> `{code,total,payNow,restAtVenue,bookings,payment}`. When paid, all hours confirm and the amount is shared across them in proportion to price; unpaid, all are released together |
+| POST | `/bookings/checkout` | Guest or User | `{date,startTime,duration?,method: fonepay|venue,promoCode?,voucherId?,guest?:{name,phone}}`. Guest: details required, `venue` refused (403), no voucher. User: no guest details. Window today..+10. Online (Fonepay) -> `{booking, payment:{orderCode,amount,remarks,expiresAt}}` and the slot is held 30 minutes while the customer pays the venue's fixed Fonepay QR; `remarks` is the short booking code the customer writes as the Fonepay remark. Staff confirm the payment in the admin portal |
 | GET | `/bookings/me` | User | my bookings (membership ledger rows hidden) |
 | POST | `/verify` | Public | `{code}` (4 to 6 digits): is this bill or document genuine? 200 `{genuine, kind: payment|document, bill|document}` (customer name shortened, no phone); 404 = not genuine ("may be fake"); 400 bad format; 429 after 8 wrong codes from one connection in an hour. Every receipt in `GET /me/payments` carries `verifyCode` |
 | GET | `/bookings/me/rebook` | User | weekday+hour of the last game played and the next such weekday (same hour, else the nearest open hour), or `null` |
@@ -75,8 +75,6 @@ Times use Nepal time. Dates are `YYYY-MM-DD`. Money is whole rupees.
 | GET | `/bookings/arrivals` | Staff | who is on the way |
 | GET | `/payments/:orderCode/status` | Owner, or guest with `?phone=` | `pending|paid|expired`. Only the gateway/staff change it |
 | POST | `/payments/:orderCode/mark-paid` | Staff | |
-| POST | `/payments/:orderCode/test-pay` | local/test only | simulates the gateway |
-| POST | `/payments/webhooks/fonepay` | gateway | 501 until configured; must verify the gateway signature |
 
 `startTime` is `HH:mm`. A booking made with a voucher costs Rs. 0, is confirmed at once, and uses up the voucher.
 

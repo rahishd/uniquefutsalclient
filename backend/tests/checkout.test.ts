@@ -1,4 +1,4 @@
-import { api, bearer, futureDate, makeUser, prisma, tokenFor, adminToken } from "./helpers";
+import { api, bearer, futureDate, makeUser, prisma, tokenFor, adminToken, confirmPayment } from "./helpers";
 import loyaltyService from "../src/modules/loyalty/loyalty.service";
 import paymentService from "../src/modules/payment/payment.service";
 
@@ -112,8 +112,8 @@ describe("online payment lifecycle", () => {
     expect(booking.paymentStatus).toBe("pending");
     expect(payment.amount).toBe(booking.totalPrice);
     expect(payment.orderCode).toBe(booking.id);
-    expect(payment.remarks).toBe(`Regular game - ${booking.id}`);
-    expect(payment.qrPayload).toContain(`NPR ${booking.totalPrice}`);
+    expect(payment.remarks).toBe(booking.code); // the customer writes the short booking code as the Fonepay remark
+    expect(payment.qrPayload).toBeNull(); // no QR is generated: the app shows the venue's fixed Fonepay QR
   });
 
   it("holds the slot: nobody else can take it", async () => {
@@ -141,10 +141,10 @@ describe("online payment lifecycle", () => {
   });
 
   it("the verified payment confirms the booking, once", async () => {
-    const first = await api().post(`/api/payments/${code}/test-pay`);
+    const first = await confirmPayment(code);
     expect(first.status).toBe(200);
     expect(first.body.data.alreadyPaid).toBe(false);
-    const again = await api().post(`/api/payments/${code}/test-pay`);
+    const again = await confirmPayment(code);
     expect(again.body.data.alreadyPaid).toBe(true);
     const b = await prisma.booking.findUnique({ where: { id: code } });
     expect(b?.paymentStatus).toBe("completed");
@@ -154,9 +154,11 @@ describe("online payment lifecycle", () => {
     expect(st.body.data.status).toBe("paid");
   });
 
-  it("gateway webhooks are off until the merchant keys exist", async () => {
-    expect((await api().post("/api/payments/webhooks/fonepay").send({})).status).toBe(501);
-    expect((await api().post("/api/payments/webhooks/fonepay").send({})).status).toBe(501);
+  it("a customer cannot confirm their own payment: only staff can, and a stray webhook address does nothing", async () => {
+    const mine = await api().post(`/api/payments/${code}/mark-paid`).set(bearer(tokenFor("9800000399")));
+    expect([401, 403]).toContain(mine.status);
+    expect((await api().post("/api/payments/webhooks/fonepay").send({})).status).toBe(404);
+    expect((await api().post(`/api/payments/${code}/test-pay`)).status).toBe(404);
   });
 });
 

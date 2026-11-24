@@ -23,9 +23,9 @@ function configure(): boolean {
   return true;
 }
 
-let sender: PushSender = (sub, payload) => webpush.sendNotification(sub, payload, { TTL: 3600 });
+let sender: PushSender = (sub, payload) => webpush.sendNotification(sub, payload, { TTL: 3600, urgency: "high" });
 export const setPushSender = (s: PushSender | null) => {
-  sender = s ?? ((sub, payload) => webpush.sendNotification(sub, payload, { TTL: 3600 }));
+  sender = s ?? ((sub, payload) => webpush.sendNotification(sub, payload, { TTL: 3600, urgency: "high" }));
 };
 
 // Notice types a customer can switch off, and the one tied to the "Pop-up reminder" switch.

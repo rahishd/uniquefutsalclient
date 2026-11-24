@@ -132,7 +132,6 @@ export default function GiftCardPage() {
           orderId={order.payment.orderCode}
           amount={order.payment.amount}
           remarks={order.payment.remarks}
-          payload={order.payment.qrPayload}
           expiresAt={order.payment.expiresAt}
           backLabel="Back to Gift Card"
           onBack={() => { setOrder(null); refresh(); }}
@@ -272,7 +271,7 @@ export default function GiftCardPage() {
                 {busy ? <><Loader2 size={18} className="animate-spin" /> Please wait…</> : `Pay ${formatRs(total)} with Fonepay`}
               </button>
               <p className="text-center text-xs text-slate-400">
-                {option === "points" ? "The points reach your friend as soon as the payment arrives." : "The hour is held for 10 minutes while you pay. Your friend gets the booking as soon as the payment arrives."} Up to {rules.perDay} gifts a day.
+                {option === "points" ? "The points reach your friend as soon as the payment arrives." : "The hour is held for 30 minutes while you pay. Your friend gets the booking as soon as the payment arrives."} Up to {rules.perDay} gifts a day.
               </p>
             </>
           )}

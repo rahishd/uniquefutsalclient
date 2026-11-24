@@ -59,6 +59,11 @@ export async function disablePush() {
   await sub.unsubscribe();
 }
 
+export interface PushTest { serverReady: boolean; devices: number; sent: number }
+
+/** Sends one test alert to this customer's saved devices and reports what the server could do (see /me/push-test). */
+export const sendTestAlert = () => api<PushTest>("/me/push-test", { method: "POST" });
+
 // After sign-in: if this device already allowed alerts, make sure the server has its subscription for this account.
 export async function syncPush() {
   try {

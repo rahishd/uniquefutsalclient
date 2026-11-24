@@ -1,4 +1,4 @@
-import { api, bearer, futureDate, makeUser, prisma, tokenFor } from "./helpers";
+import { api, bearer, futureDate, makeUser, prisma, tokenFor, confirmPayment } from "./helpers";
 
 const A = "9800000931"; // buys the gifts
 const F = "9800000932"; // the friend
@@ -8,7 +8,7 @@ const ALL = [A, F, G];
 
 const post = (p: string, url: string, body: object = {}) => api().post(url).set(bearer(tokenFor(p))).send(body);
 const get = (p: string, url: string) => api().get(url).set(bearer(tokenFor(p)));
-const pay = (p: string, code: string) => post(p, `/api/payments/${code}/test-pay`);
+const pay = (_p: string, code: string) => confirmPayment(code);
 
 async function wipe() {
   const gifts = await prisma.gift.findMany({ where: { OR: [{ buyerId: { in: ALL } }, { friendId: { in: ALL } }] } });
@@ -56,7 +56,7 @@ describe("Gift Card", () => {
     const r = await post(A, "/api/gifts/points", { friendPhone: F, points: 50, message: "Happy birthday!" });
     expect(r.status).toBe(201);
     expect(r.body.data.payment).toMatchObject({ amount: 500, method: "fonepay", status: "pending" });
-    expect(r.body.data.payment.remarks).toMatch(/^Gift Card points - GIFT-/);
+    expect(r.body.data.payment.remarks).toMatch(/^GIFT-/); // the gift code is the Fonepay remark
     const code = r.body.data.gift.code;
     expect(await prisma.loyaltyEntry.count({ where: { userId: F } })).toBe(0);
 

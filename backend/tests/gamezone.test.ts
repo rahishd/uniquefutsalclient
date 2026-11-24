@@ -1,4 +1,4 @@
-import { api, adminToken, bearer, futureDate, makeUser, prisma, tokenFor } from "./helpers";
+import { api, adminToken, bearer, futureDate, makeUser, prisma, tokenFor, confirmPayment } from "./helpers";
 
 const REG = "9800000401";
 const GUEST = "9800000402";
@@ -114,8 +114,8 @@ describe("online payment, expiry and cancel", () => {
     const { booking, payment } = res.body.data;
     expect(booking.total).toBe(800);
     expect(payment.amount).toBe(800);
-    expect(payment.remarks).toBe(`Gamezone PS5 - ${booking.code}`);
-    const pay = await api().post(`/api/payments/${booking.code}/test-pay`);
+    expect(payment.remarks).toBe(booking.code);
+    const pay = await confirmPayment(booking.code);
     expect(pay.status).toBe(200);
     const row = await prisma.gzBooking.findUnique({ where: { code: booking.code } });
     expect(row?.paymentStatus).toBe("paid");

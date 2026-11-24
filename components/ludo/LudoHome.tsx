@@ -13,7 +13,6 @@ import {
 import { ludoSound } from "@/lib/ludo-sound";
 import Board from "@/components/ludo/Board";
 import { LudoFrame, RulesSheet, Sheet } from "@/components/ludo/parts";
-import { GameHistory, LudoStats } from "@/components/ludo/Records";
 
 const PREVIEW = [[-1, 12, 30, 0], [-1, -1, 7, 44], [3, -1, 22, 56], [-1, 18, 52, 38]];
 
@@ -48,7 +47,6 @@ export default function LudoHome() {
   const [msg, setMsg] = useState<string | null>(null);
 
   useLudoSocket(() => void ludoStore.refresh(), () => void ludoStore.refresh());
-  const lastGameId = me?.recent[0]?.id;
   const soloLeft = me?.limits.solo.left ?? rules.soloLimit;
   const multiLeft = me?.limits.multi.left ?? rules.multiLimit;
   const noPoints = registered && me !== null && me.balance < rules.entryFee;
@@ -149,12 +147,10 @@ export default function LudoHome() {
               </form>
             )}
 
-            {/* the player's records (also under Profile > Unique Ludo Game) */}
-            {registered && me && me.stats.played > 0 && <LudoStats stats={me.stats} />}
-            {registered && <GameHistory refreshKey={lastGameId} />}
+            {/* the player's statistics, game history and the leaderboard are kept under Profile > Unique Ludo Game, not on this screen */}
             {registered && (
-              <Link href="/profile/ludo#leaderboard" className="lu-btn ghost block w-full text-center" onClick={() => ludoSound.button()}>
-                <Trophy size={16} /> View Leaderboard
+              <Link href="/profile/ludo" className="lu-btn ghost block w-full text-center" onClick={() => ludoSound.button()}>
+                <Trophy size={16} /> View Records &amp; Leaderboard
               </Link>
             )}
           </div>

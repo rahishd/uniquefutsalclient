@@ -51,7 +51,6 @@ export default function DealPage({ id }: { id: string }) {
           orderId={order.orderCode}
           amount={order.amount}
           remarks={order.remarks}
-          payload={order.qrPayload}
           expiresAt={order.expiresAt}
           backLabel="Back to the deal"
           onBack={() => {

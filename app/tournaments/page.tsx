@@ -6,6 +6,7 @@ import { ArrowRight, Banknote, ChevronLeft, Download, Loader2, MapPin, CalendarD
 import PlaceholderPage from "@/components/PlaceholderPage";
 import TieSheet from "@/components/TieSheet";
 import LiveGoals from "@/components/tournament/LiveGoals";
+import FinalResult from "@/components/tournament/FinalResult";
 import { downloadPdf } from "@/lib/pdf";
 import { dateKey, formatRs } from "@/lib/booking";
 import { fmtDay } from "@/lib/promos";
@@ -70,7 +71,7 @@ export default function TournamentsPage() {
       </Link>
 
       <header className="mt-4">
-        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${t.status === "live" ? "bg-rose-500/10 text-rose-600" : t.status === "upcoming" ? "bg-sky-500/10 text-sky-700" : "bg-slate-500/10 text-slate-600"}`}>{t.status === "live" && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-500" />}{t.status}</span>
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${t.status === "live" ? "bg-rose-500/10 text-rose-600" : t.status === "upcoming" ? "bg-sky-500/10 text-sky-700" : "bg-slate-500/10 text-slate-600"}`}>{t.status === "live" && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-500" />}{t.status === "completed" ? "Completed" : t.status}</span>
         <h1 className="mt-3 text-2xl font-bold leading-tight text-slate-900">{t.name}</h1>
       </header>
 
@@ -140,7 +141,8 @@ export default function TournamentsPage() {
         </section>
       )}
 
-      <LiveGoals rounds={t.rounds} />
+      {/* while it runs: the live goal status; once it is over: the final result */}
+      {t.status === "completed" ? <FinalResult rounds={t.rounds} /> : <LiveGoals rounds={t.rounds} />}
 
       <section aria-label="Tie-sheet" className="mt-8">
         <div className="mb-3 flex items-center justify-between gap-3">

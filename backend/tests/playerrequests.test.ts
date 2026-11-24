@@ -1,4 +1,4 @@
-import { api, bearer, futureDate, makeUser, prisma, tokenFor } from "./helpers";
+import { api, bearer, futureDate, makeUser, prisma, tokenFor, confirmPayment } from "./helpers";
 
 const POSTER = "9800000821";
 const P2 = "9800000822";
@@ -162,7 +162,7 @@ describe("Find Player: the host's advance books the court", () => {
     const again = await post(P2, `/api/player-requests/${id}/advance`);
     expect(again.body.data.orderCode).toBe(order.body.data.orderCode);
 
-    const paid = await post(P2, `/api/payments/${order.body.data.orderCode}/test-pay`);
+    const paid = await confirmPayment(order.body.data.orderCode);
     expect(paid.status).toBe(200);
 
     const booking = await prisma.booking.findUniqueOrThrow({ where: { id: order.body.data.orderCode } });

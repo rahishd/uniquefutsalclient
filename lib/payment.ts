@@ -1,9 +1,8 @@
 // Payment helpers shared by court bookings and Gamezone.
 //
-// The server creates the order and the QR (for the exact amount, with the remarks that link the payment to
-// the order) and is the only one that can mark an order paid: from the gateway, from staff at the venue, or
-// (only while the backend runs its local test gateway) from the test button below. The browser just shows the
-// QR and asks the server for the status every few seconds.
+// The customer pays the venue's one fixed Fonepay QR (public/fonepay-qr.png) for the exact amount and writes the short booking code as the
+// remark. The server creates the order; only staff can mark it paid (they see the payment in the Fonepay app and confirm it in the admin
+// portal). The browser just shows the QR and asks the server for the status every few seconds.
 
 import { api } from "@/lib/api";
 
@@ -11,7 +10,7 @@ export type PayMethod = "fonepay" | "venue";
 export type OnlineMethod = Exclude<PayMethod, "venue">;
 
 export const PAY_METHODS: { id: PayMethod; label: string; note: string }[] = [
-  { id: "fonepay", label: "Fonepay", note: "Pay with QR" },
+  { id: "fonepay", label: "Fonepay", note: "Scan the venue QR" },
   { id: "venue", label: "Pay at venue", note: "Cash or QR on arrival" },
 ];
 
@@ -20,17 +19,16 @@ export const METHOD_LABEL: Record<string, string> = { fonepay: "Fonepay", venue:
 
 export const isOnline = (m: PayMethod): m is OnlineMethod => m !== "venue";
 
-// How often the open QR screen asks the server whether the order has been paid.
+// How often the open payment screen asks the server whether the order has been paid.
 export const PAYMENT_POLL_MS = 3000;
 
-// What the server returns when it creates a QR order.
+// What the server returns when it creates a payment order.
 export interface PaymentOrder {
   orderCode: string;
   method: OnlineMethod;
   amount: number;
-  remarks: string;
-  qrPayload: string;
-  expiresAt: string; // ISO time the QR (and the held slot) runs out
+  remarks: string; // the short booking code to write as the Fonepay remark
+  expiresAt: string; // ISO time the held slot runs out
 }
 
 export type PaymentStatus = "pending" | "paid" | "expired";
@@ -44,10 +42,3 @@ export async function fetchPaymentStatus(orderCode: string, guestPhone?: string)
     return "pending"; // a network blip: keep waiting, the next check tries again
   }
 }
-
-// Only works while the backend uses its TEST gateway (never in production): pretends the gateway reported the payment.
-export async function testPay(orderCode: string) {
-  await api(`/payments/${encodeURIComponent(orderCode)}/test-pay`, { method: "POST" });
-}
-
-export const isTestQr = (payload: string) => payload.startsWith("UF-TEST|");

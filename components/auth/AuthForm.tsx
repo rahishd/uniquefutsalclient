@@ -1,14 +1,16 @@
 "use client";
 
 import { startLoginSplash } from "@/lib/splash";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Cake, CheckCircle2, Eye, EyeOff, HeartPulse, Loader2, Lock, Phone, User } from "lucide-react";
 import { errorText } from "@/lib/api";
-import { signIn, signUp, useSession } from "@/lib/session";
+import { completeSignUp, requestOtp, resetPasswordWithOtp, signIn, useSession, verifyResetOtp, verifySignupOtp } from "@/lib/session";
 import { site } from "@/lib/site";
 import { googleConfig, requestPasswordReset, resetPasswordWithGoogle, type GoogleConfig } from "@/lib/google";
 import GoogleButton from "@/components/auth/GoogleButton";
+import OtpDialog, { type OtpResult } from "@/components/auth/OtpDialog";
+import NewPasswordDialog from "@/components/auth/NewPasswordDialog";
 import { useT } from "@/lib/i18n";
 import { dobKey, dobOk } from "@/lib/age";
 
@@ -41,6 +43,11 @@ export default function AuthForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  // text-message codes: a NEW customer proves the number before the account is made ("signup"); "Forgot password" proves it before a new password ("reset")
+  const [otp, setOtp] = useState<null | "signup" | "reset">(null);
+  const [newPasswordOpen, setNewPasswordOpen] = useState(false);
+  const signupPass = useRef<{ token: string; phone: string } | null>(null); // the verified-number pass for sign-up (kept, so a fix to the form does not need a second code)
+  const resetPass = useRef<string | null>(null);
   // opening the app straight on the sign-in page (a bookmark, a restored tab, a cold start) goes to Home instead: Home has the Log in and
   // Create account buttons. Coming from inside the app (the Log in buttons, or a page that needs a sign-in, which add ?next= or ?mode=) stays here.
   useEffect(() => {
@@ -67,7 +74,7 @@ export default function AuthForm() {
   const emPhoneBad = emPhone.length === 10 && !emPhoneOk;
   const emOk = emName.trim().length >= 2 && emPhoneOk;
   const detailsOk = phoneOk && name.trim().length >= 2 && dobOk(dob) && emOk;
-  // sign-in and sign-up are phone + password (no text-message codes); a forgotten password is reset by the venue or with Google
+  // sign-in is phone + password. Sign-up first checks the number with a text-message code. A forgotten password is reset with a code too.
   const ok = mode === "in" ? phoneOk && password.length >= 6 : mode === "up" ? detailsOk && password.length >= 6 : phoneOk;
 
   function go(m: "in" | "up" | "reset") {
@@ -107,14 +114,90 @@ export default function AuthForm() {
     }
   }
 
+  const masked = phone.length === 10 ? `${phone.slice(0, 2)}••••${phone.slice(-4)}` : phone;
+
+  // ask for a code and open the code box
+  async function sendCode(purpose: "signup" | "reset") {
+    await requestOtp(phone, purpose);
+    setOtp(purpose);
+  }
+  const resend = async () => { if (otp) await requestOtp(phone, otp); };
+
+  // sign-up: the code is right -> the account is made with the details already typed
+  async function verifySignupCode(code: string): Promise<OtpResult> {
+    try {
+      signupPass.current = { token: await verifySignupOtp(phone, code), phone };
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, message: errorText(err) };
+    }
+  }
+  async function finishSignup() {
+    const pass = signupPass.current;
+    setOtp(null);
+    if (!pass || pass.phone !== phone) return;
+    setBusy(true);
+    try {
+      await completeSignUp({ signupToken: pass.token, name: name.trim(), password, dateOfBirth: dob, emergencyName: emName.trim(), emergencyPhone: emPhone, emergencyRelation: emRelation.trim() });
+      startLoginSplash(); // the splash screen plays once on the next page, only after a sign-in
+      window.location.assign(nextPath());
+    } catch (err) {
+      const m = errorText(err);
+      if (/expired/i.test(m)) signupPass.current = null; // the pass ran out: the next try asks for a new code
+      setError(m);
+      setBusy(false);
+    }
+  }
+
+  // forgot password: the code is right -> the new password box opens (the old password is never asked for)
+  async function verifyResetCode(code: string): Promise<OtpResult> {
+    try {
+      resetPass.current = await verifyResetOtp(phone, code);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, message: errorText(err) };
+    }
+  }
+  async function saveNewPassword(newPassword: string) {
+    if (!resetPass.current) throw new Error("Your verification expired. Please ask for a new code.");
+    try {
+      await resetPasswordWithOtp(resetPass.current, newPassword);
+    } catch (err) {
+      if (/expired/i.test(errorText(err))) { resetPass.current = null; setNewPasswordOpen(false); setError("Your verification expired. Please ask for a new code."); return; }
+      throw err;
+    }
+    resetPass.current = null;
+    setNewPasswordOpen(false);
+    go("in");
+    setDone("Your password was changed. Sign in with your new password.");
+  }
+  async function resetWithCode() {
+    if (busy || !phoneOk) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await sendCode("reset");
+    } catch (err) {
+      setError(errorText(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (mode === "reset" || !ok || busy) return;
     setBusy(true);
     setError(null);
     try {
-      if (mode === "in") await signIn(phone, password);
-      else await signUp({ name: name.trim(), phone, password, dateOfBirth: dob, emergencyName: emName.trim(), emergencyPhone: emPhone, emergencyRelation: emRelation.trim() });
+      if (mode === "up") {
+        // a new customer: the number is proven with a code BEFORE the account is made
+        if (signupPass.current?.phone === phone) await finishSignup();
+        else await sendCode("signup");
+        setBusy(false);
+        return;
+      }
+      await signIn(phone, password);
       startLoginSplash(); // the splash screen plays once on the next page, only after a sign-in
       window.location.assign(nextPath());
     } catch (err) {
@@ -134,14 +217,14 @@ export default function AuthForm() {
 
   const title = t(mode === "in" ? "Welcome Back" : mode === "up" ? "Create your account" : "Reset your password");
   const sub =
-    mode === "in" ? t("Sign in to book your next game.") : mode === "up" ? "Book faster, earn points and play with your team." : "We'll ask the venue to set a new password for you.";
+    mode === "in" ? t("Sign in to book your next game.") : mode === "up" ? "Book faster, earn points and play with your team." : "We'll text a 6-digit code to your number, then you choose a new password.";
   const primary =
     "flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0c0b5d] py-4 text-base font-semibold text-white shadow-[0_12px_24px_-12px_rgba(12,11,93,0.8)] transition active:scale-[0.99] disabled:opacity-40";
   const formTitle = mode === "in" ? t("Sign in to continue") : mode === "up" ? t("Your details") : t("Your mobile number");
   const formSub =
     mode === "in" ? "Book courts, Gamezone and EV charging, and see your points."
-    : mode === "up" ? "Choose a password. Your details help us look after you at the venue."
-    : "Enter the mobile number on your account.";
+    : mode === "up" ? "Choose a password. We will text a code to verify your number. Your details help us look after you at the venue."
+    : "Enter the mobile number on your account and tap Reset password.";
 
   return (
     <div className="mx-auto max-w-md rounded-[32px] bg-white px-5 pb-7 pt-8 shadow-[0_20px_50px_-24px_rgba(12,11,93,0.35)] ring-1 ring-slate-100 desk:px-8">
@@ -278,6 +361,10 @@ export default function AuthForm() {
 
         {mode === "reset" ? (
           <div className="space-y-4">
+            <button type="button" onClick={resetWithCode} disabled={!phoneOk || busy} className={primary}>
+              {busy ? <><Loader2 size={18} className="animate-spin" /> Please wait…</> : "Reset password"}
+            </button>
+
             {sent ? (
               <div role="status" className="space-y-1 rounded-3xl bg-emerald-500/10 px-5 py-4 text-sm text-emerald-800">
                 <p className="flex items-center gap-2 font-semibold"><CheckCircle2 size={18} /> Request sent</p>
@@ -288,7 +375,7 @@ export default function AuthForm() {
               </div>
             ) : (
               <button type="button" onClick={askVenue} disabled={!phoneOk || busy} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-sky-100 py-4 text-base font-semibold text-[#0c0b5d] transition hover:bg-sky-200 active:scale-[0.99] disabled:opacity-40">
-                {busy ? <><Loader2 size={18} className="animate-spin" /> Please wait…</> : t("Ask the venue to reset it")}
+                {busy ? <><Loader2 size={18} className="animate-spin" /> Please wait…</> : t("Did not get the code? Ask the venue to reset it")}
               </button>
             )}
 
@@ -331,6 +418,19 @@ export default function AuthForm() {
       <Link href="/book" className="mt-4 flex w-full items-center justify-center rounded-2xl py-3 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50">
         {t("Continue as a guest")}
       </Link>
+
+      {otp && (
+        <OtpDialog
+          sentTo={masked}
+          resendSeconds={60}
+          title={otp === "signup" ? "Verify your number" : "Enter the code"}
+          onVerify={otp === "signup" ? verifySignupCode : verifyResetCode}
+          onResend={resend}
+          onVerified={() => { if (otp === "signup") void finishSignup(); else { setOtp(null); setNewPasswordOpen(true); } }}
+          onClose={() => setOtp(null)}
+        />
+      )}
+      {newPasswordOpen && <NewPasswordDialog onSubmit={saveNewPassword} onClose={() => setNewPasswordOpen(false)} />}
     </div>
   );
 }
