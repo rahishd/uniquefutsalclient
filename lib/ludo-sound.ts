@@ -4,6 +4,7 @@
 type Ctx = AudioContext;
 let ctx: Ctx | null = null;
 let sfxOn = true;
+let vibrateOn = true;
 let music: { stop: () => void } | null = null;
 
 function ac(): Ctx | null {
@@ -50,6 +51,12 @@ function click(c: Ctx, at: number, peak: number, freq: number) {
 export const ludoSound = {
   unlock() { ac(); },
   setSfx(on: boolean) { sfxOn = on; },
+  setVibrate(on: boolean) { vibrateOn = on; },
+  /** a short buzz on phones that support it (not on iPhone Safari); only when the player has vibration on */
+  vibrate(pattern: number | number[] = 200) {
+    if (!vibrateOn || typeof navigator === "undefined" || typeof navigator.vibrate !== "function") return;
+    try { navigator.vibrate(pattern); } catch { /* not allowed */ }
+  },
   button() {
     if (!sfxOn) return;
     const c = ac(); if (!c) return;

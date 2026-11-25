@@ -90,8 +90,8 @@ function ChatPicker({ text, onClose }: { text: string; onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 desk:items-center" onClick={onClose}>
-      <div role="dialog" aria-label="Send to a chat or group" onClick={(e) => e.stopPropagation()} className="flex max-h-[80vh] w-full max-w-md flex-col rounded-t-3xl bg-white p-5 desk:rounded-3xl">
+    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/40 desk:items-center" onClick={onClose}>
+      <div role="dialog" aria-label="Send to a chat or group" onClick={(e) => e.stopPropagation()} className="flex max-h-[80dvh] w-full max-w-md flex-col rounded-t-3xl bg-white p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)] desk:rounded-3xl">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Send to a chat or group</h2>
           <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1 hover:bg-slate-100"><X size={22} /></button>

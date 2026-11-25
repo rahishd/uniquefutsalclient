@@ -2,18 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Clock, LogOut, Trophy, Wifi, WifiOff } from "lucide-react";
+import { Clock, Dices, LogOut, Maximize2, Minimize2, Trophy, Wifi, WifiOff } from "lucide-react";
 import { errorText } from "@/lib/api";
 import { clock, leaveGame, moveToken, rollDice, type LudoEventItem, type LudoGame, type LudoPlayer } from "@/lib/ludo";
-import { COLORS, cellCenter } from "@/lib/ludo-board";
+import { COLORS, COLOR_NAMES, cellCenter } from "@/lib/ludo-board";
 import { ludoSound } from "@/lib/ludo-sound";
 import Board from "@/components/ludo/Board";
-import { Avatar, Die, Sheet } from "@/components/ludo/parts";
+import { Avatar, BoardDie, Sheet, WinTrophy } from "@/components/ludo/parts";
 
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 const clone = (t: number[][]) => t.map((r) => [...r]);
 
-function PlayerCard({ p, turn, board }: { p: LudoPlayer; turn: boolean; board: LudoGame["board"] }) {
+function PlayerCard({ p, turn, board, pill = false }: { p: LudoPlayer; turn: boolean; board: LudoGame["board"]; pill?: boolean }) {
   const c = COLORS[p.color];
   const home = board ? board.tokens[p.seat].filter((x) => x === 56).length : 0;
   return (
@@ -27,6 +27,7 @@ function PlayerCard({ p, turn, board }: { p: LudoPlayer; turn: boolean; board: L
           <span aria-hidden>·</span>{p.captures} capture{p.captures === 1 ? "" : "s"}
         </p>
       </div>
+      {pill && turn && board && <span className="lu-turnpill" style={{ ["--c" as string]: c.main, ["--ink" as string]: p.color === "yellow" ? "#231b00" : "#ffffff" }} aria-live="polite">{board.phase === "roll" ? "ROLL" : "MOVE"}</span>}
       <span className="lu-pips" title={`${home} of 4 home`} aria-label={`${home} of 4 tokens home`}>{[0, 1, 2, 3].map((i) => <i key={i} className={i < home ? "on" : ""} />)}</span>
     </div>
   );
@@ -44,7 +45,6 @@ export default function GameScreen({ game, connected, onGame, onError, onRefresh
   const [animating, setAnimating] = useState(false);
   const [dice, setDice] = useState<{ value: number | null; rolling: boolean; seat: number }>({ value: board.dice, rolling: false, seat: board.turn });
   const [hit, setHit] = useState<{ key: string; at: [number, number] } | null>(null);
-  const [toast, setToast] = useState<{ id: number; text: string; tone?: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [endClosed, setEndClosed] = useState(false);
@@ -53,18 +53,6 @@ export default function GameScreen({ game, connected, onGame, onError, onRefresh
   const running = useRef(false);
   const alive = useRef(true);
   const lastGame = useRef(game);
-  const toastId = useRef(0);
-
-  const say = useCallback((text: string, tone?: string) => {
-    const id = ++toastId.current;
-    setToast({ id, text, tone });
-    setTimeout(() => setToast((t) => (t?.id === id ? null : t)), 3800);
-  }, []);
-
-  const nameOf = useCallback((seat: number) => {
-    const p = lastGame.current.players.find((x) => x.seat === seat);
-    return p?.isMe ? "You" : p?.name.replace(/\s*\(CPU\)/, "") ?? "Player";
-  }, []);
 
   const set = useCallback((t: number[][]) => { shownRef.current = t; setShown(clone(t)); }, []);
 
@@ -91,25 +79,21 @@ export default function GameScreen({ game, connected, onGame, onError, onRefresh
         const at = cellCenter(colors[e.victimSeat], tokens[e.victimSeat][e.victimToken], e.victimToken);
         setHit({ key: `${b.seq}-${e.victimToken}`, at });
         ludoSound.capture();
-        say(`${nameOf(e.seat)} captured ${nameOf(e.victimSeat)}'s token!`, "bad");
+        if (e.victimSeat === g.mySeat) ludoSound.vibrate([120, 60, 220]); // one of YOUR tokens was eaten
         await wait(380);
         tokens[e.victimSeat][e.victimToken] = -1; set(tokens);
         await wait(250);
       } else if (e.type === "home") {
-        ludoSound.home(); say(`${nameOf(e.seat)} got a token home!`, "good"); await wait(300);
+        ludoSound.home(); await wait(300);
       } else if (e.type === "nomove") {
-        say(`${nameOf(e.seat)} rolled ${e.value}: no move possible`); await wait(650);
+        await wait(650);
       } else if (e.type === "forfeit") {
-        say(`${nameOf(e.seat)} rolled three sixes in a row and loses the turn`, "bad"); await wait(900);
-      } else if (e.type === "extra") {
-        if (e.reason !== "six") say(`${nameOf(e.seat)} rolls again`);
-      } else if (e.type === "auto" || e.type === "takeover" || e.type === "back") {
-        if (e.text) say(e.text);
+        await wait(900);
       }
     }
     set(b.tokens); // always end on exactly what the server says
     shownSeq.current = b.seq;
-  }, [colors, nameOf, say, set]);
+  }, [colors, set]);
 
   const drain = useCallback(async () => {
     if (running.current) return;
@@ -144,6 +128,19 @@ export default function GameScreen({ game, connected, onGame, onError, onRefresh
 
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 500); return () => clearInterval(t); }, []);
+
+  // real full screen of the whole window (desktop button); the game already fills the window
+  const [full, setFull] = useState(false);
+  useEffect(() => {
+    const on = () => setFull(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", on);
+    return () => document.removeEventListener("fullscreenchange", on);
+  }, []);
+  const toggleFull = () => {
+    ludoSound.button();
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+    else void document.documentElement.requestFullscreen?.().catch(() => {});
+  };
 
   const myTurn = game.status === "active" && mySeat !== null && board.turn === mySeat;
   const canAct = myTurn && !animating && !busy;
@@ -206,11 +203,11 @@ export default function GameScreen({ game, connected, onGame, onError, onRefresh
   const ranking = game.outcome?.ranking ?? [];
 
   return (
-    <div className="lu-wrap flex w-full flex-col gap-3 pb-4 lg:grid lg:grid-cols-[17rem_minmax(0,34rem)_17rem] lg:items-start lg:justify-center lg:gap-6">
+    <div className="lu-wrap lu-game flex w-full flex-col gap-3 pb-4">
       {/* opponents */}
-      <div className="flex gap-2 overflow-x-auto pb-1 lg:order-1 lg:flex-col lg:overflow-visible" aria-label="Players">
+      <div className="flex gap-2 overflow-x-auto pb-1 lg:order-1 lg:flex-col lg:self-start lg:overflow-visible" aria-label="Players">
         {others.map((p) => (
-          <div key={p.id} className="min-w-[13rem] flex-1 lg:min-w-0"><PlayerCard p={p} turn={p.seat === board.turn && game.status === "active"} board={board} /></div>
+          <div key={p.id} className="min-w-[13rem] flex-1 lg:min-w-0"><PlayerCard p={p} turn={p.seat === board.turn && game.status === "active"} board={board} pill /></div>
         ))}
         <div className="hidden lg:block">
           <div className="lu-panel mt-2 space-y-2 p-3 text-xs">
@@ -223,20 +220,22 @@ export default function GameScreen({ game, connected, onGame, onError, onRefresh
       </div>
 
       {/* board */}
-      <div className="relative mx-auto w-full lg:order-2" style={{ maxWidth: "min(100%, 34rem, calc(100dvh - 21rem))", minWidth: "min(100%, 17rem)" }}>
+      <div className="lu-boardbox relative mx-auto w-full lg:order-2">
         <div className="overflow-hidden rounded-[1.1rem] ring-1 ring-white/25 shadow-[0_28px_60px_-18px_rgba(0,0,0,0.75)]" style={{ background: "#fbfcff" }}>
           <Board tokens={shown} colors={colors} legal={canPick ? board.legal : []} mySeat={mySeat} onPick={pick} turnSeat={game.status === "active" ? board.turn : null} hitKey={hit?.key} hitAt={hit?.at ?? null} />
         </div>
-        {toast && (
-          <p key={toast.id} role="status" className="lu-fade pointer-events-none absolute inset-x-2 top-2 z-10 rounded-xl px-3 py-2 text-center text-xs font-bold shadow-lg" style={{ background: toast.tone === "bad" ? "rgba(127,29,29,0.92)" : toast.tone === "good" ? "rgba(20,83,45,0.92)" : "rgba(8,12,60,0.92)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)" }}>{toast.text}</p>
-        )}
+        {showDice != null && <BoardDie key={`die-${dice.seat}`} value={showDice} rolling={dice.rolling} color={COLORS[COLOR_NAMES[colors[dice.seat] ?? 0]].dark} />}
       </div>
 
       {/* me: dice and status */}
-      <div className="flex flex-col gap-3 lg:order-3">
+      <div className="flex flex-col gap-3 lg:order-3 lg:self-start">
         {me && <PlayerCard p={me} turn={myTurn} board={board} />}
         <div className="lu-panel flex items-center gap-4 p-3" style={{ borderColor: myTurn ? myColor.main : undefined }}>
-          <Die value={showDice} rolling={dice.rolling} ready={canRoll} onClick={roll} />
+          {myTurn && !ended && <button type="button" onClick={canRoll ? roll : undefined} disabled={!canRoll} aria-label="Roll the dice"
+            className={`lu-roll${canRoll ? " ready" : ""}`}
+            style={{ ["--c" as string]: myColor.main, ["--cd" as string]: myColor.dark, ["--ink" as string]: me?.color === "yellow" ? "#231b00" : "#ffffff" }}>
+            <Dices size={26} strokeWidth={2.4} aria-hidden /> ROLL
+          </button>}
           <div className="min-w-0 flex-1">
             <p className="text-sm font-extrabold leading-tight" aria-live="polite">{hint}</p>
             <p className="lu-muted mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
@@ -247,6 +246,7 @@ export default function GameScreen({ game, connected, onGame, onError, onRefresh
             {board.sixes > 0 && myTurn && !ended && <p className="lu-gold mt-1 text-[11px] font-bold">{board.sixes} six{board.sixes > 1 ? "es" : ""} in a row{board.sixes >= 2 ? ": another 6 loses your turn" : ""}</p>}
           </div>
         </div>
+        <div className="hidden lg:block"><button type="button" className="lu-btn ghost small block w-full" onClick={toggleFull}>{full ? <Minimize2 size={16} /> : <Maximize2 size={16} />} {full ? "Exit full screen" : "Full screen"}</button></div>
         {!ended ? (
           <button type="button" className="lu-btn ghost small" onClick={() => { ludoSound.button(); setLeaveOpen(true); }}><LogOut size={16} /> Leave game</button>
         ) : (
@@ -271,7 +271,7 @@ export default function GameScreen({ game, connected, onGame, onError, onRefresh
       {showEnd && (
         <Sheet title={game.status === "abandoned" ? "Game ended" : game.outcome?.youWon ? "You won!" : "Game over"} onClose={() => setEndClosed(true)}>
           <div className="text-center">
-            <Trophy className="lu-pop mx-auto" size={44} style={{ color: game.outcome?.youWon ? "#facc15" : "#8c9bc4" }} aria-hidden />
+            {game.outcome?.youWon ? <WinTrophy color={myColor.dark} /> : <Trophy className="lu-pop mx-auto" size={44} style={{ color: "#8c9bc4" }} aria-hidden />}
             {game.status === "abandoned" ? (
               <p className="lu-muted mt-2 text-sm">{game.cancelReason ?? "The game was left."} No one wins and no points are paid out.</p>
             ) : (

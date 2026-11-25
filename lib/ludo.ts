@@ -258,11 +258,14 @@ export function useLudoSocket(onGame: (g: LudoGame) => void, onOpen?: () => void
 // preferences (this browser only)
 const MUTE = "uf-ludo-muted";
 const MUSIC = "uf-ludo-music";
+const VIBRATE = "uf-ludo-vibrate";
 const SEEN = "uf-ludo-rules-seen";
 const read = (k: string, d: boolean) => { try { const v = localStorage.getItem(k); return v === null ? d : v === "1"; } catch { return d; } };
 const write = (k: string, v: boolean) => { try { localStorage.setItem(k, v ? "1" : "0"); } catch { /* private mode */ } };
 export const readSfxOn = () => !read(MUTE, false);
 export const saveSfxOn = (on: boolean) => write(MUTE, !on);
+export const readVibrateOn = () => read(VIBRATE, true);
+export const saveVibrateOn = (on: boolean) => write(VIBRATE, on);
 export const readMusicOn = () => read(MUSIC, false);
 export const saveMusicOn = (on: boolean) => write(MUSIC, on);
 export const rulesSeen = () => read(SEEN, false);

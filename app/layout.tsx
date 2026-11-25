@@ -19,6 +19,7 @@ import ConfirmHost from "@/components/ConfirmHost";
 import LoginSplash from "@/components/LoginSplash";
 import CallHost from "@/components/chat/CallHost";
 import ChatPopup from "@/components/chat/ChatPopup";
+import PullToRefresh from "@/components/PullToRefresh";
 
 // the tall bold letters of the Home banner heading (components/DeskHero.tsx)
 const anton = Anton({ variable: "--font-anton", subsets: ["latin"], weight: "400" });
@@ -47,6 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem("uf-theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}` }} />
       </head>
       <body className="min-h-full">
+        <PullToRefresh />
         <LoginSplash />
         <LangSync />
         <PageTranslator />
