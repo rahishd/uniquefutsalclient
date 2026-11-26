@@ -478,17 +478,32 @@ export default function BookingFlow({ initialDate, initialHour }: { initialDate?
         )}
       </header>
 
-      <Link
-        href="/book/bulk"
-        className="group flex items-center gap-3 rounded-2xl bg-emerald-700 px-3 py-2.5 text-white transition active:scale-[0.99] desk:mx-auto desk:max-w-[46.8rem]"
-      >
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-emerald-700"><Layers size={18} /></span>
-        <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-2 text-sm font-semibold">Bulk Booking <span className="rounded-full bg-orange-400 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-[#0c0b5d]">New</span></span>
-          <span className="block text-[11px] leading-snug text-white/90">Up to 5 games a week over the next 7 days. Pay 50% now or in full.</span>
-        </span>
-        <ChevronRight size={18} className="shrink-0 transition group-hover:translate-x-0.5" />
-      </Link>
+      {registered ? (
+        <Link
+          href="/book/bulk"
+          className="group flex items-center gap-3 rounded-2xl bg-emerald-700 px-3 py-2.5 text-white transition active:scale-[0.99] desk:mx-auto desk:max-w-[46.8rem]"
+        >
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-emerald-700"><Layers size={18} /></span>
+          <span className="min-w-0 flex-1">
+            <span className="flex items-center gap-2 text-sm font-semibold">Bulk Booking <span className="rounded-full bg-orange-400 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-[#0c0b5d]">New</span></span>
+            <span className="block text-[11px] leading-snug text-white/90">Up to 5 games a week over the next 7 days. Pay 50% now or in full.</span>
+          </span>
+          <ChevronRight size={18} className="shrink-0 transition group-hover:translate-x-0.5" />
+        </Link>
+      ) : (
+        <button
+          type="button"
+          onClick={openSignIn}
+          className="flex w-full items-center gap-3 rounded-2xl bg-slate-200 px-3 py-2.5 text-left text-slate-600 transition active:scale-[0.99] desk:mx-auto desk:max-w-[46.8rem]"
+        >
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-slate-500"><Lock size={18} /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">Bulk Booking</span>
+            <span className="block text-[11px] leading-snug">Only for account holders. Sign in to use it.</span>
+          </span>
+          <ChevronRight size={18} className="shrink-0" />
+        </button>
+      )}
 
       <section aria-label="Select date">
         <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2 desk:mx-0 desk:flex-wrap desk:overflow-visible desk:px-0">

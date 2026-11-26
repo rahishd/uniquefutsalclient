@@ -91,6 +91,20 @@ export default function BulkBookingFlow() {
   if (!session) return <div className="h-96 animate-pulse rounded-3xl bg-white/40" aria-label="Loading" />;
 
   const registered = Boolean(session.registered);
+  // Guests cannot bulk book: they see only this (the server refuses them too).
+  if (!registered) {
+    return (
+      <div className="space-y-4">
+        <Link href="/book" className="flex items-center gap-1 text-sm text-brand"><ChevronLeft size={18} /> Single booking</Link>
+        <section className="glass space-y-3 rounded-2xl px-5 py-8 text-center">
+          <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-emerald-700/10 text-emerald-700"><Lock size={22} /></span>
+          <h1 className="text-xl font-semibold">Bulk booking is for account holders</h1>
+          <p className="text-sm text-slate-500">Sign in or create an account to book up to {BULK_MAX_PER_WEEK} games a week. Guests can still book a single game.</p>
+          <button type="button" onClick={openSignIn} className="glass-btn rounded-full px-6 py-3 text-sm font-semibold text-white">Sign in</button>
+        </section>
+      </div>
+    );
+  }
   const toggle = (s: Slot) => {
     const item = { date: activeDate, startTime: s.startTime };
     const k = keyOf(item);

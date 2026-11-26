@@ -58,7 +58,7 @@ wifiRouter.get("/", authMiddleware, asyncHandler(async (req: AuthRequest, res: R
   if (!ssid || visible === "false") return send({ visible: false });
   // default is "booked": only customers who are at the venue now. Staff can open it to every signed-in customer.
   if (access !== "all" && !(await isAtVenue(req.user!.id))) {
-    return send({ visible: true, locked: true, message: `Wi-Fi is for customers at the venue. It opens ${BEFORE_MIN} minutes before your game, Gamezone session or membership time, once you have booked.` });
+    return send({ visible: true, locked: true, message: "Wi-Fi access will be available at your game time. Scan the QR code or copy the password displayed here to connect & Share it with friends." });
   }
   send({ visible: true, locked: false, ssid, password: password ?? "", open: !password, qr: wifiQr(ssid, password ?? "") });
 }));

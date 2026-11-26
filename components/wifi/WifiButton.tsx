@@ -17,7 +17,7 @@ export default function WifiButton({ text }: { text?: string } = {}) {
   const [open, setOpen] = useState(false);
   if (!session?.registered) return <LockedIcon label="Venue Wi-Fi" message="Sign in to view the venue Wi-Fi."><WifiIcon size={18} /></LockedIcon>;
   // the icon is always there; it carries a lock while the Wi-Fi is switched off or the customer is not at the venue yet
-  const wifi: Extract<Wifi, { visible: true }> = data?.visible ? data : { visible: true, locked: true, message: "The venue Wi-Fi is not available right now. Please ask the staff at the venue." };
+  const wifi: Extract<Wifi, { visible: true }> = data?.visible ? data : { visible: true, locked: true, message: "Wi-Fi access will be available at your game time. Scan the QR code or copy the password displayed here to connect & Share it with friends." };
   const locked = wifi.locked;
   return (
     <>

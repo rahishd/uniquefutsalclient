@@ -1660,7 +1660,7 @@ export const NE_DICTIONARY: Record<string, string> = {
  "Live updates are off for this match": "यो खेलको लाइभ अपडेट बन्द छ",
  "This player is the captain of \"{0}\". Move or remove that team first.": "यो खेलाडी “{0}” को कप्तान हो। पहिले त्यो टोली सार्नुहोस् वा हटाउनुहोस्।",
  "Wi-Fi": "वाइफाइ",
- "Wi-Fi is for customers at the venue. It opens {0} minutes before your game, Gamezone session or membership time, once you have booked.": "वाइफाइ भेन्युमा रहेका ग्राहकका लागि हो। बुक गरेपछि तपाईंको खेल, गेमजोन सेसन वा सदस्यताको समयभन्दा {0} मिनेट अघि खुल्छ।",
+ "Wi-Fi access will be available at your game time. Scan the QR code or copy the password displayed here to connect & Share it with friends.": "तपाईंको खेलको समयमा वाइफाइ पहुँच उपलब्ध हुनेछ। जडान गर्न यहाँ देखाइएको QR कोड स्क्यान गर्नुहोस् वा पासवर्ड कपी गर्नुहोस्, र साथीहरूसँग सेयर गर्नुहोस्।",
  "Online payment is not available yet. Please choose Pay at venue or try again later.": "अनलाइन भुक्तानी अहिले उपलब्ध छैन। कृपया भेन्युमा भुक्तानी छान्नुहोस् वा पछि फेरि प्रयास गर्नुहोस्।",
  "Photos must be JPG, PNG or WebP images.": "फोटो JPG, PNG वा WebP हुनुपर्छ।",
  "A photo is too large. Each photo can be up to 8 MB.": "एउटा फोटो धेरै ठूलो छ। प्रत्येक फोटो 8 MB सम्मको हुन सक्छ।",
