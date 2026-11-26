@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import AdStrip from "@/components/ads/AdStrip";
+import { useDesk } from "@/lib/use-desk";
 import Link from "next/link";
 import { BadgeCheck, CalendarClock, ChevronDown, Eye, EyeOff, Pencil, Star } from "lucide-react";
 import { clubStore } from "@/lib/club";
@@ -64,6 +66,7 @@ const dayFmt = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeri
 // "Hi, name!" with the account link), and under it one account card: name, number, points, status pills and the next game.
 // A VIP customer keeps the dark blue card. Desktop keeps the profile card in components/UserBadge.tsx.
 export default function HomeTop() {
+  const desk = useDesk();
   const session = useSession();
   const teams = useTeams();
   const club = clubStore.use().data;
@@ -118,6 +121,8 @@ export default function HomeTop() {
           <LiveMatchStrip className="mt-3" />
           <div className="mt-3"><TodayCard compact /></div>
           <GuestPrompt />
+          {/* the header ad (a guest has no Next game card, so it goes under the invitation) */}
+          {!desk && <div className="mt-3 empty:hidden"><AdStrip placement="header" /></div>}
         </div>
       </div>
     );
@@ -198,6 +203,9 @@ export default function HomeTop() {
           </Link>
         </div>
         )}
+
+        {/* the header ad, below the Next game card (on a phone; the desktop bar carries it there) */}
+        {!desk && <div className="mt-3 empty:hidden"><AdStrip placement="header" /></div>}
       </section>
     </div>
   );

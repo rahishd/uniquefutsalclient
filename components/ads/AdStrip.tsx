@@ -9,8 +9,8 @@ import { mediaUrl, trackAd, useContent, type AdItem } from "@/lib/content";
 type Place = "header" | "footer" | "inline";
 
 const SHAPE: Record<Place, string> = {
-  header: "h-14 rounded-xl",
-  footer: "h-16 rounded-2xl",
+  header: "rounded-xl", // header and footer banners show the whole picture at its own shape (1200 x 185 / 1200 x 210), never cropped
+  footer: "rounded-2xl",
   inline: "aspect-[16/7] rounded-3xl",
 };
 
@@ -48,7 +48,7 @@ export default function AdStrip({ placement }: { placement: Place }) {
       <Tag ad={ad} onClick={() => trackAd(ad.id, "click")} className={`relative block w-full overflow-hidden bg-white/60 shadow-sm ${SHAPE[placement]}`}>
         {/* ads come from the venue's own API, so next/image is not used */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img key={ad.id} src={mediaUrl(ad.imageUrl)} alt={ad.title} className="h-full w-full animate-[adfade_.5s_ease] object-cover" />
+        <img key={ad.id} src={mediaUrl(ad.imageUrl)} alt={ad.title} className={`w-full animate-[adfade_.5s_ease] ${placement === "inline" ? "h-full object-cover" : "block h-auto"}`} />
         <span className="absolute left-2 top-1.5 rounded bg-black/40 px-1.5 text-[9px] font-medium uppercase tracking-wide text-white">Ad</span>
       </Tag>
       {ads.length > 1 && (

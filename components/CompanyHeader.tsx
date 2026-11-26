@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { site } from "@/lib/site";
+import { useDesk } from "@/lib/use-desk";
 import AdStrip from "@/components/ads/AdStrip";
 import DeskNav from "@/components/DeskNav";
 import PageScrollBar from "@/components/PageScrollBar";
@@ -18,6 +19,7 @@ import HeaderLogout from "@/components/HeaderLogout";
 // On the phone the full bar is shown on Home only; other pages have no bar at the top; a slim one slides in only while scrolling down (components/PageScrollBar.tsx). In desktop mode (see `desk:` in globals.css) the bar is on every page, because it
 // carries the main navigation there (the bottom bar is hidden).
 export default function CompanyHeader() {
+  const desk = useDesk();
   const path = usePathname();
   const home = path === "/";
   // the sign-in page needs no greeting bar: the person is not signed in yet
@@ -38,6 +40,10 @@ export default function CompanyHeader() {
       {!home && !signIn && <div aria-hidden className="desk:hidden" style={{ height: "env(safe-area-inset-top)" }} />}
       {/* the slim bar that shows only while scrolling down within the page (hidden when a page opens, gone at once when scrolling up) */}
       {!home && !signIn && !path.startsWith("/marketplace") && <PageScrollBar key={path} />} {/* Partner offers keeps its own fixed block, so the slim bar stays away there */}
+      {/* phone: the header ad sits at the top of every page but Home (the navy bar below is desktop only). On Home it is shown below the Next game card, see HomeTop. */}
+      {!signIn && !home && !desk && (
+        <div className="empty:hidden mx-auto w-full max-w-md px-5 pb-1 pt-2 tab:max-w-3xl tab:px-8"><AdStrip placement="header" /></div>
+      )}
       <div className={`hidden desk:block uf-navy-header ${home && atTop ? "uf-hdr-over" : ""} sticky top-0 z-30 pt-[calc(env(safe-area-inset-top)+1.5rem)] desk:pt-[env(safe-area-inset-top)] shadow-[0_8px_24px_-14px_rgba(12,11,93,0.45)]`}>
       <div className="mx-auto w-full max-w-md px-5 tab:max-w-3xl tab:px-8 desk:max-w-[1320px] desk:px-10">
         <div className="flex min-h-0 items-center gap-3 py-2.5 tab:gap-4 pr-1 desk:gap-3 desk:py-4 2xl:gap-6">
@@ -54,7 +60,7 @@ export default function CompanyHeader() {
           <DeskNav />
           <div className="-mr-2 ml-auto flex shrink-0 items-center gap-0 desk:ml-0 desk:gap-1.5"><HeaderPoints plain /><HeaderChat /><span aria-hidden className="mx-1 hidden h-5 w-px bg-[#0c0b5d]/25 desk:block" /><div className="desk:mr-3.5 [&_button[aria-label^=Notifications]]:!h-8 [&_button[aria-label^=Notifications]]:!w-8 [&_button[aria-label^=Notifications]]:!rounded-md [&_button[aria-label^=Notifications]]:!bg-transparent [&_button[aria-label^=Notifications]]:!text-white [&_button[aria-label^=Notifications]]:!shadow-none [&_button[aria-label^=Notifications]]:!ring-0 [&_button[aria-label^=Notifications]]:!border-0 [&_button[aria-label^=Notifications]>svg]:!h-[18px] [&_button[aria-label^=Notifications]>svg]:!w-[18px] [&_.uf-badge-ping]:!h-4 [&_.uf-badge-ping]:!w-4 [&_.uf-badge-blink]:!h-4 [&_.uf-badge-blink]:!min-w-4 [&_.uf-badge-blink]:!px-0.5 [&_.uf-badge-blink]:!text-[9.5px]"><NotificationBell /></div><HeaderLogout /></div>
         </div>
-        <div className="empty:hidden pb-2"><AdStrip placement="header" /></div>
+        <div className="empty:hidden pb-2">{desk && <AdStrip placement="header" />}</div>
       </div>
     </div>
     </>
