@@ -37,7 +37,7 @@ export default function CompanyHeader() {
       {/* phone, every page but Home: no greeting bar any more (Home already shows it). Only room for the phone's status bar is kept, so the page does not start under it. */}
       {!home && !signIn && <div aria-hidden className="desk:hidden" style={{ height: "env(safe-area-inset-top)" }} />}
       {/* the slim bar that shows only while scrolling down within the page (hidden when a page opens, gone at once when scrolling up) */}
-      {!home && !signIn && <PageScrollBar key={path} />}
+      {!home && !signIn && !path.startsWith("/marketplace") && <PageScrollBar key={path} />} {/* Partner offers keeps its own fixed block, so the slim bar stays away there */}
       <div className={`hidden desk:block uf-navy-header ${home && atTop ? "uf-hdr-over" : ""} sticky top-0 z-30 pt-[calc(env(safe-area-inset-top)+1.5rem)] desk:pt-[env(safe-area-inset-top)] shadow-[0_8px_24px_-14px_rgba(12,11,93,0.45)]`}>
       <div className="mx-auto w-full max-w-md px-5 tab:max-w-3xl tab:px-8 desk:max-w-[1320px] desk:px-10">
         <div className="flex min-h-0 items-center gap-3 py-2.5 tab:gap-4 pr-1 desk:gap-3 desk:py-4 2xl:gap-6">

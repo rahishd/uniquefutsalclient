@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useHighlight } from "@/lib/highlight";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Gift, Star, Trophy, ShoppingBag, Gamepad2, UserRound, ChevronDown, Crown, HeartHandshake, Check, Clock, TriangleAlert, Loader2, Goal, Clapperboard, Send, Info, CalendarDays, ChevronRight, Dices } from "lucide-react";
 import SharePoints from "@/components/points/SharePoints";
 import SendPdfButton from "@/components/SendPdfButton";
@@ -49,18 +50,26 @@ export default function PointsPage() {
   const session = useSession();
   const store = loyaltyStore.use();
   const [all, setAll] = useState(false);
-  const [howOpen, setHowOpen] = useState(false); // "How it works": the first two rules show; the rest open with View more
+  const [moreOpen, setMoreOpen] = useState(false); // "More Loyalty Points, More Free Games!" (with the ways to earn) is a dropdown, closed until tapped
+  const [histOpen, setHistOpen] = useState(false); // "Points history" is a dropdown, closed until tapped (a notice opens it)
+  const [howOpen, setHowOpen] = useState(false); // "How it works" is a dropdown, closed until tapped
   // a notice opens its own row; the history shows only the latest few, so open the whole list if the row is further down
   const [target, setTarget] = useState<string | null>(null);
   useHighlight(setTarget);
   useEffect(() => {
-    if (target && (store.data?.rows.findIndex((r) => r.id === target) ?? -1) >= SHOWN) setAll(true);
+    if (!target) return;
+    const t = setTimeout(() => {
+      setHistOpen(true);
+      if ((store.data?.rows.findIndex((r) => r.id === target) ?? -1) >= SHOWN) setAll(true);
+    }, 0);
+    return () => clearTimeout(t);
   }, [target, store.data]);
   const [confirming, setConfirming] = useState<Period | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
   const [cancelling, setCancelling] = useState<string | null>(null);
+  const router = useRouter();
 
   if (!session) return <div className="h-96 animate-pulse rounded-3xl bg-white/40" aria-label="Loading" />;
   if (!session.registered) {
@@ -92,6 +101,7 @@ export default function PointsPage() {
     try {
       await claimFreeGame(period);
       setConfirming(null);
+      router.push("/book"); // the voucher is ready: go straight to booking the game
     } catch (e) {
       setError(errorText(e));
     } finally {
@@ -109,38 +119,38 @@ export default function PointsPage() {
       {/* Balance */}
       {(loy.offers ?? []).map((o) => <OfferCard key={o.id} offer={o} className="desk:col-span-2" />)}
 
-      <section className="rounded-3xl bg-gradient-to-br from-[#0c0b5d] to-[#2a2aa8] p-5 text-white shadow-lg desk:col-span-2" aria-label="Your points balance">
-        <p className="text-xs uppercase tracking-wide text-white/60">Remaining points</p>
-        <div className="mt-1 flex items-end justify-between">
-          <p className="flex items-center gap-2 text-5xl font-semibold"><Star className="fill-amber-400 text-amber-400" size={34} /> {fmtPts(loy.remaining)}</p>
-          {loy.toNext === 0 && <p className="rounded-full bg-orange-400/25 px-3 py-1 text-xs font-medium text-orange-100">Free game unlocked</p>}
+      <section className="rounded-3xl bg-gradient-to-br from-[#0c0b5d] to-[#2a2aa8] p-4 text-white shadow-lg desk:col-span-2" aria-label="Your points balance">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] uppercase tracking-wide text-white/60">Remaining points</p>
+            <p className="flex items-center gap-2 text-4xl font-semibold leading-tight"><Star className="fill-amber-400 text-amber-400" size={28} /> {fmtPts(loy.remaining)}</p>
+          </div>
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            {loy.toNext === 0 && <p className="rounded-full bg-orange-400/25 px-3 py-1 text-xs font-medium text-orange-100">Free game unlocked</p>}
+            <button type="button" onClick={() => setSharing((v) => !v)} aria-expanded={sharing} className="flex items-center justify-center gap-1.5 rounded-full bg-white/15 px-3.5 py-2 text-xs font-semibold text-white ring-1 ring-white/25 transition hover:bg-white/25">
+              <Send size={14} /> Share points
+            </button>
+          </div>
         </div>
-        <div className="mt-5 h-3 overflow-hidden rounded-full bg-white/20" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Progress to a free game">
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/20" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Progress to a free game">
           <div className="h-full rounded-full bg-gradient-to-r from-amber-300 to-orange-400" style={{ width: `${pct}%` }} />
         </div>
-        <p className="mt-2 text-xs text-white/70">
+        <p className="mt-1.5 text-xs text-white/70">
           {loy.toNext === 0 ? "You have enough points to claim a free game below." : `${fmtPts(loy.toNext)} more points to unlock a free game`}
         </p>
         {loy.expiringSoon && (
-          <p role="status" className="mt-4 flex items-start gap-2 rounded-2xl bg-amber-400/20 px-3 py-2.5 text-xs text-amber-100">
+          <p role="status" className="mt-3 flex items-start gap-2 rounded-2xl bg-amber-400/20 px-3 py-2 text-xs text-amber-100">
             <TriangleAlert size={16} className="mt-0.5 shrink-0" />
             {fmtPts(loy.expiringSoon.points)} points expire on {fmtDay(loy.expiringSoon.date)}. Claim a free game before then.
           </p>
         )}
-        <button type="button" onClick={() => setSharing((v) => !v)} aria-expanded={sharing} className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-white/15 px-4 py-3 text-sm font-semibold text-white ring-1 ring-white/25 transition hover:bg-white/25">
-          <Send size={16} /> Share points with a friend
-        </button>
         {(() => {
           const r = loy.share ?? FALLBACK_SHARE;
           return (
-            <div className="mt-3 rounded-2xl bg-white/15 px-4 py-3 text-xs text-white ring-1 ring-white/25" role="note" aria-label="Sharing rules">
-              <p className="flex items-center gap-1.5 text-[13px] font-semibold"><Info size={15} /> Sharing rules</p>
-              <ul className="mt-2 space-y-1.5">
-                <li className="flex justify-between gap-3"><span>Minimum balance to share</span><span className="font-semibold">{r.minBalance} points</span></li>
-                <li className="flex justify-between gap-3"><span>Points sent in each share</span><span className="font-semibold">{r.max} points</span></li>
-                <li className="flex justify-between gap-3"><span>Share limit</span><span className="font-semibold">{r.perDay} times a day</span></li>
-              </ul>
-            </div>
+            <p className="mt-3 flex items-start gap-1.5 border-t border-white/15 pt-2.5 text-[11px] leading-snug text-white/75" role="note" aria-label="Sharing rules">
+              <Info size={13} className="mt-px shrink-0" />
+              <span><strong className="font-semibold text-white">Sharing:</strong> needs {r.minBalance} points · sends {r.max} points each time · up to {r.perDay} times a day</span>
+            </p>
           );
         })()}
       </section>
@@ -160,11 +170,32 @@ export default function PointsPage() {
 
       {/* Link to the partners' offers (the loyalty card itself lives on the Partners page) */}
       <div className="space-y-2 desk:col-span-2">
-        <Link href="/marketplace" className="flex items-center justify-between rounded-2xl bg-white/70 px-4 py-3 text-sm font-semibold text-[#0c0b5d] shadow-sm">Use my points at our partners <ChevronRight size={16} /></Link>
+        <Link href="/marketplace" className="flex items-center justify-between rounded-2xl bg-white/70 px-4 py-2.5 text-sm font-semibold text-[#0c0b5d] shadow-sm">Use my points at our partners <ChevronRight size={16} /></Link>
       </div>
 
+      {/* Expiry: when each kind of point runs out (compact, right under the balance) */}
+      <section className="glass rounded-2xl px-4 py-3 desk:col-span-2" aria-label="When points expire">
+        <h2 className="flex items-center gap-1.5 text-sm font-semibold"><Clock size={15} className="text-brand" /> When points expire</h2>
+        <ul className="mt-2 grid grid-cols-3 gap-2 text-center">
+          {[
+            { label: "Game points", rule: `${GAME_POINTS_MONTHS} months from the game`, b: loy.byType.games },
+            { label: "Extra goods", rule: "1 year from purchase", b: loy.byType.goods },
+            { label: "Membership", rule: "Never expire", b: loy.byType.membership },
+            { label: "Shared with you", rule: "Keep their expiry", b: loy.byType.shared ?? { points: 0, nextExpiry: null } },
+          ].filter((r) => r.label !== "Shared with you" || r.b.points > 0).map((r) => (
+            <li key={r.label} className="rounded-xl bg-white/60 px-1.5 py-2">
+              <p className="text-[11px] font-medium leading-tight">{r.label}</p>
+              <p className="text-lg font-semibold leading-tight">{fmtPts(r.b.points)}</p>
+              <p className="text-[10px] leading-tight text-slate-500">{r.rule}</p>
+              {r.b.nextExpiry && r.b.points > 0 && <p className="mt-0.5 text-[10px] font-medium leading-tight text-amber-600">Expires {fmtDay(r.b.nextExpiry)}</p>}
+            </li>
+          ))}
+        </ul>
+        <p className="mt-2 text-[11px] leading-snug text-slate-500">Points not used in time vanish automatically. The ones that expire soonest are spent first.</p>
+      </section>
+
       {/* Claim a free game */}
-      <section className="glass rounded-3xl p-5 desk:col-span-2" aria-label="Claim a free game">
+      <section className="rounded-3xl bg-sky-100 p-5 ring-1 ring-sky-200/70 desk:col-span-2" aria-label="Claim a free game">
         {loy.vouchers.length > 0 && (
           <div className="mb-4 space-y-3">
             {loy.vouchers.map((v) => (
@@ -200,7 +231,23 @@ export default function PointsPage() {
           </div>
         )}
         <h2 className="text-base font-semibold">Claim a free game</h2>
-        <p className="mt-1 text-xs text-slate-500">Pick any shift you have enough points for. It books one regular game and can&apos;t be used to host a challenge.{loy.freeLimit && <> Even with lots of points, you can claim up to {loy.freeLimit.perDay} free games a day and {loy.freeLimit.perWeek} a week (claimed today {loy.freeLimit.day}/{loy.freeLimit.perDay}, last 7 days {loy.freeLimit.week}/{loy.freeLimit.perWeek}).</>}</p>
+        <p className="mt-1 text-xs text-slate-500">Pick any shift you have enough points for. It books one regular game and can&apos;t be used to host a challenge.</p>
+        {loy.freeLimit && (() => {
+          const f = loy.freeLimit;
+          const meter = (label: string, used: number, max: number) => (
+            <div className="rounded-xl bg-white/60 px-3 py-2" role="group" aria-label={`${label}: ${used} of ${max} free games claimed`}>
+              <div className="flex items-baseline justify-between gap-2"><span className="text-[11px] font-medium text-slate-500">{label}</span><span className="text-sm font-semibold tabular-nums">{used}<span className="text-xs font-medium text-slate-400"> / {max}</span></span></div>
+              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-200"><div className={`h-full rounded-full ${used >= max ? "bg-rose-500" : "bg-emerald-500"}`} style={{ width: `${Math.min(100, (used / Math.max(1, max)) * 100)}%` }} /></div>
+              <p className="mt-1 text-[10px] leading-tight text-slate-500">{used >= max ? "Limit reached" : `${max - used} left`}</p>
+            </div>
+          );
+          return (
+            <div className="mt-2">
+              <p className="text-[11px] text-slate-500">Free game limit, even with lots of points: up to {f.perDay} a day and {f.perWeek} a week.</p>
+              <div className="mt-1.5 grid grid-cols-2 gap-2">{meter("Claimed today", f.day, f.perDay)}{meter("Last 7 days", f.week, f.perWeek)}</div>
+            </div>
+          );
+        })()}
         {loy.claimOpen?.reason && <p className="mt-3 rounded-2xl bg-amber-500/10 px-3 py-2 text-xs text-amber-700">{loy.claimOpen.reason}</p>}
         {error && <p role="alert" className="mt-3 rounded-2xl bg-rose-500/10 px-3 py-2 text-xs text-rose-600">{error}</p>}
         <ul className="mt-4 space-y-2">
@@ -244,63 +291,17 @@ export default function PointsPage() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="glass rounded-3xl p-5">
-        <h2 className="text-base font-semibold">How it works</h2>
-        <ul className="mt-3 space-y-3 text-sm">
-          <li className="flex gap-3"><Gamepad2 size={20} className="mt-0.5 shrink-0 text-emerald-600" /><span>Every game earns <b>price ÷ {GAME_RS_PER_POINT}</b> points: a Rs. 1,000 game earns 10 and a Rs. 1,250 game earns 12.5. A game you book for another team earns the same, on your own account.</span></li>
-          <li className="flex gap-3"><Gift size={20} className="mt-0.5 shrink-0 text-orange-500" /><span><b>A free game costs its price ÷ 10 in points</b>. You can claim any shift you have the points for: {loy.shifts.map((s) => `${s.period} Rs. ${s.price.toLocaleString("en-IN")} = ${fmtPts(s.cost)} points`).join(" · ")}.</span></li>
-          {howOpen && (<>
-          <li className="flex gap-3"><Gamepad2 size={20} className="mt-0.5 shrink-0 text-violet-500" /><span><b>Gamezone:</b> every hour you play earns {GZ_POINTS_PER_HOUR} points (1 hour = {GZ_POINTS_PER_HOUR} points).</span></li>
-          <li className="flex gap-3"><ShoppingBag size={20} className="mt-0.5 shrink-0 text-sky-600" /><span>Add-on items: every <b>Rs. {RS_PER_POINT}</b> spent = <b>1 point</b> (Rs. 550 = 5.5 points). Items earn at most <b>{GOODS_DAILY_MAX_POINTS} points a day</b> (Rs. {(GOODS_DAILY_MAX_POINTS * RS_PER_POINT).toLocaleString("en-IN")}); anything more that day earns no extra.</span></li>
-          <li className="flex gap-3"><HeartHandshake size={20} className="mt-0.5 shrink-0 text-pink-500" /><span><b>Refer &amp; Earn:</b> book a game for another team and you both get <b>{REFERRAL_POINTS} points</b> when the venue approves it. The other team must have an account; if not, nobody gets points.</span></li>
-          <li className="flex gap-3"><Crown size={20} className="mt-0.5 shrink-0 text-violet-600" /><span>Membership purchase or renewal: <b>3 months = {MEMBERSHIP_POINTS.quarterly} points</b>, <b>6 months = {MEMBERSHIP_POINTS.half} points</b>.</span></li>
-          <li className="flex gap-3"><Dices size={20} className="mt-0.5 shrink-0 text-indigo-600" /><span><b>Unique Ludo:</b> every game costs {LUDO_RULES.entryFee} point to enter and the winner earns {LUDO_RULES.winReward} points, up to {LUDO_RULES.soloLimit} solo and {LUDO_RULES.multiLimit} multiplayer games a day.</span></li>
-          <li className="flex gap-3"><Trophy size={20} className="mt-0.5 shrink-0 text-amber-600" /><span>Challenge games: only the <b>winning captain</b> earns <b>{POINTS_CAPTAIN_WIN} points</b>.</span></li>
-          <li className="flex gap-3"><Send size={20} className="mt-0.5 shrink-0 text-brand" /><span><b>Share points:</b> once you have at least {(loy.share ?? FALLBACK_SHARE).minBalance} points you can send whole points to a friend who has an account, up to {(loy.share ?? FALLBACK_SHARE).max} points at a time. They keep their expiry date, and sent points can&apos;t be taken back.</span></li>
-          </>)}
-        </ul>
-        <button type="button" onClick={() => setHowOpen((o) => !o)} aria-expanded={howOpen} className="mt-3 text-sm font-semibold text-brand">{howOpen ? "Show less" : "View more"}</button>
-      </section>
-
-      {/* Expiry */}
-      <section className="glass rounded-3xl p-5" aria-label="When points expire">
-        <h2 className="flex items-center gap-2 text-base font-semibold"><Clock size={18} className="text-brand" /> When points expire</h2>
-        <ul className="mt-3 divide-y divide-white/70 text-sm">
-          {[
-            { label: "Game points", rule: `${GAME_POINTS_MONTHS} months from the game`, b: loy.byType.games },
-            { label: "Extra goods", rule: "1 year from purchase", b: loy.byType.goods },
-            { label: "Membership", rule: "Never expire", b: loy.byType.membership },
-            { label: "Shared with you", rule: "Keep the expiry they had", b: loy.byType.shared ?? { points: 0, nextExpiry: null } },
-          ].filter((r) => r.label !== "Shared with you" || r.b.points > 0).map((r) => (
-            <li key={r.label} className="flex items-center justify-between gap-3 py-2.5">
-              <div>
-                <p className="font-medium">{r.label}</p>
-                <p className="text-xs text-slate-500">{r.rule}</p>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold">{fmtPts(r.b.points)}</p>
-                {r.b.nextExpiry && r.b.points > 0 ? (
-                  <p className="text-xs font-medium text-amber-600">Expires {fmtDay(r.b.nextExpiry)}</p>
-                ) : (
-                  <p className="text-[11px] text-slate-400">{r.b.points > 0 ? "Never expires" : "—"}</p>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-3 rounded-2xl bg-white/60 px-3 py-2 text-xs text-slate-500">
-          Game points last {GAME_POINTS_MONTHS} months. Points not used in time vanish automatically, and the points that expire soonest are spent first.
-        </p>
-      </section>
-
       {/* History */}
       <section className="glass rounded-3xl p-5">
-        <h2 className="text-base font-semibold">Points history</h2>
-        {loy.rows.length === 0 ? (
+        <h2 className="text-base font-semibold">
+          <button type="button" onClick={() => setHistOpen((o) => !o)} aria-expanded={histOpen} aria-controls="points-history" className="flex w-full items-center justify-between gap-2 text-left">
+            Points history ({loy.rows.length}) <ChevronDown size={18} className={`shrink-0 text-slate-500 transition-transform ${histOpen ? "rotate-180" : ""}`} />
+          </button>
+        </h2>
+        {!histOpen ? null : loy.rows.length === 0 ? (
           <p className="py-6 text-center text-sm text-slate-400">No points yet. Play a game to start earning.</p>
         ) : (
-          <ul className="mt-3 space-y-3">
+          <ul id="points-history" className="mt-3 space-y-3">
             {rows.map((e) => {
               const k = KIND[e.kind] ?? KIND.game;
               const Icon = k.icon;
@@ -318,37 +319,47 @@ export default function PointsPage() {
             })}
           </ul>
         )}
-        {loy.rows.length > SHOWN && (
+        {histOpen && loy.rows.length > SHOWN && (
           <button type="button" onClick={() => setAll((v) => !v)} aria-expanded={all} className="mt-4 flex w-full items-center justify-center gap-1 rounded-2xl bg-white/60 py-2.5 text-sm font-medium text-brand">
             {all ? "Show less" : `Show all (${loy.rows.length})`} <ChevronDown size={16} className={all ? "rotate-180" : ""} />
           </button>
         )}
       </section>
 
-      <section className="rounded-3xl bg-white/40 p-5 text-xs text-slate-500" aria-label="Terms">
-        <h2 className="text-sm font-semibold text-slate-700">Terms</h2>
-        <ul className="mt-2 list-disc space-y-1.5 pl-4">
-          <li>Points are earned only by the registered account holder (the main person). Guests don&apos;t earn points.</li>
-          <li>Game points last {GAME_POINTS_MONTHS} months. Points not used in time expire.</li>
-          <li>Extra goods points last 1 year. Membership points never expire.</li>
-          <li>A free game is for one regular booking in the shift you chose. It can&apos;t be used to host a challenge and has no cash value.</li>
-          <li>The final points are confirmed by Unique Futsal after the game or payment.</li>
-        </ul>
+      {/* How it works */}
+      <section className="glass rounded-3xl p-5">
+        <h2 className="text-base font-semibold">
+          <button type="button" onClick={() => setHowOpen((o) => !o)} aria-expanded={howOpen} aria-controls="how-it-works" className="flex w-full items-center justify-between gap-2 text-left">
+            How it works <ChevronDown size={18} className={`shrink-0 text-slate-500 transition-transform ${howOpen ? "rotate-180" : ""}`} />
+          </button>
+        </h2>
+        {howOpen && <ul id="how-it-works" className="mt-3 space-y-3 text-sm">
+          <li className="flex gap-3"><Gamepad2 size={20} className="mt-0.5 shrink-0 text-emerald-600" /><span>Every game earns <b>price ÷ {GAME_RS_PER_POINT}</b> points: a Rs. 1,000 game earns 10 and a Rs. 1,250 game earns 12.5. A game you book for another team earns the same, on your own account.</span></li>
+          <li className="flex gap-3"><Gift size={20} className="mt-0.5 shrink-0 text-orange-500" /><span><b>A free game costs its price ÷ 10 in points</b>. You can claim any shift you have the points for: {loy.shifts.map((s) => `${s.period} Rs. ${s.price.toLocaleString("en-IN")} = ${fmtPts(s.cost)} points`).join(" · ")}.</span></li>
+          <li className="flex gap-3"><Gamepad2 size={20} className="mt-0.5 shrink-0 text-violet-500" /><span><b>Gamezone:</b> every hour you play earns {GZ_POINTS_PER_HOUR} points (1 hour = {GZ_POINTS_PER_HOUR} points).</span></li>
+          <li className="flex gap-3"><ShoppingBag size={20} className="mt-0.5 shrink-0 text-sky-600" /><span>Add-on items: every <b>Rs. {RS_PER_POINT}</b> spent = <b>1 point</b> (Rs. 550 = 5.5 points). Items earn at most <b>{GOODS_DAILY_MAX_POINTS} points a day</b> (Rs. {(GOODS_DAILY_MAX_POINTS * RS_PER_POINT).toLocaleString("en-IN")}); anything more that day earns no extra.</span></li>
+          <li className="flex gap-3"><HeartHandshake size={20} className="mt-0.5 shrink-0 text-pink-500" /><span><b>Refer &amp; Earn:</b> book a game for another team and you both get <b>{REFERRAL_POINTS} points</b> when the venue approves it. The other team must have an account; if not, nobody gets points.</span></li>
+          <li className="flex gap-3"><Crown size={20} className="mt-0.5 shrink-0 text-violet-600" /><span>Membership purchase or renewal: <b>3 months = {MEMBERSHIP_POINTS.quarterly} points</b>, <b>6 months = {MEMBERSHIP_POINTS.half} points</b>.</span></li>
+          <li className="flex gap-3"><Dices size={20} className="mt-0.5 shrink-0 text-indigo-600" /><span><b>Unique Ludo:</b> every game costs {LUDO_RULES.entryFee} point to enter and the winner earns {LUDO_RULES.winReward} points, up to {LUDO_RULES.soloLimit} solo and {LUDO_RULES.multiLimit} multiplayer games a day.</span></li>
+          <li className="flex gap-3"><Trophy size={20} className="mt-0.5 shrink-0 text-amber-600" /><span>Challenge games: only the <b>winning captain</b> earns <b>{POINTS_CAPTAIN_WIN} points</b>.</span></li>
+          <li className="flex gap-3"><Send size={20} className="mt-0.5 shrink-0 text-brand" /><span><b>Share points:</b> once you have at least {(loy.share ?? FALLBACK_SHARE).minBalance} points you can send whole points to a friend who has an account, up to {(loy.share ?? FALLBACK_SHARE).max} points at a time. They keep their expiry date, and sent points can&apos;t be taken back.</span></li>
+        </ul>}
       </section>
 
       {/* Why more points = more free games, and where the points come from */}
       <section className="glass rounded-3xl p-5 desk:col-span-2" aria-label="More loyalty points, more free games">
-        <div className="flex items-start gap-3">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-amber-400/25 text-amber-600"><Gift size={22} /></span>
-          <div>
-            <h2 className="text-base font-semibold">More Loyalty Points, More Free Games!</h2>
-            <p className="mt-1 text-sm leading-relaxed text-slate-500">
-              You&apos;re no longer limited to one free game after every 10 games. Redeem as many free games as your available Loyalty Points allow.
-            </p>
-          </div>
-        </div>
-
-        <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">Ways to earn more points</p>
+        <h2 className="text-base font-semibold">
+          <button type="button" onClick={() => setMoreOpen((o) => !o)} aria-expanded={moreOpen} aria-controls="more-points" className="flex w-full items-center gap-3 text-left">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-amber-400/25 text-amber-600"><Gift size={22} /></span>
+            <span className="min-w-0 flex-1">More Loyalty Points, More Free Games!</span>
+            <ChevronDown size={18} className={`shrink-0 text-slate-500 transition-transform ${moreOpen ? "rotate-180" : ""}`} />
+          </button>
+        </h2>
+        {moreOpen && <div id="more-points">
+        <p className="mt-3 text-sm leading-relaxed text-slate-500">
+          You&apos;re no longer limited to one free game after every 10 games. Redeem as many free games as your available Loyalty Points allow.
+        </p>
+        <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-600">Ways to earn more points</p>
         {(() => {
           const me = session.registered ? session.phone : "";
           // a friend can only top you up by sharing from their own account, so this sends them a branded PDF page with the ask and how to do it
@@ -367,7 +378,7 @@ export default function PointsPage() {
           ];
           const tile = "group flex items-center gap-3 rounded-2xl bg-white/60 px-3.5 py-3 ring-1 ring-black/5 transition hover:bg-white/90 hover:ring-brand/30 active:scale-[0.99]";
           return (
-            <ul className="mt-2 grid grid-cols-1 gap-2 tab:grid-cols-2 desk:grid-cols-3">
+            <ul id="ways-to-earn" className="mt-2 grid grid-cols-1 gap-2 tab:grid-cols-2 desk:grid-cols-3">
               {ways.map(({ Icon, title, sub, to, external }) => {
                 const body = (
                   <>
@@ -390,6 +401,18 @@ export default function PointsPage() {
           );
         })()}
         <p className="mt-4 text-center text-xs font-medium text-slate-500">Enjoy more rewards, your way!</p>
+        </div>}
+      </section>
+
+      <section className="rounded-3xl bg-white/40 p-5 text-xs text-slate-500 desk:col-span-2" aria-label="Terms and conditions">
+        <h2 className="text-sm font-semibold text-slate-700">Terms and Conditions</h2>
+        <ul className="mt-2 list-disc space-y-1.5 pl-4">
+          <li>Points are earned only by the registered account holder (the main person). Guests don&apos;t earn points.</li>
+          <li>Game points last {GAME_POINTS_MONTHS} months. Points not used in time expire.</li>
+          <li>Extra goods points last 1 year. Membership points never expire.</li>
+          <li>A free game is for one regular booking in the shift you chose. It can&apos;t be used to host a challenge and has no cash value.</li>
+          <li>The final points are confirmed by Unique Futsal after the game or payment.</li>
+        </ul>
       </section>
 
       <p className="px-2 text-center text-xs text-slate-400 desk:col-span-2">

@@ -379,7 +379,7 @@ export const helpTopics: HelpTopic[] = [
       "On Home, tap Complaints in Quick Access. You need to be signed in.",
       "Pick what it is about, describe what happened, and add up to 3 photos if they help.",
       "You can add your booking code so we find the game faster.",
-      "You get a reference like CP-7K3QX9. The venue's reply shows on the same page and in your notifications.",
+      "You get a reference like CP-7K3QX9. The venue's reply shows under Profile > My complaints and in your notifications.",
       "You can send up to 5 complaints a day. For something urgent, call the venue.",
     ],
     href: { label: "Complaints", to: "/complaints" },

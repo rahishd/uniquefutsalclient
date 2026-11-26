@@ -16,6 +16,14 @@ const mediaUrl = (id: string) => `/api/content/media/${id}`;
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const newCode = () => "UFM-" + Array.from({ length: 6 }, () => CODE_CHARS[randomInt(CODE_CHARS.length)]).join("");
 
+// A card is good for one week from the day it was made; after that it is "expired" (unused) and cannot be used.
+export const CARD_VALID_DAYS = 7;
+export const cardExpiresAt = (createdAt: Date) => new Date(createdAt.getTime() + CARD_VALID_DAYS * 86_400_000);
+export const cardStatus = (r: { status: string; createdAt: Date }, now = new Date()) => (r.status === "active" && cardExpiresAt(r.createdAt) <= now ? "expired" : r.status);
+
+// the short code the customer shows: UFM01, UFM02 ... counted per partner, so the partner sees a clean running list
+const shortCodeOf = (n: number) => `UFM${String(n).padStart(2, "0")}`;
+
 const partnerLive = (p: { active: boolean; agreementStart: string; agreementEnd: string }, today = todayKey()) => p.active && p.agreementStart <= today && today <= p.agreementEnd;
 
 export class MarketplaceService {
@@ -58,8 +66,13 @@ export class MarketplaceService {
       const spent = planShare(ledger, today, cost).map((p) => ({ expiresOn: p.expiresOn, points: p.points }));
       let code = newCode();
       for (let i = 0; i < 5 && (await tx.marketplaceRedemption.findUnique({ where: { code } })); i++) code = newCode();
+      // the code the customer shows: the next number of this partner's cards (locked per partner so two customers cannot get the same one)
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${"marketplace:" + offer.partnerId}))`;
+      let seq = (await tx.marketplaceRedemption.count({ where: { partnerId: offer.partnerId } })) + 1;
+      while (await tx.marketplaceRedemption.findFirst({ where: { partnerId: offer.partnerId, shortCode: shortCodeOf(seq) }, select: { id: true } })) seq++;
+      const shortCode = shortCodeOf(seq);
       const r = await tx.marketplaceRedemption.create({
-        data: { partnerId: offer.partnerId, offerId: offer.id, userId, customerName: user.name ?? null, points: new Prisma.Decimal(cost.toFixed(1)), code, spent: JSON.stringify(spent) },
+        data: { partnerId: offer.partnerId, offerId: offer.id, userId, customerName: user.name ?? null, points: new Prisma.Decimal(cost.toFixed(1)), code, shortCode, spent: JSON.stringify(spent) },
       });
       await tx.loyaltyEntry.create({
         data: {
@@ -72,15 +85,15 @@ export class MarketplaceService {
 
     await notificationService.notify({
       userId, type: "points", title: `Your ${offer.partner.name} card is ready`,
-      message: `${offer.discountText}. Show the code ${card.code} at ${offer.partner.name}. ${cost} loyalty points were used.`, href: "/marketplace", dedupeKey: `partner-card-${card.id}`,
+      message: `${offer.discountText}. Show the code ${card.shortCode ?? card.code} at ${offer.partner.name}. ${cost} loyalty points were used.`, href: "/marketplace", dedupeKey: `partner-card-${card.id}`,
     });
     return this.cardView({ ...card, offer, partner: offer.partner });
   }
 
-  private cardView(r: { id: string; code: string; status: string; points: Prisma.Decimal; createdAt: Date; usedAt: Date | null; offer: { title: string; code: string; discountText: string }; partner: { name: string; category: string; agreementEnd: string; bannerMediaId: string | null } }) {
+  private cardView(r: { id: string; code: string; shortCode: string | null; status: string; points: Prisma.Decimal; createdAt: Date; usedAt: Date | null; offer: { title: string; code: string; discountText: string }; partner: { name: string; category: string; agreementEnd: string; bannerMediaId: string | null } }) {
     return {
-      id: r.id, cardCode: r.code, status: r.status, points: num(r.points), createdAt: r.createdAt, usedAt: r.usedAt,
-      partner: r.partner.name, category: r.partner.category, validUntil: r.partner.agreementEnd, bannerUrl: r.partner.bannerMediaId ? mediaUrl(r.partner.bannerMediaId) : null,
+      id: r.id, cardCode: r.shortCode ?? r.code, status: cardStatus(r), expiresAt: cardExpiresAt(r.createdAt), points: num(r.points), createdAt: r.createdAt, usedAt: r.usedAt,
+      partner: r.partner.name, category: r.partner.category, validUntil: cardExpiresAt(r.createdAt).toISOString().slice(0, 10), bannerUrl: r.partner.bannerMediaId ? mediaUrl(r.partner.bannerMediaId) : null,
       offerTitle: r.offer.title, discountText: r.offer.discountText, discountCode: r.offer.code,
     };
   }

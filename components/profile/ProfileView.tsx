@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import HeaderToggles from "@/components/HeaderToggles";
 import EmergencyContactCard from "@/components/emergency/EmergencyContactCard";
 import Link from "next/link";
-import { CalendarCheck, Camera, Check, ChevronDown, ChevronRight, Crown, Dices, Layers, Loader2, LogOut, Pencil, Receipt, Settings as SettingsIcon, Trophy, UserRound, X } from "lucide-react";
+import { CalendarCheck, Camera, Check, ChevronDown, ChevronRight, Crown, Dices, Layers, Loader2, LogOut, MessageSquareWarning, Pencil, Receipt, Settings as SettingsIcon, Trophy, UserRound, X } from "lucide-react";
 import { errorText } from "@/lib/api";
 import { openSignIn, signOut, useSession } from "@/lib/session";
 import { ludoStore } from "@/lib/ludo";
@@ -267,6 +267,7 @@ function RegisteredProfile() {
       <RecordCard href="/profile/bulk" title="Bulk Booking" summary={rec.summary.bulk} icon={<Layers size={20} className="text-brand" />} />
       <RecordCard href="/profile/games" title="Games played" summary={rec.summary.games} icon={<Trophy size={20} className="text-amber-500" />} />
       <RecordCard href="/profile/payments" title="Payment history" summary={rec.summary.payments} icon={<Receipt size={20} className="text-brand" />} />
+      <RecordCard href="/profile/complaints" title="My complaints" summary="What you sent us and the venue's replies" icon={<MessageSquareWarning size={20} className="text-brand" />} />
       <RecordCard href="/profile/ludo" title="Unique Ludo Game" summary={ludo && ludo.stats.played > 0 ? `${ludo.stats.played} game${ludo.stats.played === 1 ? "" : "s"} · ${ludo.stats.wins} won · ${ludo.stats.winRate}% win rate` : "Your Ludo games, statistics and leaderboard"} icon={<Dices size={20} className="text-brand" />} />
 
       </>)}

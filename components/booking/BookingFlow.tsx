@@ -147,6 +147,10 @@ export default function BookingFlow({ initialDate, initialHour }: { initialDate?
   const slot = slots?.find((s) => s.hour === selHour);
 
   const registered = Boolean(session?.registered);
+  // A claimed free-game voucher: show only the shift(s) it works in (with a badge), unless the customer asks for every shift
+  const [allShifts, setAllShifts] = useState(false);
+  const voucherShifts = new Set(registered ? (loyalty?.vouchers ?? []).map((v) => v.period) : []);
+  const focusShifts = voucherShifts.size > 0 && !allShifts;
   const voucher = slot && registered ? loyalty?.vouchers.find((v) => v.period === slot.period) : undefined;
   const free = Boolean(voucher) && useFree;
   const promoCode = !free && appliedCode ? appliedCode : undefined;
@@ -354,10 +358,10 @@ export default function BookingFlow({ initialDate, initialHour }: { initialDate?
             type="button"
             onClick={() => setUseFree((v) => !v)}
             aria-pressed={free}
-            className={`flex w-full items-center justify-between gap-3 rounded-3xl p-4 text-left ${free ? "glass-active text-white" : "glass"}`}
+            className={`flex w-full items-center justify-between gap-3 rounded-3xl p-4 text-left ${free ? "bg-emerald-600 text-white shadow-lg" : "animate-pulse border-2 border-red-500 bg-red-50 text-red-700 shadow-sm motion-reduce:animate-none"}`}
           >
-            <span className="flex items-center gap-2 text-sm font-medium"><Gift size={18} className={free ? "text-orange-300" : "text-orange-500"} /> Use a free game voucher</span>
-            <span className={`text-xs ${free ? "text-white/70" : "text-slate-400"}`}>{slot.period} shift · {free ? "Applied" : "Tap to apply"}</span>
+            <span className="flex items-center gap-2 text-sm font-medium"><Gift size={18} className={free ? "text-white" : "text-red-600"} /> Use a free game voucher</span>
+            <span className={`text-xs font-medium ${free ? "text-white/80" : "text-red-600"}`}>{slot.period} shift · {free ? "Applied" : "Tap to apply"}</span>
           </button>
         )}
 
@@ -538,9 +542,16 @@ export default function BookingFlow({ initialDate, initialHour }: { initialDate?
             {closed.length > 0 ? "No slots are open on this date (see the closed hours below). Please pick another day." : "No slots available on this date. Please pick another day."}
           </p>
         ) : (
-          PERIODS.filter((p) => openSlots.some((s) => s.period === p)).map((p) => (
+          <>
+          {focusShifts && !PERIODS.some((p) => voucherShifts.has(p) && openSlots.some((s) => s.period === p)) && (
+            <p className="glass rounded-2xl px-4 py-5 text-center text-sm text-slate-600">No open slots in your free game shift on this date. Pick another day, or <button type="button" onClick={() => setAllShifts(true)} className="font-semibold text-brand underline">show all shifts</button>.</p>
+          )}
+          {PERIODS.filter((p) => openSlots.some((s) => s.period === p) && (!focusShifts || voucherShifts.has(p))).map((p) => (
             <div key={p}>
-              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">{p}</h2>
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">{p}</h2>
+                {voucherShifts.has(p) && <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700"><Gift size={12} /> Free game available</span>}
+              </div>
               <div className="grid grid-cols-2 gap-3 desk:grid-cols-4 desk:gap-4 xl:desk:grid-cols-6">
                 {openSlots.filter((s) => s.period === p).map((s) => {
                   const active = s.hour === selHour;
@@ -571,7 +582,9 @@ export default function BookingFlow({ initialDate, initialHour }: { initialDate?
                 </button>
               )}
             </div>
-          ))
+          ))}
+          {focusShifts && <button type="button" onClick={() => setAllShifts(true)} className="mx-auto block text-xs font-semibold text-brand underline">Show all shifts</button>}
+          </>
         )}
       </section>
 

@@ -1,21 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { forgetRecall, useRecallState } from "@/lib/recall";
-import { CheckCircle2, ImagePlus, Loader2, MessageSquareWarning, UserRound, X } from "lucide-react";
+import { CheckCircle2, ChevronRight, ImagePlus, Loader2, MessageSquareWarning, UserRound, X } from "lucide-react";
 import { openSignIn, useSession } from "@/lib/session";
 import { errorText } from "@/lib/api";
-import { markReadByTypes } from "@/lib/notifications";
-import { FALLBACK_RULES, STATUS_TEXT, loadMine, loadRules, photoUrl, sendComplaint, shrinkPhoto, type Complaint, type ComplaintRules } from "@/lib/complaints";
-
-function when(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
+import { FALLBACK_RULES, loadRules, sendComplaint, shrinkPhoto, type Complaint, type ComplaintRules } from "@/lib/complaints";
 
 export default function ComplaintsPage() {
   const session = useSession();
   const [rules, setRules] = useState<ComplaintRules>(FALLBACK_RULES);
-  const [mine, setMine] = useState<Complaint[] | null>(null);
   const [category, setCategory] = useRecallState("complaints.category", "");
   const [message, setMessage] = useRecallState("complaints.message", "");
   const [bookingCode, setBookingCode] = useRecallState("complaints.booking", "");
@@ -37,15 +32,6 @@ export default function ComplaintsPage() {
     loadRules().then((r) => live && setRules(r)).catch(() => {});
     return () => { live = false; };
   }, []);
-
-  const refresh = useCallback(() => loadMine().then(setMine).catch(() => setMine([])), []);
-  useEffect(() => {
-    if (!registered) return;
-    let live = true;
-    loadMine().then((m) => live && setMine(m)).catch(() => live && setMine([]));
-    markReadByTypes(["complaint"]); // opening this page clears the replies badge
-    return () => { live = false; };
-  }, [registered]);
 
   async function addPhotos(files: FileList | null) {
     if (!files?.length) return;
@@ -78,7 +64,6 @@ export default function ComplaintsPage() {
       setMessage("");
       setBookingCode("");
       setPhotos([]);
-      refresh();
     } catch (e) {
       setError(errorText(e));
     } finally {
@@ -105,7 +90,7 @@ export default function ComplaintsPage() {
         <span className="flex h-20 w-20 items-center justify-center rounded-3xl bg-emerald-400/20 text-emerald-600"><CheckCircle2 size={38} /></span>
         <h1 className="mt-6 text-2xl font-semibold">We got your complaint</h1>
         <p className="mt-2 max-w-xs text-sm text-slate-500">Your reference is <strong className="font-mono text-slate-700">{sent.code}</strong>. The venue will look into it and reply here and in your notifications.</p>
-        <button type="button" onClick={() => setSent(null)} className="glass-btn mt-6 rounded-full px-8 py-3.5 text-sm font-semibold text-white">See my complaints</button>
+        <Link href="/profile/complaints" className="glass-btn mt-6 rounded-full px-8 py-3.5 text-sm font-semibold text-white">See my complaints</Link>
       </div>
     );
   }
@@ -117,8 +102,8 @@ export default function ComplaintsPage() {
         <p className="text-sm text-slate-500">Something went wrong? Tell us and we will look into it.</p>
       </header>
 
-      <section aria-label="Confidentiality" className="rounded-2xl bg-white p-4 text-sm leading-relaxed text-[#0c0b5d] shadow-sm ring-1 ring-slate-200">
-        <p>Complaints at Unique Futsal are reported directly to the Owner and kept strictly confidential. Track progress through Received, Reviewed, Solved, and Closed. You&apos;ll receive updates, and your identity will never be disclosed even with the staff, ensuring a private relationship between you and the Owner.</p>
+      <section aria-label="Confidentiality" className="rounded-2xl bg-white px-3.5 py-2.5 text-xs leading-snug text-[#0c0b5d] shadow-sm ring-1 ring-slate-200">
+        <p>Complaints go directly to the Owner and stay strictly confidential. Your identity is never disclosed, even to staff. Track progress: Received, Reviewed, Solved, Closed. You&apos;ll get updates.</p>
       </section>
 
       <form onSubmit={submit} className="glass space-y-5 rounded-3xl p-5" aria-label="New complaint">
@@ -175,47 +160,10 @@ export default function ComplaintsPage() {
         <p className="text-center text-xs text-slate-400">You can send up to {rules.perDay} a day. For something urgent, call the venue.</p>
       </form>
 
-      <section aria-label="My complaints" className="space-y-3">
-        <h2 className="text-lg font-medium">My complaints</h2>
-        {mine === null && <div className="h-24 animate-pulse rounded-3xl bg-white/40" aria-label="Loading" />}
-        {mine?.length === 0 && (
-          <div className="glass flex flex-col items-center gap-2 rounded-3xl px-4 py-8 text-center text-sm text-slate-500">
-            <MessageSquareWarning size={28} className="text-slate-400" />
-            You have not sent any complaints.
-          </div>
-        )}
-        <ul className="space-y-3">
-          {mine?.map((c) => {
-            const st = STATUS_TEXT[c.status];
-            return (
-              <li key={c.id} className="glass space-y-2 rounded-3xl p-4">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-semibold">{c.categoryLabel}</p>
-                  <span className={`rounded-full px-3 py-1 text-xs font-medium ${st.tone}`}>{st.label}</span>
-                </div>
-                <p className="text-xs text-slate-400"><span className="font-mono">{c.code}</span> · {when(c.createdAt)}{c.bookingCode ? ` · booking ${c.bookingCode}` : ""}</p>
-                <p className="whitespace-pre-line text-sm text-slate-600">{c.message}</p>
-                {c.photos.length > 0 && (
-                  <div className="flex gap-2">
-                    {c.photos.map((p, i) => (
-                      <a key={p} href={photoUrl(p)} target="_blank" rel="noopener noreferrer" aria-label={`Open photo ${i + 1}`} className="block h-16 w-16 overflow-hidden rounded-xl bg-white/60">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={photoUrl(p)} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
-                      </a>
-                    ))}
-                  </div>
-                )}
-                {c.staffReply && (
-                  <div className="rounded-2xl bg-brand/10 px-4 py-3 text-sm">
-                    <p className="text-xs font-semibold text-brand">Reply from the venue</p>
-                    <p className="mt-1 whitespace-pre-line text-slate-700">{c.staffReply}</p>
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+      <Link href="/profile/complaints" className="glass flex items-center justify-between gap-3 rounded-3xl p-4 text-sm font-medium text-[#0c0b5d]">
+        <span className="flex items-center gap-2"><MessageSquareWarning size={18} className="text-brand" /> View your complaints in Profile</span>
+        <ChevronRight size={18} className="text-slate-400" />
+      </Link>
     </div>
   );
 }

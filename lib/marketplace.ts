@@ -8,7 +8,7 @@ import { createRemoteStore } from "@/lib/remote-store";
 export interface PartnerOffer { id: string; title: string; discountText: string; pointsCost: number; maxPerCustomer: number | null }
 export interface MarketPartner { id: string; name: string; category: string; about: string | null; bannerUrl: string | null; bannerSeconds: number; validUntil: string; offers: PartnerOffer[] }
 export interface PartnerCard {
-  id: string; cardCode: string; status: "active" | "used" | "cancelled"; points: number; createdAt: string; usedAt: string | null;
+  id: string; cardCode: string; status: "active" | "used" | "cancelled" | "expired"; points: number; createdAt: string; usedAt: string | null;
   partner: string; category: string; validUntil: string; bannerUrl: string | null; offerTitle: string; discountText: string; discountCode: string;
 }
 export interface LoyaltyCard {
