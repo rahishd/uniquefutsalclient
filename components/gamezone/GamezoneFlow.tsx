@@ -275,11 +275,11 @@ function Flow({ catalog }: { catalog: Catalog }) {
         <p className="text-sm text-slate-500">Book a PS5 console by the hour. Bookings open up to {MAX_ADVANCE_DAYS} days ahead.</p>
         {/* the animated room: two friends play football on the TV, score, jump, high-five and clap (components/gamezone/GamezoneScene.tsx) */}
         <GamezoneScene />
-        <ul aria-label="Gamezone room" className="mt-2.5 grid grid-cols-3 gap-1.5 desk:grid-cols-6 desk:gap-2">
+        <ul aria-label="Gamezone room" className="mt-2 grid grid-cols-3 gap-1 desk:grid-cols-6 desk:gap-2">
           {SPECS.map(({ icon: Icon, label }) => (
-            <li key={label} className="flex flex-col items-center gap-1 rounded-xl border border-slate-200 bg-white px-1 py-2 text-center">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#0a0a0a] text-white"><Icon size={15} strokeWidth={1.9} aria-hidden /></span>
-              <span className="min-w-0 text-[10.5px] font-semibold leading-[1.15] text-[#0c0b5d]">{label}</span>
+            <li key={label} className="flex flex-col items-center gap-0.5 rounded-lg border border-slate-200 bg-white px-1 py-1.5 text-center">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#0a0a0a] text-white"><Icon size={13} strokeWidth={1.9} aria-hidden /></span>
+              <span className="min-w-0 text-[10px] font-semibold leading-tight text-[#0c0b5d]">{label}</span>
             </li>
           ))}
         </ul>

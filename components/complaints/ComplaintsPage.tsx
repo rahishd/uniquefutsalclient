@@ -108,18 +108,18 @@ export default function ComplaintsPage() {
 
       <form onSubmit={submit} className="glass space-y-5 rounded-3xl p-5" aria-label="New complaint">
         <fieldset>
-          <legend className="mb-2 text-sm font-medium">What is it about?</legend>
-          <div className="flex flex-wrap gap-2">
+          <legend className="mb-1.5 text-sm font-medium">What is it about?</legend>
+          <div className="flex flex-wrap gap-1.5">
             {rules.categories.map((c) => (
               <button type="button" key={c.id} aria-pressed={category === c.id} onClick={() => setCategory(c.id)}
-                className={`rounded-full px-4 py-2 text-sm ${category === c.id ? "bg-brand font-semibold text-white" : "bg-white/60 text-slate-600"}`}>{c.label}</button>
+                className={`rounded-full px-3 py-1 text-xs ${category === c.id ? "bg-brand font-semibold text-white" : "bg-white/60 text-slate-600"}`}>{c.label}</button>
             ))}
           </div>
         </fieldset>
 
         <label className="block text-sm font-medium">What happened?
-          <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={5} maxLength={rules.messageMax} placeholder="Tell us what happened, when, and what you would like us to do."
-            className="mt-2 w-full rounded-2xl bg-white/70 px-4 py-3 text-sm font-normal outline-none ring-1 ring-black/5 placeholder:text-slate-400 focus:ring-brand" />
+          <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={3} maxLength={rules.messageMax} placeholder="Tell us what happened, when, and what you would like us to do."
+            className="mt-1.5 w-full rounded-2xl bg-white/70 px-4 py-2 text-sm font-normal outline-none ring-1 ring-black/5 placeholder:text-slate-400 focus:ring-brand" />
           <span className="mt-1 block text-right text-xs font-normal text-slate-400">{message.length} / {rules.messageMax}</span>
         </label>
 
@@ -129,10 +129,10 @@ export default function ComplaintsPage() {
         </label>
 
         <div>
-          <p className="mb-2 text-sm font-medium">Photos <span className="font-normal text-slate-400">(optional, up to {rules.maxPhotos})</span></p>
-          <div className="flex flex-wrap gap-3">
+          <p className="mb-1.5 text-sm font-medium">Photos <span className="font-normal text-slate-400">(optional, up to {rules.maxPhotos})</span></p>
+          <div className="flex flex-wrap gap-2">
             {photos.map((p, i) => (
-              <div key={i} className="relative h-24 w-24 overflow-hidden rounded-2xl bg-white/60">
+              <div key={i} className="relative h-16 w-16 overflow-hidden rounded-2xl bg-white/60">
                 {/* a local data URL preview, so next/image is not needed */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={p} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
@@ -142,14 +142,14 @@ export default function ComplaintsPage() {
             ))}
             {photos.length < rules.maxPhotos && (
               <button type="button" disabled={photoBusy} onClick={() => picker.current?.click()}
-                className="flex h-24 w-24 flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-slate-300 text-xs text-slate-500 disabled:opacity-60">
+                className="flex h-16 w-16 flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-slate-300 text-xs text-slate-500 disabled:opacity-60">
                 {photoBusy ? <Loader2 size={22} className="animate-spin" /> : <ImagePlus size={24} />}
                 {photoBusy ? "Adding…" : "Add photo"}
               </button>
             )}
           </div>
           <input ref={picker} type="file" accept="image/*" multiple className="sr-only" aria-label="Choose photos" onChange={(e) => addPhotos(e.target.files)} />
-          <p className="mt-2 text-xs text-slate-400">Photos only for now. They are shrunk before sending and the venue staff can see them.</p>
+          <p className="mt-1.5 text-xs text-slate-400">Photos are shrunk before sending; venue staff can see them.</p>
         </div>
 
         {error && <p role="alert" className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</p>}
