@@ -248,6 +248,7 @@ model Tournament {
   id            String         @id @default(cuid())
   name          String
   prizePool     Float
+  prizes        Json           @default("[]") // [{ place, cash, trophy, note }], written by the tournament host
   minTeams      Int
   maxTeams      Int
   registrationClosed Boolean @default(false) // the organizer closed team registration by hand
@@ -265,6 +266,8 @@ model Tournament {
   entryFee      Float          @default(0) // per team, in rupees; 0 = free entry. Staff set it in the admin portal.
   hostName      String?
   hostPhone     String?
+  esewaNumber   String?
+  khaltiNumber  String?
   minRate       Int?
   billClosedAt  DateTime?
   createdBy     String?

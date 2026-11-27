@@ -210,3 +210,9 @@ export default function HomeTop() {
     </div>
   );
 }
+
+// desktop only: the header ad on Home, right under the venue banner, slim and in the page flow (the bar above stays free of it)
+export function DeskHeaderAd() {
+  const desk = useDesk();
+  return desk ? <div className="order-1 col-span-12 flex justify-center empty:hidden [&_img]:max-h-24 [&_img]:w-auto"><div className="w-fit max-w-full empty:hidden"><AdStrip placement="header" /></div></div> : null;
+}

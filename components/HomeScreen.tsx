@@ -5,7 +5,7 @@ import UserBadge from "@/components/UserBadge";
 import LastPlayed from "@/components/LastPlayed";
 import EmergencyReminder from "@/components/emergency/EmergencyReminder";
 import HealthReminder from "@/components/health/HealthReminder";
-import HomeTop, { DeskGreeting } from "@/components/HomeTop";
+import HomeTop, { DeskGreeting, DeskHeaderAd } from "@/components/HomeTop";
 import DeskHero from "@/components/DeskHero";
 import DeskMembersOnly from "@/components/DeskMembersOnly";
 import GuestPrompt from "@/components/GuestPrompt";
@@ -39,6 +39,7 @@ export default function HomeScreen() {
         <HomeTop />
         {/* desktop only: the venue banner in place of the account and weather cards */}
         <DeskHero><DeskGreeting className="text-white [text-shadow:0_2px_10px_rgba(0,0,0,0.7)]" /></DeskHero>
+        <DeskHeaderAd />
 
         {/* Quick Access (and the partner offers) in one full-width row. Desktop: right under the venue banner, and only for signed-in customers.
             Phone: where it always was, after the offers (order-[7]). */}

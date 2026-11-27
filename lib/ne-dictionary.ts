@@ -1763,13 +1763,13 @@ export const NE_DICTIONARY: Record<string, string> = {
  "Add a player": "खेलाडी थप्नुहोस्",
  "Register team": "टोली दर्ता गर्नुहोस्",
  "Registering…": "दर्ता गर्दै…",
- "The venue confirms every team. You will be contacted on the mobile number above.": "भेन्युले हरेक टोली पुष्टि गर्छ। माथिको मोबाइल नम्बरमा तपाईंलाई सम्पर्क गरिनेछ।",
+ "The tournament host confirms every team. You will be contacted on the mobile number above.": "टुर्नामेन्ट होस्टले हरेक टोली पुष्टि गर्छ। माथिको मोबाइल नम्बरमा तपाईंलाई सम्पर्क गरिनेछ।",
  "Team registered": "टोली दर्ता भयो",
  "Know another team? Share the registration link.": "अर्को टोली चिन्नुहुन्छ? दर्ता लिङ्क सेयर गर्नुहोस्।",
  "Back to tournaments": "टुर्नामेन्टमा फर्कनुहोस्",
  "Registration is closed": "दर्ता बन्द छ",
  "See tournaments": "टुर्नामेन्टहरू हेर्नुहोस्",
- "Team registered. The venue will confirm it.": "टोली दर्ता भयो। भेन्युले पुष्टि गर्नेछ।",
+ "Team registered. The tournament host will confirm it.": "टोली दर्ता भयो। टुर्नामेन्ट होस्टले पुष्टि गर्नेछ।",
  "Registration for this tournament is closed.": "यो टुर्नामेन्टको दर्ता बन्द छ।",
  "This tournament has finished.": "यो टुर्नामेन्ट सकिएको छ।",
  "All team places are taken.": "सबै टोलीका स्थान भरिए।",
@@ -1783,7 +1783,7 @@ export const NE_DICTIONARY: Record<string, string> = {
  "A team with this name is already registered. Please use a different name.": "यो नामको टोली पहिले नै दर्ता भइसकेको छ। कृपया अर्को नाम प्रयोग गर्नुहोस्।",
  "Too many registrations from this connection. Please try again later.": "यो जडानबाट धेरै दर्ता भए। कृपया पछि फेरि प्रयास गर्नुहोस्।",
  "Team registration received": "टोली दर्ताको अनुरोध प्राप्त भयो",
- "{0} is registered for {1}. The venue will confirm it.": "{0} {1} का लागि दर्ता भयो। भेन्युले पुष्टि गर्नेछ।",
+ "{0} is registered for {1}. The tournament host will confirm it.": "{0} {1} का लागि दर्ता भयो। टुर्नामेन्ट होस्टले पुष्टि गर्नेछ।",
  "Your team is confirmed": "तपाईंको टोली पुष्टि भयो",
  "Team registration not accepted": "टोली दर्ता स्वीकार गरिएन",
  "{0} is confirmed for {1}. See you there!": "{0} {1} का लागि पुष्टि भयो। त्यहीँ भेटौंला!",
@@ -1792,6 +1792,6 @@ export const NE_DICTIONARY: Record<string, string> = {
  "Entry fee:": "प्रवेश शुल्क:",
  "Free entry": "निःशुल्क प्रवेश",
  "{0} per team": "प्रति टोली {0}",
- "The whole team is registered, so you do not need to list the players. The venue confirms every team and contacts you on the mobile number above.": "पूरै टोली दर्ता हुन्छ, त्यसैले खेलाडीहरूको नाम लेख्नु पर्दैन। भेन्युले हरेक टोली पुष्टि गर्छ र माथिको मोबाइल नम्बरमा सम्पर्क गर्छ।",
- "The whole team is registered, so you do not need to list the players. The venue confirms every team and contacts you on the mobile number above about the {0} entry fee.": "पूरै टोली दर्ता हुन्छ, त्यसैले खेलाडीहरूको नाम लेख्नु पर्दैन। भेन्युले हरेक टोली पुष्टि गर्छ र {0} प्रवेश शुल्कबारे माथिको मोबाइल नम्बरमा सम्पर्क गर्छ।"
+ "The whole team is registered, so you do not need to list the players. The tournament host confirms every team and contacts you on the mobile number above.": "पूरै टोली दर्ता हुन्छ, त्यसैले खेलाडीहरूको नाम लेख्नु पर्दैन। टुर्नामेन्ट होस्टले हरेक टोली पुष्टि गर्छ र माथिको मोबाइल नम्बरमा सम्पर्क गर्छ।",
+ "The whole team is registered, so you do not need to list the players. The tournament host confirms every team and contacts you on the mobile number above about the {0} entry fee.": "पूरै टोली दर्ता हुन्छ, त्यसैले खेलाडीहरूको नाम लेख्नु पर्दैन। टुर्नामेन्ट होस्टले हरेक टोली पुष्टि गर्छ र {0} प्रवेश शुल्कबारे माथिको मोबाइल नम्बरमा सम्पर्क गर्छ।"
 };

@@ -78,7 +78,10 @@ export interface RegistrationInfo {
   startDate: string;
   endDate: string;
   prizePool: number;
+  prizes?: { place: string; cash: number; trophy: string; note: string }[];
   entryFee: number; // rupees per team, 0 = free entry
+  esewaNumber?: string | null; // where to send the entry fee (the host fills these in)
+  khaltiNumber?: string | null;
   format?: string;
   hosted: { hostName: string | null } | null;
   registered: number;
@@ -91,7 +94,7 @@ export interface RegistrationInfo {
 export const fetchRegistrationInfo = (id: string) => api<RegistrationInfo>(`/tournaments/${encodeURIComponent(id)}/registration`, { auth: "none" });
 
 export const submitTeam = (id: string, team: { teamName: string; captainName: string; contactPhone: string; contactEmail: string }) =>
-  api<{ id: string; teamName: string; status: string; tournamentName: string }>(`/tournaments/${encodeURIComponent(id)}/register`, { method: "POST", body: team, auth: "none" });
+  api<{ id: string; teamName: string; status: string; tournamentName: string }>(`/tournaments/${encodeURIComponent(id)}/register`, { method: "POST", body: team });
 
 export const registrationPath = (id: string) => `/tournaments/${encodeURIComponent(id)}/register`;
 // The full address to share. Built in the browser, so it is always the address the customer is on.
@@ -104,6 +107,13 @@ export const canRegister = (t: { status?: string }) => t.status === "upcoming";
 // ---- upcoming tournaments (the "View Upcoming Tournaments" page) ----
 // The public list: every tournament the venue runs. The page keeps the ones that have not started.
 export const tournamentListStore = createRemoteStore<Tournament[]>(() => api<Tournament[]>("/tournaments", { auth: "none" }), { pollMs: 60000 });
+
+// The teams the signed-in customer has registered (empty when signed out): used for the "You registered" badge.
+export interface MyRegistration { id: string; tournamentId: string; teamName: string; status: string; callPhone: string | null }
+export const myRegistrationsStore = createRemoteStore<MyRegistration[]>(() => api<MyRegistration[]>("/tournaments/my-registrations"), { pollMs: 60000, signedOut: [] });
+
+/** Take back a team that the host has not confirmed yet. */
+export const cancelMyRegistration = (id: string) => api<{ id: string }>(`/tournaments/my-registrations/${encodeURIComponent(id)}`, { method: "DELETE" });
 
 // ---- tie-sheet PDF ----
 const sideName = (n: string | null) => n ?? "To be decided";

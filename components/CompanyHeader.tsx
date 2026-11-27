@@ -58,11 +58,12 @@ export default function CompanyHeader() {
             <img src="/charity-3pct.png" alt="3% Charity" className="uf-hdr-charity hidden h-12 w-auto shrink-0 desk:block" />
           </Link>
           <DeskNav />
-          <div className="-mr-2 ml-auto flex shrink-0 items-center gap-0 desk:ml-0 desk:gap-1.5"><HeaderPoints plain /><HeaderChat /><span aria-hidden className="mx-1 hidden h-5 w-px bg-[#0c0b5d]/25 desk:block" /><div className="desk:mr-3.5 [&_button[aria-label^=Notifications]]:!h-8 [&_button[aria-label^=Notifications]]:!w-8 [&_button[aria-label^=Notifications]]:!rounded-md [&_button[aria-label^=Notifications]]:!bg-transparent [&_button[aria-label^=Notifications]]:!text-white [&_button[aria-label^=Notifications]]:!shadow-none [&_button[aria-label^=Notifications]]:!ring-0 [&_button[aria-label^=Notifications]]:!border-0 [&_button[aria-label^=Notifications]>svg]:!h-[18px] [&_button[aria-label^=Notifications]>svg]:!w-[18px] [&_.uf-badge-ping]:!h-4 [&_.uf-badge-ping]:!w-4 [&_.uf-badge-blink]:!h-4 [&_.uf-badge-blink]:!min-w-4 [&_.uf-badge-blink]:!px-0.5 [&_.uf-badge-blink]:!text-[9.5px]"><NotificationBell /></div><HeaderLogout /></div>
+          <div className="-mr-2 ml-auto flex shrink-0 items-center gap-0 desk:ml-0 desk:gap-1.5"><HeaderPoints plain /><HeaderChat /><span aria-hidden className="mx-1 hidden h-5 w-px bg-[#0c0b5d]/25 desk:block" /><div className="desk:mr-3.5 [&_button[aria-label^=Notifications]]:!h-8 [&_button[aria-label^=Notifications]]:!w-8 [&_button[aria-label^=Notifications]]:!rounded-md [&_button[aria-label^=Notifications]]:!bg-transparent [&_button[aria-label^=Notifications]]:!shadow-none [&_button[aria-label^=Notifications]]:!ring-0 [&_button[aria-label^=Notifications]]:!border-0 [&_button[aria-label^=Notifications]>svg]:!h-[18px] [&_button[aria-label^=Notifications]>svg]:!w-[18px] [&_.uf-badge-ping]:!h-4 [&_.uf-badge-ping]:!w-4 [&_.uf-badge-blink]:!h-4 [&_.uf-badge-blink]:!min-w-4 [&_.uf-badge-blink]:!px-0.5 [&_.uf-badge-blink]:!text-[9.5px]"><NotificationBell /></div><HeaderLogout /></div>
         </div>
-        <div className="empty:hidden pb-2">{desk && <AdStrip placement="header" />}</div>
       </div>
     </div>
+    {/* desktop: the header ad sits under the bar and scrolls away with the page (it does not stay pinned), kept slim so it never crowds the page */}
+    {desk && !signIn && !home && <div className="empty:hidden mx-auto w-fit max-w-[min(100%,1320px)] px-10 py-2 [&_img]:max-h-24 [&_img]:w-auto"><AdStrip placement="header" /></div>}
     </>
   );
 }

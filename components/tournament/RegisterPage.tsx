@@ -12,6 +12,25 @@ import ShareRegistration from "@/components/tournament/ShareRegistration";
 
 const input = "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-brand";
 
+// The host's eSewa / Khalti numbers, with a Copy button, so a team can send the entry fee.
+function PayNumbers({ info, team }: { info: RegistrationInfo; team?: string }) {
+  const [copied, setCopied] = useState("");
+  const rows = [{ label: "eSewa", number: info.esewaNumber }, { label: "Khalti", number: info.khaltiNumber }].filter((r): r is { label: string; number: string } => !!r.number);
+  if (rows.length === 0) return null;
+  const copy = (n: string) => { void navigator.clipboard?.writeText(n).then(() => { setCopied(n); setTimeout(() => setCopied(""), 1500); }).catch(() => {}); };
+  return (
+    <div className="mt-1.5 space-y-1.5">
+      <p className="text-xs text-slate-500">Send the fee to the host and write {team?.trim() ? <b className="text-slate-700">{team.trim()}</b> : "your team name"} as the remarks, so the host can match it. Then the host confirms your team:</p>
+      {rows.map((r) => (
+        <div key={r.label} className="flex items-center justify-between gap-2 rounded-xl bg-emerald-50 px-3 py-1.5 text-sm ring-1 ring-emerald-100">
+          <span><b className="text-emerald-800">{r.label}</b> <span className="tabular-nums">{r.number}</span></span>
+          <button type="button" onClick={() => copy(r.number)} className="rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">{copied === r.number ? "Copied" : "Copy"}</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // Team registration for ONE tournament. This page is the shareable link: anyone signed in who has it can register a team (a guest is asked to sign in).
 export default function RegisterPage({ id }: { id: string }) {
   const session = useSession();
@@ -68,7 +87,8 @@ export default function RegisterPage({ id }: { id: string }) {
       const r = await submitTeam(id, { teamName: teamName.trim(), captainName: captainName.trim(), contactPhone: phone, contactEmail: email.trim() });
       setDone({ teamName: r.teamName });
     } catch (err) {
-      setError(errorText(err));
+      const m = errorText(err);
+      setError(/token|sign in|log in/i.test(m) ? "Please sign in to register your team." : m);
     } finally {
       setBusy(false);
     }
@@ -101,6 +121,7 @@ export default function RegisterPage({ id }: { id: string }) {
             <div>
               <dt className="text-xs text-slate-400">Entry fee</dt>
               <dd className="font-medium">{info.entryFee > 0 ? `${formatRs(info.entryFee)} per team` : "Free entry"}</dd>
+              {info.entryFee > 0 && <PayNumbers info={info} team={teamName} />}
             </div>
           </div>
           {info.prizePool > 0 && (
@@ -109,6 +130,18 @@ export default function RegisterPage({ id }: { id: string }) {
               <div>
                 <dt className="text-xs text-slate-400">Prize pool</dt>
                 <dd className="font-medium">{formatRs(info.prizePool)}</dd>
+                {(info.prizes ?? []).length > 0 && (
+                  <ul className="mt-1.5 space-y-1 text-sm">
+                    {(info.prizes ?? []).map((p, i) => (
+                      <li key={`${p.place}-${i}`} className="flex flex-wrap items-baseline gap-x-2">
+                        <span className="w-9 shrink-0 font-semibold text-slate-700">{p.place}</span>
+                        <span className="font-medium">{p.cash > 0 ? formatRs(p.cash) : "No cash"}</span>
+                        {p.trophy && <span className="text-slate-500">+ {p.trophy}</span>}
+                        {p.note && <span className="w-full pl-11 text-xs text-slate-400">{p.note}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
           )}
@@ -120,8 +153,14 @@ export default function RegisterPage({ id }: { id: string }) {
           <CheckCircle2 size={44} className="mx-auto text-emerald-500" />
           <h2 className="text-xl font-semibold">Team registered</h2>
           <p className="text-sm text-slate-600">
-            <b>{done.teamName}</b> is registered for {info.name}. The venue will check the details and confirm your place. Keep your phone near you.
+            <b>{done.teamName}</b> is registered for {info.name}. The tournament host will check the details and confirm your place. Keep your phone near you.
           </p>
+          {info.entryFee > 0 && (info.esewaNumber || info.khaltiNumber) && (
+            <div className="rounded-2xl bg-white/60 p-4 text-left">
+              <p className="mb-1 text-sm font-medium">Pay the entry fee: {formatRs(info.entryFee)}</p>
+              <PayNumbers info={info} team={done.teamName} />
+            </div>
+          )}
           <div className="rounded-2xl bg-white/60 p-4">
             <p className="mb-2 text-sm font-medium">Know another team? Share the registration link.</p>
             <ShareRegistration id={id} name={info.name} />
@@ -155,12 +194,12 @@ export default function RegisterPage({ id }: { id: string }) {
           </label>
 
 
-          {error && <p role="alert" className="rounded-2xl bg-rose-500/10 px-4 py-3 text-sm text-rose-600">{error}</p>}
+          {error && <p role="alert" className="rounded-2xl bg-rose-500/10 px-4 py-3 text-sm text-rose-600">{error}{/sign in/i.test(error) && <> <Link href={`/login?next=${encodeURIComponent(`/tournaments/${id}/register`)}`} className="font-semibold underline">Sign in</Link></>}</p>}
 
-          <button type="submit" disabled={!ready || busy} className="glass-btn flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-sm font-semibold text-white disabled:opacity-50">
+          <button type="submit" disabled={!ready || busy} className={`flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-sm font-semibold transition-colors ${ready ? "bg-emerald-600 text-white shadow-[0_8px_20px_-8px_rgba(5,150,105,0.7)] disabled:opacity-70" : "glass-btn text-white disabled:opacity-50"}`}>
             {busy ? <><Loader2 size={18} className="animate-spin" /> Registering…</> : "Register team"}
           </button>
-          <p className="text-center text-xs text-slate-400">The whole team is registered, so you do not need to list the players. The venue confirms every team and contacts you on the mobile number above{info.entryFee > 0 ? ` about the ${formatRs(info.entryFee)} entry fee` : ""}.</p>
+          <p className="text-center text-xs text-slate-400">The whole team is registered, so you do not need to list the players. The tournament host confirms every team and contacts you on the mobile number above{info.entryFee > 0 ? ` about the ${formatRs(info.entryFee)} entry fee` : ""}.</p>
         </form>
       )}
     </div>
