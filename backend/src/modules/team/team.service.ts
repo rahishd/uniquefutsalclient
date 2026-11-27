@@ -199,6 +199,7 @@ export class TeamService {
     if (input.teamId === team.id) throw new AppError(400, "You cannot challenge your own team.");
     const target = await prisma.team.findUnique({ where: { id: input.teamId }, select: { captainId: true } });
     if (target?.captainId === userId) throw new AppError(400, "You cannot challenge another team you captain.");
+    if (await prisma.teamMember.findFirst({ where: { teamId: input.teamId, userId }, select: { userId: true } })) throw new AppError(400, "You cannot challenge a team you are in.");
     const size = await prisma.teamMember.count({ where: { teamId: team.id } });
     if (size < MIN_TEAM_TO_CHALLENGE) throw new AppError(400, `Add at least ${MIN_TEAM_TO_CHALLENGE} players to your team before challenging.`);
     const other = await prisma.team.findUnique({ where: { id: input.teamId } });

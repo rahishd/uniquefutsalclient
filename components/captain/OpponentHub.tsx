@@ -2,6 +2,7 @@
 
 import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Check, ChevronRight, Loader2, Swords, Trophy, Users, X } from "lucide-react";
 import CaptainGate from "@/components/captain/CaptainGate";
 import ChallengeSheet from "@/components/captain/ChallengeSheet";
@@ -12,6 +13,8 @@ import {
   approveResult,
   cancelChallenge,
   disputeResult,
+  myTeamsStore,
+  switchTeam,
   pendingActions,
   rankingStore,
   shareLabel,
@@ -24,7 +27,7 @@ import {
   type TeamsState,
 } from "@/lib/teams";
 
-type Tab = "teams" | "challenges" | "results";
+type Tab = "host" | "opponent" | "results";
 
 const noop = () => () => {};
 const minute = () => Math.floor(Date.now() / 60000) * 60000;
@@ -60,14 +63,19 @@ function Hub({ team, reportId }: { team: MyTeam; reportId?: string }) {
   const rankingState = rankingStore.use();
   const nowMs = useSyncExternalStore(noop, minute, () => 0);
   const act = useAction();
+  const router = useRouter();
   // Opening /opponent?report=<game> (from the "Did you win?" popup) lands on that game's score form.
-  const [tab, setTab] = useState<Tab>(reportId ? "results" : "teams");
+  const [tab, setTab] = useState<Tab>(reportId ? "results" : "host");
   const [target, setTarget] = useState<{ id: string; name: string } | null>(null);
   const [reporting, setReporting] = useState<string | null>(reportId ?? null);
 
   if (!state || !nowMs) return null;
 
-  const ranked = rankingState.data ?? [];
+  // every team this person is in (up to 3): none of them can be challenged, only the active one is "managed" here
+  const ownIds = new Set((myTeamsStore.use().data?.teams ?? []).map((x) => x.id));
+  ownIds.add(team.id);
+  // only OTHER teams can be challenged
+  const ranked = (rankingState.data ?? []).filter((t) => !ownIds.has(t.id));
   const challenges = state.challenges;
   const incoming = challenges.filter((c) => c.direction === "in" && c.status === "pending");
   const withResult = challenges.filter((c) => c.result);
@@ -82,9 +90,24 @@ function Hub({ team, reportId }: { team: MyTeam; reportId?: string }) {
     setTab("results");
   }
 
+const renderAccepted = (c: Challenge) => {
+                const played = startsAt(c) <= nowMs;
+                const hasResult = Boolean(c.result && c.result.status !== "disputed");
+                return (
+                  <ChallengeCard key={c.id} c={c} status="accepted">
+                    <p className={`mt-3 text-xs font-medium ${c.venuePaidAt ? "text-emerald-600" : "text-slate-400"}`}>
+                      {c.venuePaidAt ? "✓ Paid at the venue and confirmed by the venue" : "Payment is made at the venue after the game."}
+                    </p>
+                    {played && !hasResult && <button type="button" onClick={() => goReport(c.id)} className="glass-btn mt-3 w-full rounded-full py-2.5 text-sm font-semibold text-white">Report result</button>}
+                    {hasResult && <p className="mt-2 text-xs text-slate-400">Result uploaded. See the Results tab.</p>}
+                    {!played && <p className="mt-2 text-xs text-slate-400">You can upload the result once the game has been played.</p>}
+                  </ChallengeCard>
+                );
+              };
+  
   const tabs: { id: Tab; label: string; icon: typeof Users; badge: number }[] = [
-    { id: "teams", label: "Teams", icon: Users, badge: 0 },
-    { id: "challenges", label: "Challenges", icon: Swords, badge: incoming.length },
+    { id: "host", label: "Host Challenges", icon: Users, badge: 0 },
+    { id: "opponent", label: "Opponent Challenges", icon: Swords, badge: incoming.length },
     { id: "results", label: "Results", icon: Trophy, badge: awaitingMyApproval.length + reportable.length },
   ];
 
@@ -100,7 +123,7 @@ function Hub({ team, reportId }: { team: MyTeam; reportId?: string }) {
 
       <div role="tablist" aria-label="Opponent sections" className="grid grid-cols-3 gap-1 rounded-full bg-white/60 p-1 text-sm font-medium">
         {tabs.map(({ id, label, badge }) => (
-          <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`relative rounded-full py-2 ${tab === id ? "glass-active text-white" : "text-slate-500"}`}>
+          <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`relative rounded-full px-1 py-1.5 text-xs leading-tight ${tab === id ? "glass-active text-white" : "text-slate-500"}`}>
             {label}
             {badge > 0 && <span aria-label={`${badge} need action`} className="absolute -right-0.5 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-semibold text-white">{badge}</span>}
           </button>
@@ -109,35 +132,60 @@ function Hub({ team, reportId }: { team: MyTeam; reportId?: string }) {
 
       {act.error && <p role="alert" className="rounded-2xl bg-rose-500/10 px-4 py-3 text-sm text-rose-600">{act.error}</p>}
 
-      {/* ---------------- Teams ---------------- */}
-      {tab === "teams" && (
+      {/* ---------------- Host challenges ---------------- */}
+      {tab === "host" && (
+        <div className="space-y-6">
+          <Group title="Sent" empty="You haven't hosted a challenge yet. Pick a team below." items={challenges.filter((c) => c.direction === "out" && (c.status === "pending" || c.status === "declined" || c.status === "cancelled" || c.status === "expired"))}>
+            {(c) => (
+              <ChallengeCard key={c.id} c={c} status={c.status}>
+                {c.status === "pending" && (
+                  <button type="button" disabled={act.busy !== null} onClick={() => act.run(`c-${c.id}`, () => cancelChallenge(c.id))} className="mt-3 text-xs font-medium text-rose-500">Cancel challenge</button>
+                )}
+              </ChallengeCard>
+            )}
+          </Group>
+
+          <Group title="Accepted games" empty="No accepted games." items={challenges.filter((c) => c.status === "accepted" && c.direction === "out")}>
+            {renderAccepted}
+          </Group>
         <section aria-label="Team rankings">
+          <h2 className="mb-1 text-base font-medium">Challenge a team</h2>
           <p className="mb-3 text-xs text-slate-400">Ranked by 5-star rating from confirmed results: win rate, goal difference and recent form.</p>
           {rankingState.status === "error" ? (
             <p role="alert" className="glass rounded-2xl px-4 py-5 text-center text-sm text-rose-600">{rankingState.error}</p>
           ) : !rankingState.data ? (
             <div className="space-y-3" aria-label="Loading teams">{[0, 1, 2].map((i) => <div key={i} className="h-24 animate-pulse rounded-3xl bg-white/40" />)}</div>
+          ) : ranked.length === 0 ? (
+            <p className="glass rounded-2xl px-4 py-5 text-center text-sm text-slate-400">No other teams to challenge yet.</p>
           ) : (
             <ol className="space-y-3">
               {ranked.map((t) => {
                 const mine = t.id === team.id;
+                const own = mine || ownIds.has(t.id);
                 return (
                   <li key={t.id} className={`glass rounded-3xl p-4 ${mine ? "ring-2 ring-brand/50" : ""}`}>
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3">
                         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand/10 text-sm font-semibold text-brand">{t.rank ?? "–"}</span>
                         <div>
-                          <p className="font-semibold leading-tight">{t.name}{mine && <span className="ml-2 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-[#0c0b5d]">YOU</span>}</p>
+                          <p className="font-semibold leading-tight">{t.name}{own && <span className="ml-2 whitespace-nowrap rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-[#0c0b5d]">{mine ? "YOU" : "YOUR TEAM"}</span>}</p>
                           <p className="text-xs text-slate-400">{t.area} · {t.players} players · {t.record.wins}W {t.record.draws}D {t.record.losses}L</p>
                         </div>
                       </div>
                       <Stars rating={t.rating} size={14} />
                     </div>
                     <div className="mt-3 flex gap-2">
-                      <Link href={mine ? "/team" : `/opponent/team/${t.id}`} className="flex flex-1 items-center justify-center gap-1 rounded-full bg-white/70 py-2.5 text-xs font-medium text-brand">
-                        {mine ? "Manage team" : "View team stats"} <ChevronRight size={14} />
-                      </Link>
-                      {!mine && <button type="button" onClick={() => setTarget({ id: t.id, name: t.name })} className="glass-btn flex-1 rounded-full py-2.5 text-xs font-semibold text-white">Challenge</button>}
+                      {own ? (
+                        // one of my teams: Manage team (switch to it first when it is not the active one)
+                        <button type="button" onClick={async () => { if (!mine) await switchTeam(t.id); router.push("/team"); }} className="flex flex-1 items-center justify-center gap-1 rounded-full bg-white/70 py-2.5 text-xs font-medium text-brand">
+                          Manage team <ChevronRight size={14} />
+                        </button>
+                      ) : (
+                        <Link href={`/opponent/team/${t.id}`} className="flex flex-1 items-center justify-center gap-1 rounded-full bg-white/70 py-2.5 text-xs font-medium text-brand">
+                          View team stats <ChevronRight size={14} />
+                        </Link>
+                      )}
+                      {!own && <button type="button" onClick={() => setTarget({ id: t.id, name: t.name })} className="glass-btn flex-1 rounded-full py-2.5 text-xs font-semibold text-white">Challenge</button>}
                     </div>
                   </li>
                 );
@@ -145,11 +193,12 @@ function Hub({ team, reportId }: { team: MyTeam; reportId?: string }) {
             </ol>
           )}
         </section>
+        </div>
       )}
 
-      {/* ---------------- Challenges ---------------- */}
-      {tab === "challenges" && (
-        <section aria-label="Challenges" className="space-y-6">
+      {/* ---------------- Opponent challenges ---------------- */}
+      {tab === "opponent" && (
+        <section aria-label="Opponent challenges" className="space-y-6">
           <Group title="Received" empty="No challenges waiting for you." items={incoming}>
             {(c) => (
               <ChallengeCard key={c.id} c={c}>
@@ -162,31 +211,8 @@ function Hub({ team, reportId }: { team: MyTeam; reportId?: string }) {
             )}
           </Group>
 
-          <Group title="Sent" empty="You haven't challenged anyone yet. Pick a team to start." items={challenges.filter((c) => c.direction === "out" && (c.status === "pending" || c.status === "declined" || c.status === "cancelled" || c.status === "expired"))}>
-            {(c) => (
-              <ChallengeCard key={c.id} c={c} status={c.status}>
-                {c.status === "pending" && (
-                  <button type="button" disabled={act.busy !== null} onClick={() => act.run(`c-${c.id}`, () => cancelChallenge(c.id))} className="mt-3 text-xs font-medium text-rose-500">Cancel challenge</button>
-                )}
-              </ChallengeCard>
-            )}
-          </Group>
-
-          <Group title="Accepted games" empty="No accepted games." items={challenges.filter((c) => c.status === "accepted")}>
-            {(c) => {
-              const played = startsAt(c) <= nowMs;
-              const hasResult = Boolean(c.result && c.result.status !== "disputed");
-              return (
-                <ChallengeCard key={c.id} c={c} status="accepted">
-                  <p className={`mt-3 text-xs font-medium ${c.venuePaidAt ? "text-emerald-600" : "text-slate-400"}`}>
-                    {c.venuePaidAt ? "✓ Paid at the venue and confirmed by the venue" : "Payment is made at the venue after the game."}
-                  </p>
-                  {played && !hasResult && <button type="button" onClick={() => goReport(c.id)} className="glass-btn mt-3 w-full rounded-full py-2.5 text-sm font-semibold text-white">Report result</button>}
-                  {hasResult && <p className="mt-2 text-xs text-slate-400">Result uploaded. See the Results tab.</p>}
-                  {!played && <p className="mt-2 text-xs text-slate-400">You can upload the result once the game has been played.</p>}
-                </ChallengeCard>
-              );
-            }}
+          <Group title="Accepted games" empty="No accepted games." items={challenges.filter((c) => c.status === "accepted" && c.direction === "in")}>
+            {renderAccepted}
           </Group>
         </section>
       )}

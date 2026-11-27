@@ -7,7 +7,7 @@ import CaptainGate from "@/components/captain/CaptainGate";
 import ChallengeSheet from "@/components/captain/ChallengeSheet";
 import Stars from "@/components/captain/Stars";
 import { errorText } from "@/lib/api";
-import { fetchTeam, type FormResult, type MyTeam, type TeamDetail as TeamData } from "@/lib/teams";
+import { fetchTeam, myTeamsStore, type FormResult, type MyTeam, type TeamDetail as TeamData } from "@/lib/teams";
 
 const FORM_STYLE: Record<FormResult, string> = {
   W: "bg-emerald-500 text-white",
@@ -18,6 +18,7 @@ const FORM_STYLE: Record<FormResult, string> = {
 // Another team's stats (team stats only: there are no individual player stats anywhere).
 function Detail({ id, myTeam }: { id: string; myTeam: MyTeam }) {
   const [open, setOpen] = useState(false);
+  const ownTeams = myTeamsStore.use().data?.teams ?? [];
   const [loaded, setLoaded] = useState<{ id: string; team: TeamData | null; error: string | null } | null>(null);
 
   useEffect(() => {
@@ -41,7 +42,8 @@ function Detail({ id, myTeam }: { id: string; myTeam: MyTeam }) {
     );
   }
 
-  const me = team.id === myTeam.id;
+  // a team this person is in (any of their up to 3) can never be challenged by them
+  const me = team.id === myTeam.id || ownTeams.some((x) => x.id === team.id);
   const s = { ...team.record, gf: team.goalsFor, ga: team.goalsAgainst, form: team.form };
 
   return (

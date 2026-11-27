@@ -62,15 +62,15 @@ export default function FindPlayerPage() {
     d.setDate(d.getDate() + 1 + i);
     return { key: dateKey(d), label: i === 0 ? "Tomorrow" : d.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" }) };
   });
-  const chosenDate = date ?? days[0].key;
+  const chosenDate = date; // no day is preselected: the times appear only after the poster picks one
   const hours = rules.hours;
-  const chosenHour = hour !== null && hours.includes(hour) ? hour : null;
+  const chosenHour = chosenDate !== null && hour !== null && hours.includes(hour) ? hour : null;
 
   const mine = (data ?? []).filter((r) => r.mine);
   const others = (data ?? []).filter((r) => !r.mine);
 
   async function submit() {
-    if (chosenHour === null) return;
+    if (chosenDate === null || chosenHour === null) return;
     const who = everyone ? "all registered players" : `registered players aged ${chosenText}`;
     if (!(await askConfirm(`Send "${session?.registered ? session.name : "You"} needs ${playersLabel(players)}" to ${who}?`, { confirmLabel: everyone ? "Notify everyone" : "Notify groups", title: everyone ? "Notify all players?" : "Notify these age groups?" }))) return;
     setBusy(true);
@@ -147,6 +147,7 @@ export default function FindPlayerPage() {
               </div>
             </div>
 
+            {chosenDate !== null && (
             <div>
               <p className="text-sm font-medium">What time?</p>
               {hours.length === 0 ? (
@@ -166,6 +167,7 @@ export default function FindPlayerPage() {
                 </div>
               )}
             </div>
+            )}
 
             <div>
               <p className="text-sm font-medium">Age group</p>
@@ -179,13 +181,13 @@ export default function FindPlayerPage() {
                         type="button"
                         aria-pressed={on}
                         onClick={() => toggleGroup(g)}
-                        className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium ${on ? "glass-active" : "border border-slate-200 bg-white text-slate-600"}`}
+                        className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium ${on ? "glass-active" : "border border-slate-200 bg-white text-slate-600"}`}
                       >
                         {on && <Check size={14} aria-hidden />}
                         {ageGroupLabel(g)}
                       </button>
                       {g === MOST_ACTIVE_GROUP && (
-                        <span className="pointer-events-none absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-orange-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0c0b5d]">Most active</span>
+                        <span className="pointer-events-none absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-orange-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0c0b5d]">Most active</span>
                       )}
                     </span>
                   );
